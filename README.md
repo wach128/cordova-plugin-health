@@ -158,7 +158,7 @@ Example values:
 | appleExerciseTime | 24 <br/>**Notes**: only available on iOS|
 | calories       | 245.3                             |
 | activity       | "walking"<br />**Notes**: recognized activities and their mappings in Google Fit / HealthKit can be found [here](activities_map.md) <br /> the query also returns calories (kcal) and distance (m) |
-| height         | 185.9                             |
+| height         | 1.85                             |
 | weight         | 83.3                              |
 | heart_rate     | 66                                |
 | heart_rate.resting | 63                            |
