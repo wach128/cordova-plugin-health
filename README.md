@@ -109,6 +109,7 @@ As HealthKit does not allow adding custom data types, only a subset of data type
 | vo2max          | ml/(kg * min) | HKQuantityTypeIdentifierVO2Max   | TBD                      |
 | temperature     | Celsius | HKQuantityTypeIdentifierBodyTemperature       | TBD                      |
 | fat_percentage  | %     | HKQuantityTypeIdentifierBodyFatPercentage     | TYPE_BODY_FAT_PERCENTAGE                 |
+| waist_circumference | m     | HKQuantityTypeIdentifierWaistCircumference     | NA                    |
 | blood_glucose   | mmol/L | HKQuantityTypeIdentifierBloodGlucose         | TYPE_BLOOD_GLUCOSE                       |
 | insulin         | IU    | HKQuantityTypeIdentifierInsulinDelivery       | NA                                       |
 | blood_pressure  | mmHg  | HKCorrelationTypeIdentifierBloodPressure      | TYPE_BLOOD_PRESSURE                      |
@@ -166,7 +167,8 @@ Example values:
 | resp_rate      | 12                                |
 | vo2max         | 34                                |
 | temperature    | 36.2                              |
-| fat_percentage | 31.2                              |
+| fat_percentage | 0.312                             |
+| waist_circumference | 0.65                         |
 | blood_glucose  | { glucose: 5.5, meal: 'breakfast', sleep: 'fully_awake', source: 'capillary_blood' }<br />**Notes**: <br />to convert to mg/dL, multiply by `18.01559` ([The molar mass of glucose is 180.1559](http://www.convertunits.com/molarmass/Glucose))<br />`meal` can be: 'before_meal' (iOS only), 'after_meal' (iOS only), 'fasting', 'breakfast', 'dinner', 'lunch', 'snack', 'unknown', 'before_breakfast', 'before_dinner', 'before_lunch', 'before_snack', 'after_breakfast', 'after_dinner', 'after_lunch', 'after_snack'<br />`sleep` can be: 'fully_awake', 'before_sleep', 'on_waking', 'during_sleep'<br />`source` can be: 'capillary_blood' ,'interstitial_fluid', 'plasma', 'serum', 'tears', whole_blood' |
 | insulin        | { insulin: 2.3, reason: 'bolus' }<br />**Notes**: only available on iOS<br />`reason` can be 'bolus' or 'basal' |
 | blood_pressure | { systolic: 110, diastolic: 70 }  |
