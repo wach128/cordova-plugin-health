@@ -161,7 +161,7 @@ Example values:
 | distance       | 101.2                             |
 | appleExerciseTime | 24 <br/>**Notes**: only available on iOS|
 | calories       | 245.3                             |
-| activity       | "walking"<br />**Notes**: recognized activities and their mappings in Google Fit / HealthKit can be found [here](activities_map.md) <br /> the query also returns calories (kcal) and distance (m) |
+| activity       | "walking"<br />**Notes**: recognized activities and their mappings in Google Fit / HealthKit can be found [here](activities_map.md) <br /> the query also returns calories (kcal) and distance (m)<br />**Warning** If you want to fetch activities you also have to request permission for 'calories' and 'distance' (Android). |
 | height         | 1.85                             |
 | weight         | 83.3                              |
 | heart_rate     | 66                                |
@@ -249,6 +249,7 @@ navigator.health.requestAuthorization(datatypes, successCallback, errorCallback)
 
 - It will try to get authorization from the Google fitness APIs. It is necessary that the app's package name and the signing key are registered in the Google API console (see [here](https://developers.google.com/fit/android/get-api-key)).
 - Be aware that if the activity is destroyed (e.g. after a rotation) or is put in background, the connection to Google Fit may be lost without any callback. Going through the authorization will ensure that the app is connected again.
+- Be aware that if you want to fetch activities you also have to request permission for 'calories' and 'distance'.
 - In Android 6 and over, this function will also ask for some dynamic permissions if needed (e.g. in the case of "distance" or "activity", it will need access to ACCESS_FINE_LOCATION).
 
 #### iOS quirks
