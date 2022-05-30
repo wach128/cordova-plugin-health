@@ -346,8 +346,14 @@ public class HealthPlugin extends CordovaPlugin {
           callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, true));
         })
         .addOnFailureListener(err -> {
-          err.getCause().printStackTrace();
-          callbackContext.error("cannot disconnect," + err.getMessage());
+          String message = "";
+          if (err != null) {
+            message = err.getMessage();
+            if (err.getCause() != null) {
+              err.getCause().printStackTrace();
+            }
+          }
+          callbackContext.error("cannot disconnect," + message);
         });
     }
   }
@@ -1461,8 +1467,14 @@ public class HealthPlugin extends CordovaPlugin {
         callbackContext.success();
       })
       .addOnFailureListener(err -> {
-        err.getCause().printStackTrace();
-        callbackContext.error(err.getMessage());
+          String message = "";
+          if (err != null) {
+            message = err.getMessage();
+            if (err.getCause() != null) {
+              err.getCause().printStackTrace();
+            }
+          }
+          callbackContext.error(message);
       });
   }
 
@@ -1501,8 +1513,14 @@ public class HealthPlugin extends CordovaPlugin {
         callbackContext.success();
       })
       .addOnFailureListener(err -> {
-        err.getCause().printStackTrace();
-        callbackContext.error(err.getMessage());
+        String message = "";
+        if (err != null) {
+          message = err.getMessage();
+          if (err.getCause() != null) {
+            err.getCause().printStackTrace();
+          }
+        }
+        callbackContext.error(message);
       });
   }
 }
