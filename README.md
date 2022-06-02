@@ -102,6 +102,7 @@ As HealthKit does not allow adding custom data types, only a subset of data type
 | activity        | activityType | HKWorkoutTypeIdentifier + HKCategoryTypeIdentifierSleepAnalysis | TYPE_ACTIVITY_SEGMENT |
 | height          | m     | HKQuantityTypeIdentifierHeight                | TYPE_HEIGHT                              |
 | weight          | kg    | HKQuantityTypeIdentifierBodyMass              | TYPE_WEIGHT                              |
+| bmi             | count | HKQuantityTypeIdentifierBodyMassIndex         | NA                                       |
 | heart_rate      | count/min | HKQuantityTypeIdentifierHeartRate         | TYPE_HEART_RATE_BPM                      |
 | heart_rate.resting | count/min | HKQuantityTypeIdentifierRestingHearRate | TBD                      |
 | heart_rate.variability      | ms | HKQuantityTypeIdentifierHeartRateVariabilitySDNN         | NA                   |
