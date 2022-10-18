@@ -14,6 +14,7 @@ dataTypes['calories.active'] = 'HKQuantityTypeIdentifierActiveEnergyBurned';
 dataTypes['calories.basal'] = 'HKQuantityTypeIdentifierBasalEnergyBurned';
 dataTypes['height'] = 'HKQuantityTypeIdentifierHeight';
 dataTypes['weight'] = 'HKQuantityTypeIdentifierBodyMass';
+dataTypes['bmi'] = 'HKQuantityTypeIdentifierBodyMassIndex';
 dataTypes['heart_rate'] = 'HKQuantityTypeIdentifierHeartRate';
 dataTypes['heart_rate.resting'] = 'HKQuantityTypeIdentifierRestingHeartRate';
 dataTypes['heart_rate.variability'] = 'HKQuantityTypeIdentifierHeartRateVariabilitySDNN';
@@ -60,6 +61,7 @@ units['calories.active'] = 'kcal';
 units['calories.basal'] = 'kcal';
 units['height'] = 'm';
 units['weight'] = 'kg';
+units['bmi'] = 'count';
 units['heart_rate'] = 'count/min';
 units['heart_rate.resting'] = 'count/min';
 units['heart_rate.variability'] = 'ms';
@@ -255,9 +257,27 @@ Health.prototype.query = function (opts, onSuccess, onError) {
             res.id = data[i].UUID
             res.startDate = new Date(data[i].startDate);
             res.endDate = new Date(data[i].endDate);
-            if (data[i].value == 0) res.value = 'sleep.inBed';
-            else if (data[i].value == 1) res.value = 'sleep';
-            else res.value = 'sleep.awake';
+            switch(data[i].value) {
+              case 0:
+                res.value = 'sleep.inBed';
+                break;
+              case 1:
+              default:
+                res.value = 'sleep';
+                break;
+              case 2:
+                res.value = 'sleep.awake';
+                break;
+              case 3:
+                res.value = 'sleep.light';
+                break;
+              case 4:
+                res.value = 'sleep.deep';
+                break;
+              case 5:
+                res.value = 'sleep.rem';
+                break;
+            }
             res.unit = 'activityType';
             res.sourceName = data[i].sourceName;
             res.sourceBundleId = data[i].sourceBundleId;

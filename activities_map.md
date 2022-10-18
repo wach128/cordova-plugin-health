@@ -103,9 +103,9 @@ This means that, for example, if you try to save "aerobics" in an iOS applicatio
 |	skiing.roller	|	SKIING_ROLLER	|	HKWorkoutActivityTypeSnowSports	|
 |	sledding	|	SLEDDING	|	HKWorkoutActivityTypeSnowSports	|
 |	sleep	|	SLEEP	|	HKCategoryValueSleepAnalysisAsleep	|
-|	sleep.light	|	SLEEP_LIGHT	|	HKCategoryValueSleepAnalysisAsleep	|
-|	sleep.deep	|	SLEEP_DEEP	|	HKCategoryValueSleepAnalysisAsleep	|
-|	sleep.rem	|	SLEEP_REM	|	HKCategoryValueSleepAnalysisAsleep	|
+|	sleep.light	|	SLEEP_LIGHT	| 	HKCategoryValueSleepAnalysisAsleepCore |
+|	sleep.deep	|	SLEEP_DEEP	| 	HKCategoryValueSleepAnalysisAsleepDeep |
+|	sleep.rem	|	SLEEP_REM	| 	HKCategoryValueSleepAnalysisAsleepREM |
 |	sleep.inBed	|	AWAKE	|	HKCategoryValueSleepAnalysisInBed	|
 |	sleep.awake	|	AWAKE	|	HKCategoryValueSleepAnalysisAwake	|
 |	sleep.outOfBed	|	OUT_OF_BED	|	NA	|

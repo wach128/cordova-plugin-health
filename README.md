@@ -80,6 +80,7 @@ This is known to happen when using the Ionic Package cloud service.
 * Be sure to give your app access to the Google Fitness API, see [this](https://developers.google.com/fit/android/get-api-key).
 * If you are wondering what key your compiled app is using, you can type `keytool -list -printcert -jarfile yourapp.apk`.
 * If you haven't configured the APIs correctly, particularly the OAuth requirements, you are likely to get 'User cancelled the dialog' as an error message. This often happens if you mismatch the signing certificate and SHA-1 fingerprint.
+* You will need to add permissions in AndroidManifest.xml via config.xml depending on the data types you are requesting. See [this issue](https://github.com/dariosalvi78/cordova-plugin-health/issues/178#issuecomment-645937435) for an example
 * You can use the Google Fitness API even if the user doesn't have Google Fit installed, but there has to be some other fitness app putting data into the Fitness API otherwise your queries will always be empty. See the [the original documentation](https://developers.google.com/fit/overview).
 * Google has launched a [verification process](https://support.google.com/cloud/answer/9110914) for the app. This is needed for all the data types in Google Fit. Check [their guidelines](https://developers.google.com/terms/api-services-user-data-policy).
 * You can change which Google Play Services Fitness API version this plugin uses by setting the `FIT_API_VERSION` variable in `config.xml` and the version of the Auth API using `PLAY_AUTH_VERSION`. By default it will use version `20.0.0` for play-services-fitness and version `19.0.0` for play-services-auth (see [release notes](https://developers.google.com/android/guides/releases#october_19_2020)). From version 15 of the Play Services [you don't have to use the same version](https://developers.google.com/android/guides/versioning) accross all your cordova plugins. You can track google services releases [here](https://developers.google.com/android/guides/releases).
@@ -101,6 +102,7 @@ As HealthKit does not allow adding custom data types, only a subset of data type
 | activity        | activityType | HKWorkoutTypeIdentifier + HKCategoryTypeIdentifierSleepAnalysis | TYPE_ACTIVITY_SEGMENT |
 | height          | m     | HKQuantityTypeIdentifierHeight                | TYPE_HEIGHT                              |
 | weight          | kg    | HKQuantityTypeIdentifierBodyMass              | TYPE_WEIGHT                              |
+| bmi             | count | HKQuantityTypeIdentifierBodyMassIndex         | NA                                       |
 | heart_rate      | count/min | HKQuantityTypeIdentifierHeartRate         | TYPE_HEART_RATE_BPM                      |
 | heart_rate.resting | count/min | HKQuantityTypeIdentifierRestingHearRate | TBD                      |
 | heart_rate.variability      | ms | HKQuantityTypeIdentifierHeartRateVariabilitySDNN         | NA                   |
@@ -160,7 +162,7 @@ Example values:
 | distance       | 101.2                             |
 | appleExerciseTime | 24 <br/>**Notes**: only available on iOS|
 | calories       | 245.3                             |
-| activity       | "walking"<br />**Notes**: recognized activities and their mappings in Google Fit / HealthKit can be found [here](activities_map.md) <br /> the query also returns calories (kcal) and distance (m) |
+| activity       | "walking"<br />**Notes**: recognized activities and their mappings in Google Fit / HealthKit can be found [here](activities_map.md) <br /> the query also returns calories (kcal) and distance (m)<br />**Warning** If you want to fetch activities you also have to request permission for 'calories' and 'distance' (Android). |
 | height         | 1.85                             |
 | weight         | 83.3                              |
 | heart_rate     | 66                                |
@@ -196,6 +198,9 @@ navigator.health.isAvailable(successCallback, errorCallback)
 - successCallback: {type: function(available)}, if available a true is passed as argument, false otherwise
 - errorCallback: {type: function(err)}, called if something went wrong, err contains a textual description of the problem
 
+#### Android quirks
+
+- To check for installation of Google Fit, you will need to add `<package android:name="com.google.android.apps.fitness" />` under `queries` to AndroidManifest.xml via config.xml. See [this article](https://medium.com/androiddevelopers/package-visibility-in-android-11-cc857f221cd9) for info
 
 ### promptInstallFit() - Android only
 
@@ -245,6 +250,7 @@ navigator.health.requestAuthorization(datatypes, successCallback, errorCallback)
 
 - It will try to get authorization from the Google fitness APIs. It is necessary that the app's package name and the signing key are registered in the Google API console (see [here](https://developers.google.com/fit/android/get-api-key)).
 - Be aware that if the activity is destroyed (e.g. after a rotation) or is put in background, the connection to Google Fit may be lost without any callback. Going through the authorization will ensure that the app is connected again.
+- Be aware that if you want to fetch activities you also have to request permission for 'calories' and 'distance'.
 - In Android 6 and over, this function will also ask for some dynamic permissions if needed (e.g. in the case of "distance" or "activity", it will need access to ACCESS_FINE_LOCATION).
 
 #### iOS quirks
