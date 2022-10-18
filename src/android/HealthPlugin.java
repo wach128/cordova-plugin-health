@@ -654,11 +654,21 @@ public class HealthPlugin extends CordovaPlugin {
           }
           obj.put("distance", totaldistance);
           obj.put("calories", totalcalories);
-        }  else if (dt.equals(HealthDataTypes.TYPE_OXYGEN_SATURATION)) {
-          float oxysat = datapoint.getValue(HealthFields.FIELD_OXYGEN_SATURATION).asFloat();
+        } else if (dt.equals(HealthDataTypes.TYPE_OXYGEN_SATURATION)) {
+          float oxysat;
+          if (datapoint.getValue(HealthFields.FIELD_OXYGEN_SATURATION) != null)
+            oxysat = datapoint.getValue(HealthFields.FIELD_OXYGEN_SATURATION).asFloat();
+          else if (datapoint.getValue(FIELD_OXYGEN_SATURATION_AVERAGE) != null)
+            oxysat = datapoint.getValue(FIELD_OXYGEN_SATURATION_AVERAGE).asFloat();
           obj.put("value", oxysat);
           obj.put("unit", "%");
-        }  else if (dt.equals(HealthDataTypes.TYPE_BLOOD_GLUCOSE)) {
+
+          // get also max and min if available:
+          if (datapoint.getValue(FIELD_OXYGEN_SATURATION_MAX) != null)
+            obj.put("max", datapoint.getValue(FIELD_OXYGEN_SATURATION_MAX).asFloat());
+          if (datapoint.getValue(FIELD_OXYGEN_SATURATION_MIN) != null)
+            obj.put("min", datapoint.getValue(FIELD_OXYGEN_SATURATION_MIN).asFloat());
+        } else if (dt.equals(HealthDataTypes.TYPE_BLOOD_GLUCOSE)) {
           JSONObject glucob = new JSONObject();
           float glucose = datapoint.getValue(HealthFields.FIELD_BLOOD_GLUCOSE_LEVEL).asFloat();
           glucob.put("glucose", glucose);
