@@ -121,6 +121,7 @@ As HealthKit does not allow adding custom data types, only a subset of data type
 | date_of_birth   |       | HKCharacteristicTypeIdentifierDateOfBirth     | NA        |
 | mindfulness     | sec   | HKCategoryTypeIdentifierMindfulSession        | NA                                       |
 | nutrition       |       | HKCorrelationTypeIdentifierFood               | TYPE_NUTRITION                           |
+| UVexposure      | count | HKQuantityTypeIdentifierUVExposure            | NA        |
 | nutrition.calories | kcal | HKQuantityTypeIdentifierDietaryEnergyConsumed | TYPE_NUTRITION, NUTRIENT_CALORIES      |
 | nutrition.fat.total | g | HKQuantityTypeIdentifierDietaryFatTotal       | TYPE_NUTRITION, NUTRIENT_TOTAL_FAT       |
 | nutrition.fat.saturated | g | HKQuantityTypeIdentifierDietaryFatSaturated | TYPE_NUTRITION, NUTRIENT_SATURATED_FAT |
