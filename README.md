@@ -411,7 +411,7 @@ navigator.health.store({
 
 #### iOS quirks
 
-- When storing an activity, you can also specify calories (active, in kcal) and distance (walked or run, in meters). For example: `dataType: 'activity', value: 'walking', calories: 20, distance: 520`. Be aware, though, that you need permission to write calories and distance first, or the call will fail.
+- When storing an activity, you can also specify calories (active, in kcal) and/or distance (in meters). For example: `dataType: 'activity', value: 'walking', calories: 20, distance: 520`. Distance is set as DistanceWalkingRunning unless an additional `cycling: true` is added to the object. Be aware that you need permission to write calories and distance first, or the call will fail.
 - In iOS you cannot store the total calories, you need to specify either basal or active. If you use total calories, the active ones will be stored.
 - In iOS distance is assumed to be of type WalkingRunning, if you want to explicitly set it to Cycling you need to add the field `cycling: true`.
 - The blood glucose meal information can be stored as 'before_meal' and 'after_meal', but these two can't be used in Android apps.

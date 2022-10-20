@@ -723,27 +723,43 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                 if (success_save) {
                     // now store the samples, so it shows up in the health app as well (pass this in as an option?)
                     if (energy != nil || distance != nil) {
-                        HKQuantitySample *sampleActivity = nil;
-                        if(cycling != nil && cycling){
-                            sampleActivity = [HKQuantitySample quantitySampleWithType:[HKQuantityType quantityTypeForIdentifier:
-                                            HKQuantityTypeIdentifierDistanceCycling]
+                        HKQuantitySample *sampleDistance = nil;
+                        if(distance != nil) {
+                            if(cycling != nil && cycling){
+                                sampleDistance = [HKQuantitySample quantitySampleWithType:[HKQuantityType quantityTypeForIdentifier:
+                                                HKQuantityTypeIdentifierDistanceCycling]
                                                                                             quantity:nrOfDistanceUnits
                                                                                             startDate:startDate
                                                                                                 endDate:endDate];
-                        } else {
-                            sampleActivity = [HKQuantitySample quantitySampleWithType:[HKQuantityType quantityTypeForIdentifier:
-                                            HKQuantityTypeIdentifierDistanceWalkingRunning]
+                            } else {
+                                sampleDistance = [HKQuantitySample quantitySampleWithType:[HKQuantityType quantityTypeForIdentifier:
+                                                HKQuantityTypeIdentifierDistanceWalkingRunning]
                                                                                             quantity:nrOfDistanceUnits
                                                                                             startDate:startDate
                                                                                                 endDate:endDate];
 
+                            }
                         }
-                        HKQuantitySample *sampleCalories = [HKQuantitySample quantitySampleWithType:[HKQuantityType quantityTypeForIdentifier:
-                                        HKQuantityTypeIdentifierActiveEnergyBurned]
+                        HKQuantitySample *sampleCalories = nil;
+                        if(energy != nil) {
+                            sampleCalories = [HKQuantitySample quantitySampleWithType:[HKQuantityType     quantityTypeForIdentifier:
+                                            HKQuantityTypeIdentifierActiveEnergyBurned]
                                                                                            quantity:nrOfEnergyUnits
                                                                                           startDate:startDate
                                                                                             endDate:endDate];
-                        NSArray *samples = @[sampleActivity, sampleCalories];
+                        }
+                         NSArray *samples = nil;
+                         if (energy != nil &&  distance != nil) { 
+                            // both distance and energy
+                            samples = @[sampleDistance, sampleCalories];
+                         } else if (energy != nil &&  distance == nil) { 
+                            // only energy
+                            samples = @[sampleCalories];
+                         } else if (energy == nil &&  distance != nil) {
+                            // only distance
+                            samples = @[sampleDistance];
+                         }
+                        
 
                         [[HealthKit sharedHealthStore] addSamples:samples toWorkout:workout completion:^(BOOL success_addSamples, NSError *mostInnerError) {
                             if (success_addSamples) {
@@ -816,9 +832,8 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                             source = workout.source;
                         }
 
-                        // TODO: use a float value, or switch to metric
-                        double miles = [workout.totalDistance doubleValueForUnit:[HKUnit meterUnit]];
-                        NSString *milesString = [NSString stringWithFormat:@"%ld", (long) miles];
+                        double meters = [workout.totalDistance doubleValueForUnit:[HKUnit meterUnit]];
+                        NSString *metersString = [NSString stringWithFormat:@"%ld", (long) meters];
 
                         // Parse totalEnergyBurned in kilocalories
                         double cals = [workout.totalEnergyBurned doubleValueForUnit:[HKUnit kilocalorieUnit]];
@@ -829,7 +844,7 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                                         @"duration": @(workout.duration),
                                         HKPluginKeyStartDate: [HealthKit stringFromDate:workout.startDate],
                                         HKPluginKeyEndDate: [HealthKit stringFromDate:workout.endDate],
-                                        @"distance": milesString,
+                                        @"distance": metersString,
                                         @"energy": calories,
                                         HKPluginKeySourceBundleId: source.bundleIdentifier,
                                         HKPluginKeySourceName: source.name,
