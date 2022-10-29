@@ -151,7 +151,7 @@ Returned objects contain a set of fixed fields:
 - endDate: {type: Date} a date indicating when the data point ends
 - unit: {type: String} the unit of measurement
 - value: the actual value
-- sourceBundleId: {type: String} the identifier of the app that produced the data
+- sourceBundleId: {type: String} the identifier of the app that produced the data. It can be the "stream identifier" when the app is Google Fit
 - sourceName: {type: String} (only on iOS) the name of the app that produced the data (as it appears to the user)
 - id: {type: String} (only on iOS) the unique identifier of that measurement
 
