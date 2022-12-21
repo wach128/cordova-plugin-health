@@ -69,3 +69,16 @@ Log of changes
 * updated activity types in iOS (removed depecrated ones and added new ones)
 * fixed energy in activity when > 1000 Kcal
 
+### v2.0.4
+
+* added oxygen saturation for Android and iOS
+* added weight circumference for iOS
+* added blood pressure for iOS
+* added BMI for iOS
+* enable HealthKit automatically in iOS
+
+
+### v2.0.5
+
+* fixed bug
+
