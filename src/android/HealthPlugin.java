@@ -773,7 +773,7 @@ public class HealthPlugin extends CordovaPlugin {
           obj.put("value", bpobj);
           obj.put("unit", "mmHg");
         }  else if (dt.equals(DataType.TYPE_SLEEP_SEGMENT)) {
-          String sleepSegmentType = "";
+          String sleepSegmentType = "sleep";
           switch (datapoint.getValue(Field.FIELD_SLEEP_SEGMENT_TYPE).asInt()) {
             case SleepStages.AWAKE:
               sleepSegmentType = "sleep.awake";
@@ -801,8 +801,6 @@ public class HealthPlugin extends CordovaPlugin {
       }
     }
     callbackContext.success(resultset);
-
-
   }
 
   // utility function, gets nutrients from a Value and merges the value inside a json object
@@ -1472,6 +1470,26 @@ public class HealthPlugin extends CordovaPlugin {
       if (bpobj.has("diastolic")) {
         float diastolic = (float) bpobj.getDouble("diastolic");
         datapointBuilder.setField(HealthFields.FIELD_BLOOD_PRESSURE_DIASTOLIC, diastolic);
+      }
+    } else if (dt == DataType.TYPE_SLEEP_SEGMENT) {
+      String value = args.getJSONObject(0).getString("value");
+      if (value.equalsIgnoreCase("sleep")) {
+        datapointBuilder.setField(Field.FIELD_SLEEP_SEGMENT_TYPE, SleepStages.SLEEP);
+      } else if (value.equalsIgnoreCase("sleep.light")) {
+        datapointBuilder.setField(Field.FIELD_SLEEP_SEGMENT_TYPE, SleepStages.SLEEP_LIGHT);
+      } else if (value.equalsIgnoreCase("sleep.deep")) {
+        datapointBuilder.setField(Field.FIELD_SLEEP_SEGMENT_TYPE, SleepStages.SLEEP_DEEP);
+      } else if (value.equalsIgnoreCase("sleep.rem")) {
+        datapointBuilder.setField(Field.FIELD_SLEEP_SEGMENT_TYPE, SleepStages.SLEEP_REM);
+      } else if (value.equalsIgnoreCase("sleep.inBed")) {
+        datapointBuilder.setField(Field.FIELD_SLEEP_SEGMENT_TYPE, SleepStages.AWAKE);
+      } else if (value.equalsIgnoreCase("sleep.awake")) {
+        datapointBuilder.setField(Field.FIELD_SLEEP_SEGMENT_TYPE, SleepStages.AWAKE);
+      } else if (value.equalsIgnoreCase("sleep.outOfBed")) {
+        datapointBuilder.setField(Field.FIELD_SLEEP_SEGMENT_TYPE, SleepStages.OUT_OF_BED);
+      } else {
+        callbackContext.error("Unknown sleep value " + value);
+        return;
       }
     }
     dataSetBuilder.add(datapointBuilder.build());
