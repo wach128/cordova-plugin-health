@@ -319,6 +319,7 @@ navigator.health.query({
 - HealthKit does not calculate active and basal calories - these must be inputted from an app
 - HealthKit does not detect activities automatically - these must be inputted from an app
 - When querying for activities, only events whose startDate and endDate are **both** in the query range will be returned.
+- Activities can include a duration (in seconds), this may be different than the endTime - startTime and actually more accurate.
 - When querying for nutrition, HealthKit only returns those stored as correlation. To be sure to get all stored quantities, it's better to query nutrients individually (e.g. MyFitnessPal doesn't store meals as correlations).
 - nutrition.vitamin_a is given in micrograms. Automatic conversion to international units is not trivial and depends on the actual substance (see [here](https://dietarysupplementdatabase.usda.nih.gov/ingredient_calculator/help.php#q9)).
 - The blood glucose meal information is stored by the Health App as preprandial (before a meal) or postprandial (after a meal), which are mapped to 'before_meal' and 'after_meal'. These two specific values are only used in iOS and can't be used in Android apps.

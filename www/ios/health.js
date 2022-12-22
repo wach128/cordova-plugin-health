@@ -246,6 +246,7 @@ Health.prototype.query = function (opts, onSuccess, onError) {
           res.unit = 'activityType';
           if (data[i].energy) res.calories = parseInt(data[i].energy);
           if (data[i].distance) res.distance = parseInt(data[i].distance);
+          if (data[i].duration) res.duration = data[i].duration;
           res.sourceName = data[i].sourceName;
           res.sourceBundleId = data[i].sourceBundleId;
           result.push(res);
