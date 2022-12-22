@@ -656,7 +656,7 @@ static NSString *const HKPluginKeyUUID = @"UUID";
     HKWorkoutActivityType activityTypeEnum = [WorkoutActivityConversion convertStringToHKWorkoutActivityType:activityType];
 
     BOOL requestReadPermission = (args[@"requestReadPermission"] == nil || [args[@"requestReadPermission"] boolValue]);
-    BOOL *cycling = (args[@"cycling"] == nil || [args[@"cycling"] boolValue]);
+    BOOL *cycling = (args[@"cycling"] != nil && [args[@"cycling"] boolValue]);
 
     // optional energy
     NSNumber *energy = args[@"energy"];
@@ -796,11 +796,14 @@ static NSString *const HKPluginKeyUUID = @"UUID";
  * @param command *CDVInvokedUrlCommand
  */
 - (void)findWorkouts:(CDVInvokedUrlCommand *)command {
+    NSMutableDictionary *args = command.arguments[0];
     NSPredicate *workoutPredicate = nil;
     // TODO if a specific workouttype was passed, use that
     //  if (false) {
     //    workoutPredicate = [HKQuery predicateForWorkoutsWithWorkoutActivityType:HKWorkoutActivityTypeCycling];
     //  }
+
+    BOOL *includeCalsAndDist = (args[@"includeCalsAndDist"] != nil && [args[@"includeCalsAndDist"] boolValue]);
 
     NSSet *types = [NSSet setWithObjects:[HKWorkoutType workoutType], nil];
     [[HealthKit sharedHealthStore] requestAuthorizationToShareTypes:nil readTypes:types completion:^(BOOL success, NSError *error) {
@@ -831,15 +834,17 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                             //@TODO Update deprecated API call
                             source = workout.source;
                         }
+                        NSMutableDictionary *entry;
 
-                        double meters = [workout.totalDistance doubleValueForUnit:[HKUnit meterUnit]];
-                        NSString *metersString = [NSString stringWithFormat:@"%ld", (long) meters];
+                        if(includeCalsAndDist != nil && includeCalsAndDist) {
+                            double meters = [workout.totalDistance doubleValueForUnit:[HKUnit meterUnit]];
+                            NSString *metersString = [NSString stringWithFormat:@"%ld", (long) meters];
 
-                        // Parse totalEnergyBurned in kilocalories
-                        double cals = [workout.totalEnergyBurned doubleValueForUnit:[HKUnit kilocalorieUnit]];
-                        NSString *calories = [[NSNumber numberWithDouble:cals] stringValue];
+                            // Parse totalEnergyBurned in kilocalories
+                            double cals = [workout.totalEnergyBurned doubleValueForUnit:[HKUnit kilocalorieUnit]];
+                            NSString *calories = [[NSNumber numberWithDouble:cals] stringValue];
 
-                        NSMutableDictionary *entry = [
+                            entry = [
                                 @{
                                         @"duration": @(workout.duration),
                                         HKPluginKeyStartDate: [HealthKit stringFromDate:workout.startDate],
@@ -851,7 +856,20 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                                         @"activityType": workoutActivity,
                                         @"UUID": [workout.UUID UUIDString]
                                 } mutableCopy
-                        ];
+                            ];
+                        }  else {
+                            entry = [
+                                @{
+                                        @"duration": @(workout.duration),
+                                        HKPluginKeyStartDate: [HealthKit stringFromDate:workout.startDate],
+                                        HKPluginKeyEndDate: [HealthKit stringFromDate:workout.endDate],
+                                        HKPluginKeySourceBundleId: source.bundleIdentifier,
+                                        HKPluginKeySourceName: source.name,
+                                        @"activityType": workoutActivity,
+                                        @"UUID": [workout.UUID UUIDString]
+                                } mutableCopy
+                            ];
+                        }
 
                         [finalResults addObject:entry];
                     }
