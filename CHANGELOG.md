@@ -80,5 +80,12 @@ Log of changes
 
 ### v2.0.5
 
-* fixed bug
+* bugfixes
 
+### v2.1.0
+
+* bumped version of Google Play APIs
+* added separate sleep datatype for Android and iOS
+* added sleep sessions in simple query for "sleep" data type for Android
+* distance and calories are optional when querying activity
+* bugfixing

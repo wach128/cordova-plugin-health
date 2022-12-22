@@ -76,13 +76,13 @@ This is known to happen when using the Ionic Package cloud service.
 
 ## Android requirements
 
+* Google has launched a [verification process](https://support.google.com/cloud/answer/9110914) for the app. This is needed for all the data types in Google Fit. Check [their guidelines](https://developers.google.com/terms/api-services-user-data-policy).
+* If you haven't configured the APIs correctly, particularly the OAuth requirements, you are likely to get 'User cancelled the dialog' as an error message. This often happens if you mismatch the signing certificate and SHA-1 fingerprint.
 * You need to have the Google Services API downloaded in your SDK.
 * Be sure to give your app access to the Google Fitness API, see [this](https://developers.google.com/fit/android/get-api-key).
 * If you are wondering what key your compiled app is using, you can type `keytool -list -printcert -jarfile yourapp.apk`.
-* If you haven't configured the APIs correctly, particularly the OAuth requirements, you are likely to get 'User cancelled the dialog' as an error message. This often happens if you mismatch the signing certificate and SHA-1 fingerprint.
 * You will need to add permissions in AndroidManifest.xml via config.xml depending on the data types you are requesting. See [this issue](https://github.com/dariosalvi78/cordova-plugin-health/issues/178#issuecomment-645937435) for an example
 * You can use the Google Fitness API even if the user doesn't have Google Fit installed, but there has to be some other fitness app putting data into the Fitness API otherwise your queries will always be empty. See the [the original documentation](https://developers.google.com/fit/overview).
-* Google has launched a [verification process](https://support.google.com/cloud/answer/9110914) for the app. This is needed for all the data types in Google Fit. Check [their guidelines](https://developers.google.com/terms/api-services-user-data-policy).
 * You can change which Google Play Services Fitness API version this plugin uses by setting the `FIT_API_VERSION` variable in `config.xml` and the version of the Auth API using `PLAY_AUTH_VERSION`. By default it will use version `20.0.0` for play-services-fitness and version `19.0.0` for play-services-auth (see [release notes](https://developers.google.com/android/guides/releases#october_19_2020)). From version 15 of the Play Services [you don't have to use the same version](https://developers.google.com/android/guides/versioning) accross all your cordova plugins. You can track google services releases [here](https://developers.google.com/android/guides/releases).
 * This plugin uses AndroidX. You will need to [activate AndroidX](https://cordova.apache.org/announcements/2020/06/29/cordova-android-9.0.0.html) in the Android platform and make sure all other plugins you use are AndroidX compatible.
 
@@ -99,7 +99,8 @@ As HealthKit does not allow adding custom data types, only a subset of data type
 | calories        | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned + HKQuantityTypeIdentifierBasalEnergyBurned | TYPE_CALORIES_EXPENDED |
 | calories.active | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned    | TYPE_CALORIES_EXPENDED - (TYPE_BASAL_METABOLIC_RATE * time window) |
 | calories.basal  | kcal  | HKQuantityTypeIdentifierBasalEnergyBurned     | TYPE_BASAL_METABOLIC_RATE * time window  |
-| activity        | activityType | HKWorkoutTypeIdentifier + HKCategoryTypeIdentifierSleepAnalysis | TYPE_ACTIVITY_SEGMENT |
+| activity        | activityType | HKWorkoutTypeIdentifier                | TYPE_ACTIVITY_SEGMENT |
+| sleep           | sleepType | HKCategoryTypeIdentifierSleepAnalysis | TYPE_ACTIVITY_SEGMENT (and/or sleep sessions) |
 | height          | m     | HKQuantityTypeIdentifierHeight                | TYPE_HEIGHT                              |
 | weight          | kg    | HKQuantityTypeIdentifierBodyMass              | TYPE_WEIGHT                              |
 | bmi             | count | HKQuantityTypeIdentifierBodyMassIndex         | NA                                       |
@@ -164,7 +165,8 @@ Example values:
 | appleExerciseTime | 24 <br/>**Notes**: only available on iOS|
 | calories       | 245.3                             |
 | activity       | "walking"<br />**Notes**: recognized activities and their mappings in Google Fit / HealthKit can be found [here](activities_map.md) <br /> the query also returns calories (kcal) and distance (m)<br />**Warning** If you want to fetch activities you also have to request permission for 'calories' and 'distance' (Android). |
-| height         | 1.85                             |
+| sleep       | 'sleep.light' <br />**Notes**: recognized sleep stages and their mappings in Google Fit / HealthKit can be found [here](sleep_map.md) |
+| height         | 1.85                              |
 | weight         | 83.3                              |
 | heart_rate     | 66                                |
 | heart_rate.resting | 63                            |
@@ -184,7 +186,6 @@ Example values:
 | mindfulness     | 1800 <br/>**Notes**: only available on iOS |
 | nutrition      | { item: "cheese", meal_type: "lunch", brand_name: "McDonald's", nutrients: { nutrition.fat.saturated: 11.5, nutrition.calories: 233.1 } } <br/>**Note**: the `brand_name` property is only available on iOS |
 | nutrition.X    | 12.4                              |
-| sleep       | 'sleep.light' <br />**Notes**: can be sleep, sleep.awake, sleep.outOfBed, sleep.deep, sleep.light, sleep.rem <br/> recognized sleep stages and their mappings in Google Fit / HealthKit can be found [here](activities_map.md) |
 
 ## Methods
 
@@ -257,7 +258,6 @@ navigator.health.requestAuthorization(datatypes, successCallback, errorCallback)
 #### iOS quirks
 
 - Once the user has allowed (or not allowed) the app, this function will not prompt the user again, but will call the callback immediately. See [this](https://developer.apple.com/documentation/healthkit/hkhealthstore/1614152-requestauthorization) for further explanation.
-- The datatype `activity` also includes sleep. If you want to get authorization only for workouts, you can specify `workouts` as datatype, but be aware that this is only availabe in iOS.
 
 ### isAuthorized()
 
@@ -299,7 +299,7 @@ Gets all the data points of a certain data type within a certain time window.
 navigator.health.query({
   startDate: new Date(new Date().getTime() - 3 * 24 * 60 * 60 * 1000), // three days ago
   endDate: new Date(), // now
-  dataType: 'height',
+  dataType: 'steps',
   limit: 1000
 }, successCallback, errorCallback)
 ```
@@ -308,21 +308,19 @@ navigator.health.query({
 - endDate: {type: Date}, end data to which to get the data
 - dataType: {type: String}, the data type to be queried (see above)
 - limit: {type: integer}, optional, sets a maximum number of returned values
+- includeCalsAndDist: {type: boolean}, optional, only used for activity. Adds 2 additional fields, calories (kcal) and distance (m) for each detected activity. **Warning**: access to calories and distance must have been granted!
 - successCallback: {type: function(data) }, called if all OK, data contains the result of the query in the form of an array of: { startDate: Date, endDate: Date, value: xxx, unit: 'xxx', sourceName: 'aaaa', sourceBundleId: 'bbbb' }
 - errorCallback: {type: function(err)}, called if something went wrong, err contains a textual description of the problem
 
 #### iOS quirks
 
 - Limit is set to 1000 by default.
-- Limit is not currently supported in workouts.
 - Datapoints are ordered in an descending fashion (from newer to older). You can revert this behaviour by adding `ascending: true` to your query object.
 - HealthKit does not calculate active and basal calories - these must be inputted from an app
-- HealthKit does not detect specific activities - these must be inputted from an app
-- Activities in HealthKit may include two extra fields: calories (kcal) and distance (m)
+- HealthKit does not detect activities automatically - these must be inputted from an app
+- When querying for activities, only events whose startDate and endDate are **both** in the query range will be returned.
 - When querying for nutrition, HealthKit only returns those stored as correlation. To be sure to get all stored quantities, it's better to query nutrients individually (e.g. MyFitnessPal doesn't store meals as correlations).
 - nutrition.vitamin_a is given in micrograms. Automatic conversion to international units is not trivial and depends on the actual substance (see [here](https://dietarysupplementdatabase.usda.nih.gov/ingredient_calculator/help.php#q9)).
-- When querying for activities, only events whose startDate and endDate are **both** in the query range will be returned.
-- If you want to query for activity but only want workouts, you can specify the `workouts` datatype, but be aware that this will only be availabe in iOS.
 - The blood glucose meal information is stored by the Health App as preprandial (before a meal) or postprandial (after a meal), which are mapped to 'before_meal' and 'after_meal'. These two specific values are only used in iOS and can't be used in Android apps.
 
 #### Android quirks
@@ -330,11 +328,14 @@ navigator.health.query({
 - It is possible to query for "raw" steps or to select those as filtered by the Google Fit app. In the latter case the query object must contain the field `filtered: true`.
 - calories.basal is returned as an average per day, and usually is not available in all days.
 - calories.active is computed by subtracting the basal calories from the total. As basal energy expenditure, an average is computed from the week before endDate.
-- Active and basal calories can be automatically calculated
-- Some activities can be determined automatically (still, walking, running, biking, in vehicle)
+- Active and basal calories can be automatically calculated.
+- Some activities (still, walking, running, biking, in vehicle) can be determined automatically by Google Fit.
+- Activities in Google Fit can also include sleep, but this has been deprecated in favour of a separate sleep type.
+- When querying sleep both data points with sleep segment type and [sleep sessions](https://developers.google.com/fit/scenarios/read-sleep-data) are retrieved. If an app stores both, it is possible that data comes duplicated (this needs to be confirmed! please create an issue if you notice it!).
+- When querying for activities, if an event's startDate is out of the query range but its endDate is within, Google Fit will truncate the startDate to match that of the query.
 - When querying for nutrition, Google Fit always returns all the nutrition elements it has.
 - nutrition.vitamin_a is given in international units. Automatic conversion to micrograms is not trivial and depends on the actual substance (see [here](https://dietarysupplementdatabase.usda.nih.gov/ingredient_calculator/help.php#q9)).
-- When querying for activities, if an event's startDate is out of the query range but its endDate is within, Google Fit will truncate the startDate to match that of the query.
+
 
 ### queryAggregated()
 
@@ -354,6 +355,7 @@ navigator.health.queryAggregated({
 - endDate: {type: Date}, end data to which to get the data
 - dataType: {type: String}, the data type to be queried (see below for supported data types)
 - bucket: {type: String}, if specified, aggregation is grouped an array of "buckets" (windows of time), supported values are: 'hour', 'day', 'week', 'month', 'year'
+- includeCalsAndDist: {type: boolean}, optional, only used for activity, adds 2 additional fields, calories (kcal) and distance (m) for each detected activity. **Warning**: access to calories and distance must have been granted!
 - successCallback: {type: function(data)}, called if all OK, data contains the result of the query, see below for returned data types. If no buckets is specified, the result is an object. If a bucketing strategy is specified, the result is an array.
 - errorCallback: {type: function(err)}, called if something went wrong, err contains a textual description of the problem
 
@@ -367,7 +369,7 @@ The following table shows what types are supported and examples of the returned 
 | calories        | { startDate: Date, endDate: Date, value: 25698.1, unit: 'kcal' } |
 | calories.active | { startDate: Date, endDate: Date, value: 3547.4, unit: 'kcal' } |
 | calories.basal  | { startDate: Date, endDate: Date, value: 13146.1, unit: 'kcal' } |
-| activity        | { startDate: Date, endDate: Date, value: { still: { duration: 520000, calories: 30, distance: 0 }, walking: { duration: 223000, calories: 20, distance: 15 }}, unit: 'activitySummary' }<br />**Note:** duration is expressed in milliseconds, distance in meters and calories in kcal |
+| activity        | { startDate: Date, endDate: Date, value: { still: { duration: 520000 }, walking: { duration: 223000 }}, unit: 'activitySummary' }<br />**Note:** duration is expressed in milliseconds, additional distance (in meters) and calories (in kcal) can be added |
 | nutrition       | { startDate: Date, endDate: Date, value: { nutrition.fat.saturated: 11.5, nutrition.calories: 233.1 }, unit: 'nutrition' }<br />**Note:** units of measurement for nutrients are fixed according to the table at the beginning of this README |
 | nutrition.x     | { startDate: Date, endDate: Date, value: 23, unit: 'mg'} |
 
@@ -380,12 +382,11 @@ The following table shows what types are supported and examples of the returned 
 
 #### iOS quirks
 
-- Activities in HealthKit may include two extra fields: calories (kcal) and distance (m)
 - When querying for nutrition, HealthKit only returns those stored as correlation. To be sure to get all stored quantities, it's better to query nutrients individually (e.g. MyFitnessPal doesn't store meals as correlations).
 - nutrition.vitamin_a is given in micrograms. Automatic conversion to international units is not trivial and depends on the actual substance (see [here](https://dietarysupplementdatabase.usda.nih.gov/ingredient_calculator/help.php#q9)).
 
 #### Android quirks
-- Activities will include two extra fields: calories (kcal) and distance (m) and requires the user to grant access to location
+
 - nutrition.vitamin_a is given in international units. Automatic conversion to micrograms is not trivial and depends on the actual substance (see [here](https://dietarysupplementdatabase.usda.nih.gov/ingredient_calculator/help.php#q9)).
 
 ### store()
