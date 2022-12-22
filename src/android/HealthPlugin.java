@@ -22,11 +22,14 @@ import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.data.HealthDataTypes;
 import com.google.android.gms.fitness.data.HealthFields;
+import com.google.android.gms.fitness.data.Session;
 import com.google.android.gms.fitness.data.SleepStages;
 import com.google.android.gms.fitness.data.Value;
 import com.google.android.gms.fitness.request.DataDeleteRequest;
 import com.google.android.gms.fitness.request.DataReadRequest;
+import com.google.android.gms.fitness.request.SessionReadRequest;
 import com.google.android.gms.fitness.result.DataReadResponse;
+import com.google.android.gms.fitness.result.SessionReadResponse;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 
@@ -537,6 +540,7 @@ public class HealthPlugin extends CordovaPlugin {
     Log.d(TAG, "Data query successful");
     JSONArray resultset = new JSONArray();
     List<DataSet> datasets = response.getDataSets();
+
     for (DataSet dataset : datasets) {
       for (DataPoint datapoint : dataset.getDataPoints()) {
         JSONObject obj = new JSONObject();
@@ -795,11 +799,87 @@ public class HealthPlugin extends CordovaPlugin {
               break;
           }
           obj.put("value", sleepSegmentType);
-          obj.put("unit", "sleepSegmentType");
+          obj.put("unit", "sleepType");
         }
         resultset.put(obj);
       }
     }
+
+    // add sleep sessions
+    // (for some reason, they may not be included as data points)
+    if (dt.equals(DataType.TYPE_SLEEP_SEGMENT)){
+      SessionReadRequest.Builder sleepSessionsBuilder = new SessionReadRequest.Builder()
+              .readSessionsFromAllApps()
+              // By default, only activity sessions are included, so it is necessary to explicitly
+              // request sleep sessions. This will cause activity sessions to be *excluded*.
+              .includeSleepSessions()
+              // Sleep segment data is required for details of the fine-granularity sleep, if it is present.
+              .read(DataType.TYPE_SLEEP_SEGMENT)
+              .setTimeInterval(st, et, TimeUnit.MILLISECONDS);
+
+      Task<SessionReadResponse> sleepQueryTask = Fitness.getSessionsClient(this.cordova.getContext(), this.account)
+              .readSession(sleepSessionsBuilder.build());
+
+      SessionReadResponse sleepSessionsResponse = Tasks.await(sleepQueryTask);
+      if (!sleepSessionsResponse.getStatus().isSuccess()) {
+        // abort
+        callbackContext.error(sleepSessionsResponse.getStatus().getStatusMessage());
+        return;
+      }
+      List<Session> sessions = sleepSessionsResponse.getSessions();
+      for (Session session : sessions) {
+        JSONObject obj = new JSONObject();
+        String sourceBundleId = session.getAppPackageName();
+        long sessionStart = session.getStartTime(TimeUnit.MILLISECONDS);
+        long sessionEnd = session.getEndTime(TimeUnit.MILLISECONDS);
+        // If the sleep session has finer granularity sub-components, extract them:
+        boolean hasSubSessions = false;
+        List<DataSet> sleepDatasets = sleepSessionsResponse.getDataSet(session);
+        for (DataSet sleepDataSet : sleepDatasets) {
+          for (DataPoint point : sleepDataSet.getDataPoints()) {
+            hasSubSessions = true;
+            int sleepType = point.getValue(Field.FIELD_SLEEP_SEGMENT_TYPE).asInt();
+            long segmentStart = point.getStartTime(TimeUnit.MILLISECONDS);
+            long segmentEnd = point.getEndTime(TimeUnit.MILLISECONDS);
+            obj.put("startDate", segmentStart);
+            obj.put("endDate",segmentEnd);
+            if (sourceBundleId != null) {
+              obj.put("sourceBundleId", sourceBundleId);
+            }
+            obj.put("unit", "sleepType");
+            if (sleepType == SleepStages.AWAKE) {
+              obj.put("value", "sleep.awake");
+            } else if (sleepType == SleepStages.SLEEP) {
+              obj.put("value", "sleep");
+            } else if (sleepType == SleepStages.OUT_OF_BED) {
+              obj.put("value", "sleep.outOfBed");
+            } else if (sleepType == SleepStages.SLEEP_DEEP) {
+              obj.put("value", "sleep.deep");
+            } else if (sleepType == SleepStages.SLEEP_LIGHT) {
+              obj.put("value", "sleep.light");
+            } else if (sleepType == SleepStages.SLEEP_REM) {
+              obj.put("value", "sleep.rem");
+            } else {
+              // a generic sleep
+              obj.put("value", "sleep");
+            }
+          }
+        }
+        if (!hasSubSessions) {
+          obj.put("startDate", sessionStart);
+          obj.put("endDate",sessionEnd);
+          // if no specific type of sleep is specified, just use the generic "sleep"
+          obj.put("unit", "sleepType");
+          obj.put("value", "sleep");
+          if (sourceBundleId != null) {
+            obj.put("sourceBundleId", sourceBundleId);
+          }
+          resultset.put(obj);
+        }
+      }
+    }
+
+
     callbackContext.success(resultset);
   }
 
