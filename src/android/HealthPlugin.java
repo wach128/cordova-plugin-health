@@ -1296,10 +1296,6 @@ public class HealthPlugin extends CordovaPlugin {
       callbackContext.error("Missing argument value");
       return;
     }
-    if (!args.getJSONObject(0).has("sourceName")) {
-      callbackContext.error("Missing argument sourceName");
-      return;
-    }
 
     String sourceBundleId = cordova.getActivity().getApplicationContext().getPackageName();
     if (args.getJSONObject(0).has("sourceBundleId")) {
