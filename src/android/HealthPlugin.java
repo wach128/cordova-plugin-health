@@ -504,6 +504,11 @@ public class HealthPlugin extends CordovaPlugin {
       return;
     }
 
+    boolean includeCalsAndDist = false;
+    if (args.getJSONObject(0).has("includeCalsAndDist")) {
+      includeCalsAndDist = args.getJSONObject(0).getBoolean("includeCalsAndDist");
+    }
+
     DataReadRequest.Builder readRequestBuilder = new DataReadRequest.Builder();
     readRequestBuilder.setTimeRange(st, et, TimeUnit.MILLISECONDS);
 
@@ -635,40 +640,43 @@ public class HealthPlugin extends CordovaPlugin {
           obj.put("value", activity);
           obj.put("unit", "activityType");
 
-          //extra queries to get calorie and distance records related to the activity times
-          DataReadRequest.Builder readActivityRequestBuilder = new DataReadRequest.Builder();
-          readActivityRequestBuilder.setTimeRange(datapoint.getStartTime(TimeUnit.MILLISECONDS), datapoint.getEndTime(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS)
-            .read(DataType.TYPE_DISTANCE_DELTA)
-            .read(DataType.TYPE_CALORIES_EXPENDED);
+          if (includeCalsAndDist) {
+            // extra queries to get calorie and distance records related to the activity times
+            DataReadRequest.Builder readActivityRequestBuilder = new DataReadRequest.Builder();
+            readActivityRequestBuilder.setTimeRange(datapoint.getStartTime(TimeUnit.MILLISECONDS), datapoint.getEndTime(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS)
+                    .read(DataType.TYPE_DISTANCE_DELTA)
+                    .read(DataType.TYPE_CALORIES_EXPENDED);
 
-          Task<DataReadResponse> activityTask = Fitness.getHistoryClient(this.cordova.getContext(), this.account)
-            .readData(readActivityRequestBuilder.build());
-          // Active wait. This is not very efficient, but otherwise the code would become hard to structure
-          DataReadResponse dataReadActivityResult = Tasks.await(activityTask);
+            Task<DataReadResponse> activityTask = Fitness.getHistoryClient(this.cordova.getContext(), this.account)
+                    .readData(readActivityRequestBuilder.build());
+            // Active wait. This is not very efficient, but otherwise the code would become hard to structure
+            DataReadResponse dataReadActivityResult = Tasks.await(activityTask);
 
-          if (!dataReadActivityResult.getStatus().isSuccess()) {
-            // abort
-            callbackContext.error(dataReadActivityResult.getStatus().getStatusMessage());
-            return;
-          }
+            if (!dataReadActivityResult.getStatus().isSuccess()) {
+              // abort
+              callbackContext.error(dataReadActivityResult.getStatus().getStatusMessage());
+              return;
+            }
 
-          float totaldistance = 0;
-          float totalcalories = 0;
+            float totaldistance = 0;
+            float totalcalories = 0;
 
-          List<DataSet> dataActivitySets = dataReadActivityResult.getDataSets();
-          for (DataSet dataActivitySet : dataActivitySets) {
-            for (DataPoint dataActivityPoint : dataActivitySet.getDataPoints()) {
-              if (dataActivitySet.getDataType().equals(DataType.TYPE_DISTANCE_DELTA)) {
-                float distance = dataActivityPoint.getValue(Field.FIELD_DISTANCE).asFloat();
-                totaldistance += distance;
-              } else {
-                float calories = dataActivityPoint.getValue(Field.FIELD_CALORIES).asFloat();
-                totalcalories += calories;
+            List<DataSet> dataActivitySets = dataReadActivityResult.getDataSets();
+            for (DataSet dataActivitySet : dataActivitySets) {
+              for (DataPoint dataActivityPoint : dataActivitySet.getDataPoints()) {
+                if (dataActivitySet.getDataType().equals(DataType.TYPE_DISTANCE_DELTA)) {
+                  float distance = dataActivityPoint.getValue(Field.FIELD_DISTANCE).asFloat();
+                  totaldistance += distance;
+                } else {
+                  float calories = dataActivityPoint.getValue(Field.FIELD_CALORIES).asFloat();
+                  totalcalories += calories;
+                }
               }
             }
+            obj.put("distance", totaldistance);
+            obj.put("calories", totalcalories);
           }
-          obj.put("distance", totaldistance);
-          obj.put("calories", totalcalories);
+
         } else if (dt.equals(HealthDataTypes.TYPE_OXYGEN_SATURATION)) {
           float oxysat = -1;
           if (datapoint.getValue(HealthFields.FIELD_OXYGEN_SATURATION) != null)
@@ -952,6 +960,10 @@ public class HealthPlugin extends CordovaPlugin {
     }
     String datatype = args.getJSONObject(0).getString("dataType");
 
+    boolean includeCalsAndDist = false;
+    if (args.getJSONObject(0).has("includeCalsAndDist")) {
+      includeCalsAndDist = args.getJSONObject(0).getBoolean("includeCalsAndDist");
+    }
     boolean hasbucket = args.getJSONObject(0).has("bucket");
     boolean customBucket = false;
     String bucketType = "";
@@ -1119,9 +1131,15 @@ public class HealthPlugin extends CordovaPlugin {
           retBucket.put("unit", "kcal");
         } else if (datatype.equalsIgnoreCase("activity")) {
           retBucket.put("unit", "activitySummary");
-          // query per bucket time to get distance and calories per activity
-          JSONObject actobj = getAggregatedActivityDistanceCalories(st, et);
-          retBucket.put("value", actobj);
+          if (includeCalsAndDist) {
+            // query per bucket time to get distance and calories per activity
+            // this will return the value already
+            JSONObject actobj = getAggregatedActivityDistanceCalories(st, et);
+            retBucket.put("value", actobj);
+          } else {
+            // initialise an empty object (will be filled in later)
+            retBucket.put("value", new JSONObject());
+          }
         } else if (datatype.equalsIgnoreCase("nutrition.water")) {
           retBucket.put("unit", "ml");
         } else if (datatype.equalsIgnoreCase("nutrition")) {
@@ -1163,9 +1181,14 @@ public class HealthPlugin extends CordovaPlugin {
               retBucket.put("unit", "kcal");
             } else if (datatype.equalsIgnoreCase("activity")) {
               retBucket.put("unit", "activitySummary");
-              // query per bucket time to get distance and calories per activity
-              JSONObject actobj = getAggregatedActivityDistanceCalories(bucket.getStartTime(TimeUnit.MILLISECONDS), bucket.getEndTime(TimeUnit.MILLISECONDS));
-              retBucket.put("value", actobj);
+              if (includeCalsAndDist) {
+                // query per bucket time to get distance and calories per activity
+                JSONObject actobj = getAggregatedActivityDistanceCalories(bucket.getStartTime(TimeUnit.MILLISECONDS), bucket.getEndTime(TimeUnit.MILLISECONDS));
+                retBucket.put("value", actobj);
+              } else {
+                // initialise an empty object (will be filled in later)
+                retBucket.put("value", new JSONObject());
+              }
             } else if (datatype.equalsIgnoreCase("nutrition.water")) {
               retBucket.put("unit", "ml");
             } else if (datatype.equalsIgnoreCase("nutrition")) {
@@ -1428,7 +1451,8 @@ public class HealthPlugin extends CordovaPlugin {
       datapointBuilder.setField(Field.FIELD_PERCENTAGE, perc);
     } else if (dt.equals(DataType.TYPE_ACTIVITY_SEGMENT)) {
       String value = args.getJSONObject(0).getString("value");
-      datapointBuilder.setField(Field.FIELD_ACTIVITY, value);
+      // special set activity function, see https://developers.google.com/android/reference/com/google/android/gms/fitness/data/Field#FIELD_ACTIVITY
+      datapointBuilder.setActivityField(Field.FIELD_ACTIVITY, value);
     } else if (dt.equals(DataType.TYPE_HYDRATION)) {
       float nuv = (float) args.getJSONObject(0).getDouble("value");
       datapointBuilder.setField(Field.FIELD_VOLUME, nuv);
