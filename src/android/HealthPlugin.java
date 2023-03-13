@@ -640,6 +640,14 @@ public class HealthPlugin extends CordovaPlugin {
           obj.put("value", activity);
           obj.put("unit", "activityType");
 
+
+          // remove user input entries if the flag "filterOutUserInput" is true
+          if (args.getJSONObject(0).has("filterOutUserInput") && args.getJSONObject(0).getBoolean("filterOutUserInput")) {
+              if (dataSource.getStreamIdentifier().contains("user_input")) {
+                  continue;
+              }
+          }
+
           if (includeCalsAndDist) {
             // extra queries to get calorie and distance records related to the activity times
             DataReadRequest.Builder readActivityRequestBuilder = new DataReadRequest.Builder();

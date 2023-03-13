@@ -1551,8 +1551,8 @@ static NSString *const HKPluginKeyUUID = @"UUID";
     // NSPredicate *predicate = [HKQuery predicateForSamplesWithStartDate:startDate endDate:endDate options:HKQueryOptionStrictStartDate];
     NSPredicate *predicate = nil;
 
-    BOOL filtered = (args[@"filtered"] != nil && [args[@"filtered"] boolValue]);
-    if (filtered) {
+    BOOL filterOutUserInput = (args[@"filterOutUserInput"] != nil && [args[@"filterOutUserInput"] boolValue]);
+    if (filterOutUserInput) {
         predicate = [NSPredicate predicateWithFormat:@"metadata.%K != YES", HKMetadataKeyWasUserEntered];
     }
 
