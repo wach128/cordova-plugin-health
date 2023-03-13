@@ -311,6 +311,8 @@ navigator.health.query({
 - includeCalsAndDist: {type: boolean}, optional, only used for activity. Adds 2 additional fields, calories (kcal) and distance (m) for each detected activity. **Warning**: access to calories and distance must have been granted!
 - successCallback: {type: function(data) }, called if all OK, data contains the result of the query in the form of an array of: { startDate: Date, endDate: Date, value: xxx, unit: 'xxx', sourceName: 'aaaa', sourceBundleId: 'bbbb' }
 - errorCallback: {type: function(err)}, called if something went wrong, err contains a textual description of the problem
+- filterOutUserInput: {type: boolean}, optional, filters out user-entered activities if set to true
+
 
 #### iOS quirks
 
@@ -359,6 +361,8 @@ navigator.health.queryAggregated({
 - includeCalsAndDist: {type: boolean}, optional, only used for activity, adds 2 additional fields, calories (kcal) and distance (m) for each detected activity. **Warning**: access to calories and distance must have been granted!
 - successCallback: {type: function(data)}, called if all OK, data contains the result of the query, see below for returned data types. If no buckets is specified, the result is an object. If a bucketing strategy is specified, the result is an array.
 - errorCallback: {type: function(err)}, called if something went wrong, err contains a textual description of the problem
+- filterOutUserInput: {type: boolean}, optional, filters out user-entered activities if set to true (only works on iOS for aggregated query)
+
 
 Not all data types are supported for aggregated queries.
 The following table shows what types are supported and examples of the returned object:
@@ -379,7 +383,7 @@ The following table shows what types are supported and examples of the returned 
 - The start and end dates returned are the date of the first and the last available samples. If no samples are found, start and end may not be set.
 - When bucketing, buckets will include the whole hour / day / month / week / year where start and end times fall into. For example, if your start time is 2016-10-21 10:53:34, the first daily bucket will start at 2016-10-21 00:00:00.
 - Weeks start on Monday.
-- You can query for "filtered steps" adding the flag `filtered: true` to the query object. This returns the steps as filtered out by Google Fit, or the non-manual ones from HealthKit.
+- You can query for "filtered steps" adding the flag `filtered: true` to the query object. This returns the steps as filtered out by Google Fit. It currently has no effect on iOS.
 
 #### iOS quirks
 
@@ -389,6 +393,7 @@ The following table shows what types are supported and examples of the returned 
 #### Android quirks
 
 - nutrition.vitamin_a is given in international units. Automatic conversion to micrograms is not trivial and depends on the actual substance (see [here](https://dietarysupplementdatabase.usda.nih.gov/ingredient_calculator/help.php#q9)).
+- `filterOutUserInput: true` has no effect for aggregated queries currently.
 
 ### store()
 
