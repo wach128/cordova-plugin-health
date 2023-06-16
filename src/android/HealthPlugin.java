@@ -1617,7 +1617,7 @@ public class HealthPlugin extends CordovaPlugin {
         callbackContext.error("Unknown sleep value " + value);
         return;
       }
-    } else if (dt == DataType.TYPE_BODY_TEMPERATURE) {
+    } else if (dt.equals(HealthDataTypes.TYPE_BODY_TEMPERATURE)) {
       String value = args.getJSONObject(0).getString("value");
       float btemp = Float.parseFloat(value);
       datapointBuilder.setField(HealthFields.FIELD_BODY_TEMPERATURE, btemp);
