@@ -91,6 +91,7 @@ public class HealthPlugin extends CordovaPlugin {
     datatypes.put("blood_glucose", HealthDataTypes.TYPE_BLOOD_GLUCOSE);
     datatypes.put("blood_pressure", HealthDataTypes.TYPE_BLOOD_PRESSURE);
     datatypes.put("sleep", DataType.TYPE_SLEEP_SEGMENT);
+    datatypes.put("body_temperature", HealthDataTypes.TYPE_BODY_TEMPERATURE);
   }
 
   // Helper class used for storing nutrients information (name and unit of measurement)
@@ -640,14 +641,6 @@ public class HealthPlugin extends CordovaPlugin {
           obj.put("value", activity);
           obj.put("unit", "activityType");
 
-
-          // remove user input entries if the flag "filterOutUserInput" is true
-          if (args.getJSONObject(0).has("filterOutUserInput") && args.getJSONObject(0).getBoolean("filterOutUserInput")) {
-              if (dataSource.getStreamIdentifier().contains("user_input")) {
-                  continue;
-              }
-          }
-
           if (includeCalsAndDist) {
             // extra queries to get calorie and distance records related to the activity times
             DataReadRequest.Builder readActivityRequestBuilder = new DataReadRequest.Builder();
@@ -837,7 +830,11 @@ public class HealthPlugin extends CordovaPlugin {
           }
           obj.put("value", sleepSegmentType);
           obj.put("unit", "sleepType");
-        }
+        } else if (dt.equals(HealthDataTypes.TYPE_BODY_TEMPERATURE)) {
+          float body_temp = datapoint.getValue(HealthFields.FIELD_BODY_TEMPERATURE).asFloat();
+          obj.put("value", body_temp);
+          obj.put("unit", "celsius");
+        } 
         resultset.put(obj);
       }
     }
@@ -1620,6 +1617,10 @@ public class HealthPlugin extends CordovaPlugin {
         callbackContext.error("Unknown sleep value " + value);
         return;
       }
+    } else if (dt.equals(HealthDataTypes.TYPE_BODY_TEMPERATURE)) {
+      String value = args.getJSONObject(0).getString("value");
+      float btemp = Float.parseFloat(value);
+      datapointBuilder.setField(HealthFields.FIELD_BODY_TEMPERATURE, btemp);
     }
     dataSetBuilder.add(datapointBuilder.build());
 
