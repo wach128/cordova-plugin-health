@@ -163,8 +163,8 @@ public class HealthPlugin extends CordovaPlugin {
       }
     }
     if (authReadTypes.contains("distance") || authReadWriteTypes.contains("distance")) {
-      if (!cordova.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION))
-        dynPerms.add(Manifest.permission.ACCESS_FINE_LOCATION);
+      if (!cordova.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION))
+        dynPerms.add(Manifest.permission.ACCESS_COARSE_LOCATION);
     }
     if (authReadTypes.contains("heart_rate")) {
       if (!cordova.hasPermission(Manifest.permission.BODY_SENSORS))
