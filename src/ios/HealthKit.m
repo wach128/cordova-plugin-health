@@ -1395,8 +1395,20 @@ static NSString *const HKPluginKeyUUID = @"UUID";
             unit = [HKUnit unitFromString:unitString];
         }
     }
+
     // TODO check that unit is compatible with sampleType if sample type of HKQuantityType
-    NSPredicate *predicate = [HKQuery predicateForSamplesWithStartDate:startDate endDate:endDate options:HKQueryOptionStrictStartDate];
+    NSPredicate *predicate1 = [HKQuery predicateForSamplesWithStartDate:startDate endDate:endDate options:HKQueryOptionStrictStartDate];
+    NSPredicate *predicate2 = nil;
+
+    BOOL filterOutUserInput = (args[@"filterOutUserInput"] != nil && [args[@"filterOutUserInput"] boolValue]);
+    if (filterOutUserInput) {
+        predicate2 = [NSPredicate predicateWithFormat:@"metadata.%K != YES", HKMetadataKeyWasUserEntered];
+    }
+
+    // only include the user input predicate if it is not nil
+    NSArray *predicates = predicate2 != nil ? @[predicate1, predicate2] : @[predicate1];
+
+    NSCompoundPredicate *compoundPredicate = [NSCompoundPredicate andPredicateWithSubpredicates:predicates];
 
     NSSet *requestTypes = [NSSet setWithObjects:type, nil];
     [[HealthKit sharedHealthStore] requestAuthorizationToShareTypes:nil readTypes:requestTypes completion:^(BOOL success, NSError *error) {
@@ -1405,7 +1417,7 @@ static NSString *const HKPluginKeyUUID = @"UUID";
             NSString *endKey = HKSampleSortIdentifierEndDate;
             NSSortDescriptor *endDateSort = [NSSortDescriptor sortDescriptorWithKey:endKey ascending:ascending];
             HKSampleQuery *query = [[HKSampleQuery alloc] initWithSampleType:type
-                                                                   predicate:predicate
+                                                                   predicate:compoundPredicate
                                                                        limit:limit
                                                              sortDescriptors:@[endDateSort]
                                                               resultsHandler:^(HKSampleQuery *sampleQuery,
@@ -1548,20 +1560,25 @@ static NSString *const HKPluginKeyUUID = @"UUID";
         return;
     }
 
-    // NSPredicate *predicate = [HKQuery predicateForSamplesWithStartDate:startDate endDate:endDate options:HKQueryOptionStrictStartDate];
-    NSPredicate *predicate = nil;
+    NSPredicate *predicate1 = [HKQuery predicateForSamplesWithStartDate:startDate endDate:endDate options:HKQueryOptionStrictStartDate];
+    NSPredicate *predicate2 = nil;
 
-    BOOL filtered = (args[@"filtered"] != nil && [args[@"filtered"] boolValue]);
-    if (filtered) {
-        predicate = [NSPredicate predicateWithFormat:@"metadata.%K != YES", HKMetadataKeyWasUserEntered];
+    BOOL filterOutUserInput = (args[@"filterOutUserInput"] != nil && [args[@"filterOutUserInput"] boolValue]);
+    if (filterOutUserInput) {
+        predicate2 = [NSPredicate predicateWithFormat:@"metadata.%K != YES", HKMetadataKeyWasUserEntered];
     }
+
+    // only include the user input predicate if it is not nil
+    NSArray *predicates = predicate2 != nil ? @[predicate1, predicate2] : @[predicate1];
+
+    NSCompoundPredicate *compoundPredicate = [NSCompoundPredicate andPredicateWithSubpredicates:predicates];
 
     NSSet *requestTypes = [NSSet setWithObjects:type, nil];
     [[HealthKit sharedHealthStore] requestAuthorizationToShareTypes:nil readTypes:requestTypes completion:^(BOOL success, NSError *error) {
         __block HealthKit *bSelf = self;
         if (success) {
             HKStatisticsCollectionQuery *query = [[HKStatisticsCollectionQuery alloc] initWithQuantityType:quantityType
-                                                                                   quantitySamplePredicate:predicate
+                                                                                   quantitySamplePredicate:compoundPredicate
                                                                                                    options:statOpt
                                                                                                 anchorDate:anchorDate
                                                                                         intervalComponents:interval];
