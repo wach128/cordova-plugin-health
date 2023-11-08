@@ -1,5 +1,9 @@
 # Cordova Health Plugin
 
+![cordova-plugin-health](https://badgers.space/badge/npm/cordova-plugin-health/cyan) 
+![MIT license](https://badgers.space/badge/license/mit/cyan)  
+
+
 
 A plugin that abstracts fitness and health repositories like Apple HealthKit or Google Fit.
 
@@ -83,7 +87,7 @@ This is known to happen when using the Ionic Package cloud service.
 * If you are wondering what key your compiled app is using, you can type `keytool -list -printcert -jarfile yourapp.apk`.
 * You will need to add permissions in AndroidManifest.xml via config.xml depending on the data types you are requesting. See [this issue](https://github.com/dariosalvi78/cordova-plugin-health/issues/178#issuecomment-645937435) for an example
 * You can use the Google Fitness API even if the user doesn't have Google Fit installed, but there has to be some other fitness app putting data into the Fitness API otherwise your queries will always be empty. See the [the original documentation](https://developers.google.com/fit/overview).
-* You can change which Google Play Services Fitness API version this plugin uses by setting the `FIT_API_VERSION` variable in `config.xml` and the version of the Auth API using `PLAY_AUTH_VERSION`. By default it will use version `20.0.0` for play-services-fitness and version `19.0.0` for play-services-auth (see [release notes](https://developers.google.com/android/guides/releases#october_19_2020)). From version 15 of the Play Services [you don't have to use the same version](https://developers.google.com/android/guides/versioning) accross all your cordova plugins. You can track google services releases [here](https://developers.google.com/android/guides/releases).
+* You can change which Google Play Services Fitness API version this plugin uses by setting the `FIT_API_VERSION` variable in `config.xml` and the version of the Auth API using `PLAY_AUTH_VERSION`. By default it will use version `21.1.0` for play-services-fitness and version `20.2.0` for play-services-auth (see [release notes](https://developers.google.com/android/guides/releases#october_19_2020)). From version 15 of the Play Services [you don't have to use the same version](https://developers.google.com/android/guides/versioning) accross all your cordova plugins. You can track google services releases [here](https://developers.google.com/android/guides/releases).
 * This plugin uses AndroidX. You will need to [activate AndroidX](https://cordova.apache.org/announcements/2020/06/29/cordova-android-9.0.0.html) in the Android platform and make sure all other plugins you use are AndroidX compatible.
 
 ## Supported data types
@@ -202,7 +206,7 @@ navigator.health.isAvailable(successCallback, errorCallback)
 
 #### Android quirks
 
-- To check for installation of Google Fit, you will need to add `<package android:name="com.google.android.apps.fitness" />` under `queries` to AndroidManifest.xml via config.xml. See [this article](https://medium.com/androiddevelopers/package-visibility-in-android-11-cc857f221cd9) for info
+- To check for installation of Google Fit, you will need to add `<package android:name="com.google.android.apps.fitness" />` under `queries` to AndroidManifest.xml via config.xml. See [this article](https://medium.com/androiddevelopers/package-visibility-in-android-11-cc857f221cd9) for info.
 
 ### promptInstallFit() - Android only
 
