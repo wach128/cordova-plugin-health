@@ -51,8 +51,8 @@
     </config-file> -->
 
     <!-- Usage description of Health, mandatory since iOS 10 -->
-    <preference name="HEALTH_READ_PERMISSION" default=" " />
-    <preference name="HEALTH_WRITE_PERMISSION" default=" " />
+    <preference name="HEALTH_READ_PERMISSION" default="App needs to read data" />
+    <preference name="HEALTH_WRITE_PERMISSION" default="App needs to write data" />
     <config-file target="*-Info.plist" parent="NSHealthShareUsageDescription">
       <string>$HEALTH_READ_PERMISSION</string>
     </config-file>
@@ -87,8 +87,13 @@
   <!-- android -->
   <platform name="android">
     <framework src="androidx.health.connect:connect-client:1.1.0-alpha02" />
+    <framework src="src/android/build-extras.gradle" custom="true" type="gradleReference" />
+
 
     <config-file target="AndroidManifest.xml" parent="/*">
+      <!-- Permissions for data types -->
+      <uses-permission android:name="android.permission.health.READ_STEPS" />
+      <uses-permission android:name="android.permission.health.WRITE_STEPS" />
 
       <!-- Check if Health Connect is installed -->
       <queries>
@@ -134,7 +139,7 @@
       target-dir="src/org/apache/cordova/health/" />
 
     <js-module src="www/android/health.js" name="health">
-      <clobbers target="navigator.health" />
+      <clobbers target="cordova.plugins.health" />
     </js-module>
   </platform>
 

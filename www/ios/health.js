@@ -135,36 +135,23 @@ var getHKDataTypes = function (dtArr) {
 var getReadWriteTypes = function (dts, success, error) {
   let readTypes = [];
   let writeTypes = [];
-  for (var i = 0; i < dts.length; i++) {
-    let HKDataTypes = [];
-    if (typeof dts[i] === 'string') {
-      HKDataTypes = getHKDataTypes([dts[i]]);
-      if (Array.isArray(HKDataTypes)) {
-        readTypes = readTypes.concat(HKDataTypes);
-        writeTypes = writeTypes.concat(HKDataTypes);
-      } else {
-        error('unknown data type - ' + HKDataTypes);
-        return;
-      }
+  let HKDataTypes = [];
+  if (dts[i]['read']) {
+    HKDataTypes = getHKDataTypes(dts[i]['read']);
+    if (Array.isArray(HKDataTypes)) {
+      readTypes = readTypes.concat(HKDataTypes);
     } else {
-      if (dts[i]['read']) {
-        HKDataTypes = getHKDataTypes(dts[i]['read']);
-        if (Array.isArray(HKDataTypes)) {
-          readTypes = readTypes.concat(HKDataTypes);
-        } else {
-          error('unknown read data type - ' + HKDataTypes);
-          return;
-        }
-      }
-      if (dts[i]['write']) {
-        HKDataTypes = getHKDataTypes(dts[i]['write']);
-        if (Array.isArray(HKDataTypes)) {
-          writeTypes = writeTypes.concat(HKDataTypes);
-        } else {
-          error('unknown write data type - ' + HKDataTypes);
-          return;
-        }
-      }
+      error('unknown read data type - ' + HKDataTypes);
+      return;
+    }
+  }
+  if (dts[i]['write']) {
+    HKDataTypes = getHKDataTypes(dts[i]['write']);
+    if (Array.isArray(HKDataTypes)) {
+      writeTypes = writeTypes.concat(HKDataTypes);
+    } else {
+      error('unknown write data type - ' + HKDataTypes);
+      return;
     }
   }
   success(dedupe(readTypes), dedupe(writeTypes));
