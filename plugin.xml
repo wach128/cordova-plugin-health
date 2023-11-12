@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
   id="cordova-plugin-health"
-  version="2.1.0">
+  version="3.0.0">
 
   <name>Cordova Health</name>
 
   <description>
-    A plugin that abstracts fitness and health repositories like Apple HealthKit or Google Fit
+    A plugin that abstracts fitness and health repositories Apple HealthKit and Google Health
+    Connect
   </description>
 
-  <author>Dario Salvi, based on code by Eddy Verbruggen / Telerik and Carmelo Velardo</author>
+  <author>Dario Salvi, based on code by Eddy Verbruggen / Telerik</author>
 
   <license>MIT</license>
 
@@ -20,7 +21,7 @@
   <issue>https://github.com/dariosalvi78/cordova-plugin-health/issues</issue>
 
   <engines>
-    <engine name="cordova" version=">=6.0.0"/>
+    <engine name="cordova" version=">=6.0.0" />
   </engines>
 
 
@@ -36,11 +37,12 @@
 
     <config-file target="config.xml" parent="/*">
       <feature name="HealthKit">
-        <param name="ios-package" value="HealthKit"/>
+        <param name="ios-package" value="HealthKit" />
       </feature>
     </config-file>
 
-    <!-- Commented this because it means you can't download/use the app on iOS devices that don't support Apple Health (e.g. iPad) -->
+    <!-- Commented this because it means you can't download/use the app on iOS devices that don't
+    support Apple Health (e.g. iPad) -->
     <!-- See https://github.com/dariosalvi78/cordova-plugin-health/issues/59 -->
     <!-- <config-file target="*-Info.plist" parent="UIRequiredDeviceCapabilities">
       <array>
@@ -59,48 +61,38 @@
     </config-file>
 
     <config-file target="*/Entitlements-Debug.plist" parent="com.apple.developer.healthkit">
-      <true/>
+      <true />
     </config-file>
     <config-file target="*/Entitlements-Debug.plist" parent="com.apple.developer.healthkit.access">
-      <array/>
+      <array />
     </config-file>
 
     <config-file target="*/Entitlements-Release.plist" parent="com.apple.developer.healthkit">
-      <true/>
+      <true />
     </config-file>
     <config-file target="*/Entitlements-Release.plist" parent="com.apple.developer.healthkit.access">
-      <array/>
+      <array />
     </config-file>
 
-    <header-file src="src/ios/WorkoutActivityConversion.h"/>
-    <source-file src="src/ios/WorkoutActivityConversion.m"/>
-    <header-file src="src/ios/HKHealthStore+AAPLExtensions.h"/>
-    <source-file src="src/ios/HKHealthStore+AAPLExtensions.m"/>
-    <header-file src="src/ios/HealthKit.h"/>
-    <source-file src="src/ios/HealthKit.m"/>
+    <header-file src="src/ios/WorkoutActivityConversion.h" />
+    <source-file src="src/ios/WorkoutActivityConversion.m" />
+    <header-file src="src/ios/HKHealthStore+AAPLExtensions.h" />
+    <source-file src="src/ios/HKHealthStore+AAPLExtensions.m" />
+    <header-file src="src/ios/HealthKit.h" />
+    <source-file src="src/ios/HealthKit.m" />
 
     <framework src="HealthKit.framework" weak="true" />
   </platform>
 
   <!-- android -->
   <platform name="android">
-    <framework src="com.google.android.gms:play-services-fitness:$FIT_API_VERSION" />
-    <preference name="FIT_API_VERSION" default="21.1.0"/>
-
-    <framework src="com.google.android.gms:play-services-auth:$PLAY_AUTH_VERSION" />
-    <preference name="PLAY_AUTH_VERSION" default="20.2.0"/>
-
+    <framework src="androidx.health.connect:connect-client:1.1.0-alpha02" />
 
     <config-file target="AndroidManifest.xml" parent="/*">
-      <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-      <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-      <uses-permission android:name="android.permission.BODY_SENSORS" />
-      <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
-      <!-- Use the following if API target is < 29 -->
-      <uses-permission android:name="android.gms.permission.ACTIVITY_RECOGNITION"/>
-      <!-- Use the following if API target is > 30 -->
+
+      <!-- Check if Health Connect is installed -->
       <queries>
-        <package android:name="com.google.android.apps.fitness" />
+        <package android:name="com.google.android.apps.healthdata" />
       </queries>
     </config-file>
 
@@ -108,10 +100,38 @@
       <feature name="health">
         <param name="android-package" value="org.apache.cordova.health.HealthPlugin" />
       </feature>
-      <access origin="https://accounts.google.com/*" />
+      <!-- <access origin="https://accounts.google.com/*" /> -->
     </config-file>
 
+    <config-file target="AndroidManifest.xml" parent="/*/application">
+      <!-- For supported versions through Android 13, create an activity to show the rationale
+       of Health Connect permissions once users click the privacy policy link. -->
+      <activity
+        android:name="org.apache.cordova.health.PermissionsRationaleActivity"
+        android:exported="true">
+        <intent-filter>
+          <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+        </intent-filter>
+      </activity>
+
+      <!-- For versions starting Android 14, create an activity alias to show the rationale
+       of Health Connect permissions once users click the privacy policy link. -->
+      <activity-alias
+        android:name="ViewPermissionUsageActivity"
+        android:exported="true"
+        android:targetActivity="org.apache.cordova.health.PermissionsRationaleActivity"
+        android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+        <intent-filter>
+          <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+          <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+        </intent-filter>
+      </activity-alias>
+    </config-file>
+
+
     <source-file src="src/android/HealthPlugin.java" target-dir="src/org/apache/cordova/health/" />
+    <source-file src="src/android/PermissionsRationaleActivity.java"
+      target-dir="src/org/apache/cordova/health/" />
 
     <js-module src="www/android/health.js" name="health">
       <clobbers target="navigator.health" />
