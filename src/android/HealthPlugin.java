@@ -19,10 +19,12 @@ import androidx.health.connect.client.permission.HealthPermission;
 import androidx.health.connect.client.records.StepsRecord;
 import androidx.health.connect.client.records.metadata.DataOrigin;
 import androidx.health.connect.client.records.metadata.Device;
+import androidx.health.connect.client.records.metadata.Metadata;
 import androidx.health.connect.client.request.AggregateGroupByDurationRequest;
 import androidx.health.connect.client.request.AggregateGroupByPeriodRequest;
 import androidx.health.connect.client.request.AggregateRequest;
 import androidx.health.connect.client.request.ReadRecordsRequest;
+import androidx.health.connect.client.response.InsertRecordsResponse;
 import androidx.health.connect.client.response.ReadRecordsResponse;
 import androidx.health.connect.client.time.TimeRangeFilter;
 
@@ -43,6 +45,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.TemporalField;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -165,6 +168,19 @@ public class HealthPlugin extends CordovaPlugin {
                     try {
                         connectAPI();
                         queryAggregated(args);
+                    } catch (Exception ex) {
+                        callbackContext.error(ex.getMessage());
+                    }
+                }
+            });
+            return true;
+        } else if ("store".equals(action)) {
+            cordova.getThreadPool().execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        connectAPI();
+                        store(args);
                     } catch (Exception ex) {
                         callbackContext.error(ex.getMessage());
                     }
@@ -602,5 +618,72 @@ public class HealthPlugin extends CordovaPlugin {
         }
     }
 
+    // stores a data point
+    private void store(final JSONArray args) {
+        try {
+            if (!args.getJSONObject(0).has("startDate")) {
+                callbackContext.error("Missing argument startDate");
+                return;
+            }
+            long st = args.getJSONObject(0).getLong("startDate");
+
+            if (!args.getJSONObject(0).has("endDate")) {
+                callbackContext.error("Missing argument endDate");
+                return;
+            }
+            long et = args.getJSONObject(0).getLong("endDate");
+
+            if (!args.getJSONObject(0).has("dataType")) {
+                callbackContext.error("Missing argument dataType");
+                return;
+            }
+            String datatype = args.getJSONObject(0).getString("dataType");
+            KClass dt = dataTypeNameToClass(datatype);
+            if (dt == null) {
+                callbackContext.error("Datatype " + datatype + " not supported");
+                return;
+            }
+
+            if (!args.getJSONObject(0).has("value")) {
+                callbackContext.error("Missing argument value");
+                return;
+            }
+
+            String sourceBundleId = cordova.getActivity().getApplicationContext().getPackageName();
+            if (args.getJSONObject(0).has("sourceBundleId")) {
+                sourceBundleId = args.getJSONObject(0).getString("sourceBundleId");
+            }
+
+
+            if (datatype.equalsIgnoreCase("steps")) {
+                long steps = args.getJSONObject(0).getLong("value");
+                StepsRecord record = new StepsRecord(
+                        Instant.ofEpochMilli(st), null,
+                        Instant.ofEpochMilli(et), null,
+                        steps,
+                        Metadata.EMPTY
+                        );
+                List<StepsRecord> data = new LinkedList<>();
+                data.add(record);
+                InsertRecordsResponse response = BuildersKt.runBlocking(
+                        EmptyCoroutineContext.INSTANCE,
+                        (s, c) -> healthConnectClient.insertRecords(data, c)
+                );
+                Log.d(TAG, "Data written of type " + datatype);
+
+                String id = response.getRecordIdsList().get(0);
+
+                callbackContext.success(id);
+            } else {
+                callbackContext.error("Datatype not supported " + datatype);
+                return;
+            }
+
+        } catch (JSONException ex) {
+            callbackContext.error("Cannot parse request object " + ex.getMessage());
+        } catch (InterruptedException ex2) {
+            callbackContext.error("Thread interrupted" + ex2.getMessage());
+        }
+    }
 
 }

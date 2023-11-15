@@ -58,5 +58,14 @@ module.exports = {
 
       onSuccess(data)
     }, onError, 'health', 'queryAggregated', [opts])
+  },
+
+  store: function (data, onSuccess, onError) {
+    if (data.startDate && (typeof data.startDate == 'object'))
+      data.startDate = data.startDate.getTime()
+    if (data.endDate && (typeof data.endDate == 'object'))
+      data.endDate = data.endDate.getTime()
+
+    exec(onSuccess, onError, "health", "store", [data])
   }
 }

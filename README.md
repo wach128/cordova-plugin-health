@@ -267,6 +267,38 @@ The following table shows what types are supported and examples of the returned 
 - `filterOutUserInput: true` has no effect for aggregated queries currently.
 
 
+### store()
+
+Stores a data point.
+
+```
+navigator.health.store({
+	startDate:  new Date(new Date().getTime() - 3 * 60 * 1000), // three minutes ago
+	endDate: new Date(),
+	dataType: 'steps',
+	value: 180,
+}, successCallback, errorCallback)
+```
+
+- startDate: start date from which the new data starts
+- endDate: end date to which he new data ends
+- dataType: the data type
+- value: the value, depending on the actual data type
+- successCallback: called if all OK, in Android, argument returns the ID of the data point that has been inserted
+- errorCallback: called if something went wrong, argument contains a textual description of the problem
+
+
+#### iOS quirks
+
+- When storing an activity, you can also specify calories (active, in kcal) and/or distance (in meters). For example: `dataType: 'activity', value: 'walking', calories: 20, distance: 520`. Distance is set as DistanceWalkingRunning unless an additional `cycling: true` is added to the object. Be aware that you need permission to write calories and distance first, or the call will fail.
+- In iOS you cannot store the total calories, you need to specify either basal or active. If you use total calories, the active ones will be stored.
+- In iOS distance is assumed to be of type WalkingRunning, if you want to explicitly set it to Cycling you need to add the field `cycling: true`.
+- The blood glucose meal information can be stored as 'before_meal' and 'after_meal', but these two can't be used in Android.
+
+#### Android quirks
+
+- This operation correponds to an insert, not an update. If you want to update the data point you need to delete it first.
+
 
 ## External resources
 
