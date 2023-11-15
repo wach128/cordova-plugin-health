@@ -58,20 +58,23 @@ As HealthKit does not allow adding custom data types, only a subset of data type
 
 | Data type       | Unit  |    HealthKit equivalent                       |  Health Connect equivalent               |
 |-----------------|-------|-----------------------------------------------|------------------------------------------|
-| steps           | count | HKQuantityTypeIdentifierStepCount             |                     |
+| steps           | count | HKQuantityTypeIdentifierStepCount             |   StepsRecord                            |
 
 
 **Note**: units of measurement are fixed!
 
 Returned objects contain a set of fixed fields:
 
-- startDate: {type: Date} a date indicating when the data point starts
-- endDate: {type: Date} a date indicating when the data point ends
-- unit: {type: String} the unit of measurement
+- startDate: a date indicating when the data point starts
+- endDate: a date indicating when the data point ends
+- unit: the unit of measurement, as a string
 - value: the actual value
-- sourceBundleId: {type: String} the identifier of the app that produced the data. It can be the "stream identifier" when the app is Google Fit
-- sourceName: {type: String} (only on iOS) the name of the app that produced the data (as it appears to the user)
-- id: {type: String} (only on iOS) the unique identifier of that measurement
+- sourceBundleId: the identifier of the app that produced the data
+- sourceName: (only on iOS) the name of the app that produced the data (as it appears to the user)
+- sourceDevice: (only on Android) the device where the data came from manufacturer and model 
+- entryMethod: (only on Android) method of insertion, can be "actively_recorded", "automatically_recorded", "manual_entry" or "unknown"
+- id: the unique identifier of that measurement
+
 
 Example values:
 
@@ -119,10 +122,10 @@ cordova.plugins.health.launchPrivacyPolicy(successCallback, errorCallback)
 
 ### requestAuthorization()
 
-Requests read and/pr write access to a set of data types.
+Requests read and/or write access to a set of data types.
 It is recommendable to always explain why the app needs access to the data before asking the user to authorize it.
 
-**Important:** this method must be called before using the query, store and delete methods, even if the authorization has already been given at some point in the past. Failure to do so may cause your app to crash, or in the case of Android, Health Connect may not be initialized.
+**Important:** this method must be called before using the query, store and delete methods, even if the authorization has already been given at some point in the past.
 
 ```
 cordova.plugins.requestAuthorization(datatypes, successCallback, errorCallback)
@@ -140,10 +143,8 @@ cordova.plugins.requestAuthorization(datatypes, successCallback, errorCallback)
 
 #### Android quirks
 
-- It will try to get authorization from the Google fitness APIs. It is necessary that the app's package name and the signing key are registered in the Google API console (see [here](https://developers.google.com/fit/android/get-api-key)).
-- Be aware that if the activity is destroyed (e.g. after a rotation) or is put in background, the connection to Google Fit may be lost without any callback. Going through the authorization will ensure that the app is connected again.
 - Be aware that if you want to fetch activities you also have to request permission for 'calories' and 'distance'.
-- In Android 6 and over, this function will also ask for some dynamic permissions if needed (e.g. in the case of "distance" or "activity", it will need access to ACCESS_FINE_LOCATION).
+
 
 #### iOS quirks
 
@@ -172,6 +173,99 @@ cordova.plugins.health.isAuthorized(authObj, successCallback, errorCallback)
 
 - This method will only check authorization status for writeable data. Read-only data will always be considered as not authorized.
 This is [an intended behaviour of HealthKit](https://developer.apple.com/reference/healthkit/hkhealthstore/1614154-authorizationstatus).
+
+
+
+### query()
+
+Gets all the data points of a certain data type within a certain time window.
+
+**Warning:** if the time span is big, it can generate long arrays!
+
+```javascript
+cordova.plugins.health.query({
+  startDate: new Date(new Date().getTime() - 3 * 24 * 60 * 60 * 1000), // three days ago
+  endDate: new Date(), // now
+  dataType: 'steps',
+  limit: 1000,
+  ascending: true,
+}, successCallback, errorCallback)
+```
+
+- startDate: start date from which to get data
+- endDate: end data to which to get the data
+- dataType: the data type to be queried (see above)
+- limit: optional, sets a maximum number of returned values, default is 1000
+- ascending: optional, datapoints are ordered in an descending fashion (from newer to older) se this to true to revert this behaviour
+- filterOutUserInput: optional, if true, filters out user-entered activities (iOS only)
+- successCallback: called if all OK, argument contains the result of the query in the form of an array of: { startDate: Date, endDate: Date, value: xxx, unit: 'xxx', sourceName: 'aaaa', sourceBundleId: 'bbbb' }
+- errorCallback: called if something went wrong, argument contains a textual description of the problem
+
+
+#### iOS quirks
+
+- HealthKit does not calculate active and basal calories - these must be inputted from an app
+- HealthKit does not detect activities automatically - these must be inputted from an app
+- When querying for activities, only events whose startDate and endDate are **both** in the query range will be returned.
+- Activities can include a duration (in seconds), this may be different than the endTime - startTime and actually more accurate.
+- When querying for nutrition, HealthKit only returns those stored as correlation. To be sure to get all stored quantities, it's better to query nutrients individually (e.g. MyFitnessPal doesn't store meals as correlations).
+- nutrition.vitamin_a is given in micrograms. Automatic conversion to international units is not trivial and depends on the actual substance (see [here](https://dietarysupplementdatabase.usda.nih.gov/ingredient_calculator/help.php#q9)).
+- The blood glucose meal information is stored by the Health App as preprandial (before a meal) or postprandial (after a meal), which are mapped to 'before_meal' and 'after_meal'. These two specific values are only used in iOS and can't be used in Android apps.
+
+
+#### Android quirks
+
+- Health Connect can read data for up to 30 days prior to the time permission was first granted. If the app is reinstalled, the permission history is lost and you can only query from 30 days before installation. See [note here](https://developer.android.com/health-and-fitness/guides/health-connect/develop/read-data).
+
+
+### queryAggregated()
+
+Gets aggregated data in a certain time window.
+Usually the sum is returned for the given quantity.
+
+```
+cordova.plugins.health.queryAggregated({
+  startDate: new Date(new Date().getTime() - 3 * 24 * 60 * 60 * 1000), // three days ago
+  endDate: new Date(), // now
+  dataType: 'steps',
+  bucket: 'day'
+}, successCallback, errorCallback)
+```
+
+- startDate: start date from which to get data
+- endDate: end data to which to get the data
+- dataType: the data type to be queried (see below for supported data types)
+- bucket: if specified, aggregation is grouped an array of "buckets" (windows of time), supported values are: 'hour', 'day', 'week', 'month', 'year'
+- successCallback: called if all OK, argument contains the result of the query, see below for returned data types. If no buckets is specified, the result is an object. If a bucketing strategy is specified, the result is an array.
+- errorCallback: called if something went wrong, argument contains a textual description of the problem
+- filterOutUserInput: optional, filters out user-entered activities if set to true (only works on iOS for aggregated query)
+
+
+Not all data types are supported for aggregated queries.
+The following table shows what types are supported and examples of the returned object:
+
+| Data type       | Example of returned object |
+|-----------------|----------------------------|
+| steps           | { startDate: Date, endDate: Date, value: 5780, unit: 'count' } |
+
+
+#### Quirks
+
+- The start and end dates returned are the date of the first and the last available samples. If no samples are found, start and end may not be set.
+- When bucketing, buckets will include the whole hour / day / month / week / year where start and end times fall into. For example, if your start time is 2016-10-21 10:53:34, the first daily bucket will start at 2016-10-21 00:00:00.
+- Weeks start on Monday.
+
+
+#### iOS quirks
+
+- When querying for nutrition, HealthKit only returns those stored as correlation. To be sure to get all stored quantities, it's better to query nutrients individually (e.g. MyFitnessPal doesn't store meals as correlations).
+- nutrition.vitamin_a is given in micrograms. Automatic conversion to international units is not trivial and depends on the actual substance (see [here](https://dietarysupplementdatabase.usda.nih.gov/ingredient_calculator/help.php#q9)).
+
+#### Android quirks
+
+- nutrition.vitamin_a is given in international units. Automatic conversion to micrograms is not trivial and depends on the actual substance (see [here](https://dietarysupplementdatabase.usda.nih.gov/ingredient_calculator/help.php#q9)).
+- `filterOutUserInput: true` has no effect for aggregated queries currently.
+
 
 
 ## External resources
