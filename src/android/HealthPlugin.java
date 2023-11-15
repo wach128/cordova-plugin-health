@@ -13,11 +13,13 @@ import androidx.health.connect.client.HealthConnectClient;
 import androidx.health.connect.client.PermissionController;
 import androidx.health.connect.client.aggregate.AggregateMetric;
 import androidx.health.connect.client.aggregate.AggregationResult;
+import androidx.health.connect.client.aggregate.AggregationResultGroupedByDuration;
 import androidx.health.connect.client.aggregate.AggregationResultGroupedByPeriod;
 import androidx.health.connect.client.permission.HealthPermission;
 import androidx.health.connect.client.records.StepsRecord;
 import androidx.health.connect.client.records.metadata.DataOrigin;
 import androidx.health.connect.client.records.metadata.Device;
+import androidx.health.connect.client.request.AggregateGroupByDurationRequest;
 import androidx.health.connect.client.request.AggregateGroupByPeriodRequest;
 import androidx.health.connect.client.request.AggregateRequest;
 import androidx.health.connect.client.request.ReadRecordsRequest;
@@ -31,12 +33,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.TemporalField;
 import java.util.HashSet;
 import java.util.List;
@@ -135,6 +139,32 @@ public class HealthPlugin extends CordovaPlugin {
                     try {
                         connectAPI();
                         checkAuthorization(args, true);
+                    } catch (Exception ex) {
+                        callbackContext.error(ex.getMessage());
+                    }
+                }
+            });
+            return true;
+        } else if ("query".equals(action)) {
+            cordova.getThreadPool().execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        connectAPI();
+                        query(args);
+                    } catch (Exception ex) {
+                        callbackContext.error(ex.getMessage());
+                    }
+                }
+            });
+            return true;
+        } else if ("queryAggregated".equals(action)) {
+            cordova.getThreadPool().execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        connectAPI();
+                        queryAggregated(args);
                     } catch (Exception ex) {
                         callbackContext.error(ex.getMessage());
                     }
@@ -333,14 +363,20 @@ public class HealthPlugin extends CordovaPlugin {
                     JSONObject obj = new JSONObject();
 
                     String id = datapoint.getMetadata().getId();
-                    obj.put("id", id);
+                    if (id != null) {
+                        obj.put("id", id);
+                    }
 
                     Device dev = datapoint.getMetadata().getDevice();
-                    String device = dev.getManufacturer() + " " + dev.getModel();
-                    obj.put("sourceDevice", device);
+                    if (dev != null) {
+                        String device = dev.getManufacturer() + " " + dev.getModel();
+                        obj.put("sourceDevice", device);
+                    }
 
                     DataOrigin origin = datapoint.getMetadata().getDataOrigin();
-                    obj.put("sourceBundleId", origin.getPackageName());
+                    if (origin != null) {
+                        obj.put("sourceBundleId", origin.getPackageName());
+                    }
 
                     int methodInt = datapoint.getMetadata().getRecordingMethod();
                     String method = "unknown";
@@ -382,7 +418,7 @@ public class HealthPlugin extends CordovaPlugin {
         }
     }
 
-    private void queryAggregated(final JSONArray args, final CallbackContext callbackContext) {
+    private void queryAggregated(final JSONArray args) {
         try {
             if (!args.getJSONObject(0).has("startDate")) {
                 callbackContext.error("Missing argument startDate");
@@ -408,16 +444,47 @@ public class HealthPlugin extends CordovaPlugin {
             }
 
             boolean hasbucket = args.getJSONObject(0).has("bucket");
-            String bucketType = args.getJSONObject(0).getString("bucket");
 
             HashSet<DataOrigin> dor = new HashSet<>();
-            TimeRangeFilter timeRange = TimeRangeFilter.between(Instant.ofEpochMilli(st), Instant.ofEpochMilli(et));
 
             if (hasbucket) {
+                String bucketType = args.getJSONObject(0).getString("bucket");
+                ZonedDateTime stZDT = ZonedDateTime.ofInstant(Instant.ofEpochMilli(st), ZoneId.systemDefault());
+                ZonedDateTime etZDT = ZonedDateTime.ofInstant(Instant.ofEpochMilli(et), ZoneId.systemDefault());
+                // reset unused fields
+                // int year, Month month, int dayOfMonth, int hour, int minute, int second
+                LocalDateTime stLDT;
+                LocalDateTime etLDT = LocalDateTime.from(etZDT);
+                if (bucketType.equalsIgnoreCase("hour")) {
+                    stLDT = LocalDateTime.of(stZDT.getYear(), stZDT.getMonth(), stZDT.getDayOfMonth(), stZDT.getHour(), 0, 0, 0);
+                    // etLDT = LocalDateTime.of(etZDT.getYear(), etZDT.getMonth(), etZDT.getDayOfMonth(), etZDT.getHour(), 0, 0, 0);
+                } else if(bucketType.equalsIgnoreCase("day")) {
+                    stLDT = LocalDateTime.of(stZDT.getYear(), stZDT.getMonth(), stZDT.getDayOfMonth(), 0, 0, 0, 0);
+                    // etLDT = LocalDateTime.of(etZDT.getYear(), etZDT.getMonth(), etZDT.getDayOfMonth(), 0, 0, 0, 0);
+                } else if(bucketType.equalsIgnoreCase("week")) {
+                    DayOfWeek weekStart = DayOfWeek.MONDAY;
+                    stLDT = LocalDateTime.of(stZDT.getYear(), stZDT.getMonth(), stZDT.getDayOfMonth(), 0, 0, 0, 0).with(TemporalAdjusters.previousOrSame(weekStart));
+                    // etLDT = LocalDateTime.of(etZDT.getYear(), etZDT.getMonth(), etZDT.getDayOfMonth(), 0, 0, 0, 0).with(TemporalAdjusters.previousOrSame(weekStart));
+                } else if(bucketType.equalsIgnoreCase("month")) {
+                    stLDT = LocalDateTime.of(stZDT.getYear(), stZDT.getMonth(), 1, 0, 0, 0, 0);
+                    // etLDT = LocalDateTime.of(etZDT.getYear(), etZDT.getMonth(), 1, 0, 0, 0, 0);
+                } else if(bucketType.equalsIgnoreCase("year")) {
+                    stLDT = LocalDateTime.of(stZDT.getYear(), 1, 1, 0, 0, 0, 0);
+                    // etLDT = LocalDateTime.of(etZDT.getYear(), 1, 1, 0, 0, 0, 0);
+                } else {
+                    callbackContext.error("Bucket not recognized " + bucketType);
+                    return;
+                }
+                TimeRangeFilter timeRange = TimeRangeFilter.between(stLDT, etLDT);
 
-                Period period;
-                if (bucketType.equalsIgnoreCase("day")) {
+                Duration duration = null;
+                Period period = null;
+                if (bucketType.equalsIgnoreCase("hour")) {
+                    duration = Duration.ofHours(1);
+                } else if (bucketType.equalsIgnoreCase("day")) {
                     period = Period.ofDays(1);
+                } else if (bucketType.equalsIgnoreCase("week")) {
+                    period = Period.ofWeeks(1);
                 } else if (bucketType.equalsIgnoreCase("month")) {
                     period = Period.ofMonths(1);
                 } else if (bucketType.equalsIgnoreCase("year")) {
@@ -426,38 +493,76 @@ public class HealthPlugin extends CordovaPlugin {
                     callbackContext.error("Bucket length not recognized " + bucketType);
                     return;
                 }
-                AggregateGroupByPeriodRequest request;
-                if (datatype.equalsIgnoreCase("steps")) {
-                    Set<AggregateMetric<Long>> metrics = new HashSet<>();
-                    metrics.add(StepsRecord.COUNT_TOTAL);
-                    request = new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
+                if(period != null) {
+                    AggregateGroupByPeriodRequest request;
+                    if (datatype.equalsIgnoreCase("steps")) {
+                        Set<AggregateMetric<Long>> metrics = new HashSet<>();
+                        metrics.add(StepsRecord.COUNT_TOTAL);
+                        request = new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
+                    } else {
+                        callbackContext.error("Datatype not recognized " + datatype);
+                        return;
+                    }
+
+                    List<AggregationResultGroupedByPeriod> response = BuildersKt.runBlocking(
+                            EmptyCoroutineContext.INSTANCE,
+                            (s, c) -> healthConnectClient.aggregateGroupByPeriod(request, c)
+                    );
+
+                    Log.d(TAG, "Got data from query aggregated");
+                    JSONArray retBucketsArr = new JSONArray();
+
+                    for (AggregationResultGroupedByPeriod bucket : response) {
+                        JSONObject retObject = null;
+
+                        retObject = new JSONObject();
+                        long stbkt = bucket.getStartTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+                        long etbkt = bucket.getEndTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+                        retObject.put("startDate", stbkt);
+                        retObject.put("endDate", etbkt);
+                        setAggregatedVal(datatype, retObject, bucket.getResult());
+
+                        retBucketsArr.put(retObject);
+                    }
+
+                    callbackContext.success(retBucketsArr);
                 } else {
-                    callbackContext.error("Datatype not recognized " + datatype);
-                    return;
+                    AggregateGroupByDurationRequest request;
+                    if (datatype.equalsIgnoreCase("steps")) {
+                        Set<AggregateMetric<Long>> metrics = new HashSet<>();
+                        metrics.add(StepsRecord.COUNT_TOTAL);
+                        request = new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
+                    } else {
+                        callbackContext.error("Datatype not recognized " + datatype);
+                        return;
+                    }
+
+                    List<AggregationResultGroupedByDuration> response = BuildersKt.runBlocking(
+                            EmptyCoroutineContext.INSTANCE,
+                            (s, c) -> healthConnectClient.aggregateGroupByDuration(request, c)
+                    );
+
+                    Log.d(TAG, "Got data from query aggregated");
+                    JSONArray retBucketsArr = new JSONArray();
+
+                    for (AggregationResultGroupedByDuration bucket : response) {
+                        JSONObject retObject = null;
+
+                        retObject = new JSONObject();
+                        long stbkt = bucket.getStartTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+                        long etbkt = bucket.getEndTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+                        retObject.put("startDate", stbkt);
+                        retObject.put("endDate", etbkt);
+                        setAggregatedVal(datatype, retObject, bucket.getResult());
+
+                        retBucketsArr.put(retObject);
+                    }
+
+                    callbackContext.success(retBucketsArr);
                 }
-
-                List<AggregationResultGroupedByPeriod> response = BuildersKt.runBlocking(
-                        EmptyCoroutineContext.INSTANCE,
-                        (s, c) -> healthConnectClient.aggregateGroupByPeriod(request, c)
-                );
-                Log.d(TAG, "Got data from query aggregated");
-                JSONArray retBucketsArr = new JSONArray();
-
-                for (AggregationResultGroupedByPeriod bucket : response) {
-                    JSONObject retObject = null;
-
-                    retObject = new JSONObject();
-                    long stbkt = bucket.getStartTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();;
-                    long etbkt = bucket.getStartTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();;
-                    retObject.put("startDate", stbkt);
-                    retObject.put("endDate", etbkt);
-                    setAggregatedVal(datatype, retObject, bucket.getResult());
-
-                    retBucketsArr.put(retObject);
-                }
-
-                callbackContext.success(retBucketsArr);
             } else {
+                TimeRangeFilter timeRange = TimeRangeFilter.between(Instant.ofEpochMilli(st), Instant.ofEpochMilli(et));
+
                 AggregateRequest request;
                 if (datatype.equalsIgnoreCase("steps")) {
                     Set<AggregateMetric<Long>> metrics = new HashSet<>();

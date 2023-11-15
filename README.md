@@ -238,7 +238,7 @@ cordova.plugins.health.queryAggregated({
 - bucket: if specified, aggregation is grouped an array of "buckets" (windows of time), supported values are: 'hour', 'day', 'week', 'month', 'year'
 - successCallback: called if all OK, argument contains the result of the query, see below for returned data types. If no buckets is specified, the result is an object. If a bucketing strategy is specified, the result is an array.
 - errorCallback: called if something went wrong, argument contains a textual description of the problem
-- filterOutUserInput: optional, filters out user-entered activities if set to true (only works on iOS for aggregated query)
+- filterOutUserInput: optional, filters out user-entered activities if set to true (only works on iOS)
 
 
 Not all data types are supported for aggregated queries.
