@@ -1,5 +1,5 @@
 /**
- * Tester plugin
+ * Cordova plugin that accesses the Health Connect API
  */
 package org.apache.cordova.health;
 
@@ -16,6 +16,7 @@ import androidx.health.connect.client.aggregate.AggregationResult;
 import androidx.health.connect.client.aggregate.AggregationResultGroupedByDuration;
 import androidx.health.connect.client.aggregate.AggregationResultGroupedByPeriod;
 import androidx.health.connect.client.permission.HealthPermission;
+import androidx.health.connect.client.records.Record;
 import androidx.health.connect.client.records.StepsRecord;
 import androidx.health.connect.client.records.metadata.DataOrigin;
 import androidx.health.connect.client.records.metadata.Device;
@@ -27,6 +28,7 @@ import androidx.health.connect.client.request.ReadRecordsRequest;
 import androidx.health.connect.client.response.InsertRecordsResponse;
 import androidx.health.connect.client.response.ReadRecordsResponse;
 import androidx.health.connect.client.time.TimeRangeFilter;
+import androidx.health.platform.client.permission.Permission;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -43,7 +45,6 @@ import java.time.Period;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAdjusters;
-import java.time.temporal.TemporalField;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -64,7 +65,7 @@ public class HealthPlugin extends CordovaPlugin {
     /**
      * Used to get results from intents
      */
-    private int PERMISSIONS_INTENT = 878;
+    private final int PERMISSIONS_INTENT = 878;
 
     /**
      * Callback context, reference needed when used in functions initialized before the plugin is called
@@ -123,67 +124,62 @@ public class HealthPlugin extends CordovaPlugin {
             currentActivity.startActivity(activityIntent);
             callbackContext.success();
         } else if ("isAuthorized".equals(action)) {
-            cordova.getThreadPool().execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        connectAPI();
-                        checkAuthorization(args, false);
-                    } catch (Exception ex) {
-                        callbackContext.error(ex.getMessage());
-                    }
+            cordova.getThreadPool().execute(() -> {
+                try {
+                    connectAPI();
+                    checkAuthorization(args, false);
+                } catch (Exception ex) {
+                    callbackContext.error(ex.getMessage());
                 }
             });
             return true;
         } else if ("requestAuthorization".equals(action)) {
-            cordova.getThreadPool().execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        connectAPI();
-                        checkAuthorization(args, true);
-                    } catch (Exception ex) {
-                        callbackContext.error(ex.getMessage());
-                    }
+            cordova.getThreadPool().execute(() -> {
+                try {
+                    connectAPI();
+                    checkAuthorization(args, true);
+                } catch (Exception ex) {
+                    callbackContext.error(ex.getMessage());
                 }
             });
             return true;
         } else if ("query".equals(action)) {
-            cordova.getThreadPool().execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        connectAPI();
-                        query(args);
-                    } catch (Exception ex) {
-                        callbackContext.error(ex.getMessage());
-                    }
+            cordova.getThreadPool().execute(() -> {
+                try {
+                    connectAPI();
+                    query(args);
+                } catch (Exception ex) {
+                    callbackContext.error(ex.getMessage());
                 }
             });
             return true;
         } else if ("queryAggregated".equals(action)) {
-            cordova.getThreadPool().execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        connectAPI();
-                        queryAggregated(args);
-                    } catch (Exception ex) {
-                        callbackContext.error(ex.getMessage());
-                    }
+            cordova.getThreadPool().execute(() -> {
+                try {
+                    connectAPI();
+                    queryAggregated(args);
+                } catch (Exception ex) {
+                    callbackContext.error(ex.getMessage());
                 }
             });
             return true;
         } else if ("store".equals(action)) {
-            cordova.getThreadPool().execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        connectAPI();
-                        store(args);
-                    } catch (Exception ex) {
-                        callbackContext.error(ex.getMessage());
-                    }
+            cordova.getThreadPool().execute(() -> {
+                try {
+                    connectAPI();
+                    store(args);
+                } catch (Exception ex) {
+                    callbackContext.error(ex.getMessage());
+                }
+            });
+            return true;
+        } else if ("delete".equals(action)) {
+            cordova.getThreadPool().execute(() -> {
+                try {
+                    connectAPI();
+                    delete(args);
+                } catch (Exception ex) {
+                    callbackContext.error(ex.getMessage());
                 }
             });
             return true;
@@ -238,7 +234,7 @@ public class HealthPlugin extends CordovaPlugin {
             if (readWriteObj.has("read")) {
                 JSONArray readArray = readWriteObj.getJSONArray("read");
                 for (int j = 0; j < readArray.length(); j++) {
-                    KClass datatype = dataTypeNameToClass(readArray.getString(j));
+                    KClass<? extends Record> datatype = dataTypeNameToClass(readArray.getString(j));
                     String perm = HealthPermission.getReadPermission(datatype);
                     if (!grantedPermissions.contains(perm)) {
                         if (request) {
@@ -253,7 +249,7 @@ public class HealthPlugin extends CordovaPlugin {
             if (readWriteObj.has("write")) {
                 JSONArray readArray = readWriteObj.getJSONArray("read");
                 for (int j = 0; j < readArray.length(); j++) {
-                    KClass datatype = dataTypeNameToClass(readArray.getString(j));
+                    KClass<? extends Record> datatype = dataTypeNameToClass(readArray.getString(j));
                     String perm = HealthPermission.getWritePermission(datatype);
                     if (!grantedPermissions.contains(perm)) {
                         if (request) {
@@ -308,7 +304,12 @@ public class HealthPlugin extends CordovaPlugin {
                         for (String key : keys) {
                             Log.d(TAG, key);
                             Object v = bd.get(key);
-                            Log.d(TAG, v.toString());
+                            if (v instanceof Permission) {
+                                Permission p = (Permission) v;
+                                Log.d(TAG, p.toString());
+                            } else {
+                                Log.d(TAG, v.toString());
+                            }
                         }
 
                         callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, true));
@@ -340,7 +341,7 @@ public class HealthPlugin extends CordovaPlugin {
                 return;
             }
             String datatype = args.getJSONObject(0).getString("dataType");
-            KClass dt = dataTypeNameToClass(datatype);
+            KClass<? extends Record> dt = dataTypeNameToClass(datatype);
             if (dt == null) {
                 callbackContext.error("Datatype " + datatype + " not supported");
                 return;
@@ -453,7 +454,7 @@ public class HealthPlugin extends CordovaPlugin {
                 return;
             }
             String datatype = args.getJSONObject(0).getString("dataType");
-            KClass dt = dataTypeNameToClass(datatype);
+            KClass<? extends Record> dt = dataTypeNameToClass(datatype);
             if (dt == null) {
                 callbackContext.error("Datatype " + datatype + " not supported");
                 return;
@@ -529,9 +530,7 @@ public class HealthPlugin extends CordovaPlugin {
                     JSONArray retBucketsArr = new JSONArray();
 
                     for (AggregationResultGroupedByPeriod bucket : response) {
-                        JSONObject retObject = null;
-
-                        retObject = new JSONObject();
+                        JSONObject retObject = new JSONObject();
                         long stbkt = bucket.getStartTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
                         long etbkt = bucket.getEndTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
                         retObject.put("startDate", stbkt);
@@ -562,9 +561,7 @@ public class HealthPlugin extends CordovaPlugin {
                     JSONArray retBucketsArr = new JSONArray();
 
                     for (AggregationResultGroupedByDuration bucket : response) {
-                        JSONObject retObject = null;
-
-                        retObject = new JSONObject();
+                        JSONObject retObject = new JSONObject();
                         long stbkt = bucket.getStartTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
                         long etbkt = bucket.getEndTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
                         retObject.put("startDate", stbkt);
@@ -595,9 +592,7 @@ public class HealthPlugin extends CordovaPlugin {
                 );
                 Log.d(TAG, "Got data from query aggregated");
 
-                JSONObject retObject = null;
-
-                retObject = new JSONObject();
+                JSONObject retObject = new JSONObject();
                 retObject.put("startDate", st);
                 retObject.put("endDate", et);
                 setAggregatedVal(datatype, retObject, response);
@@ -618,7 +613,10 @@ public class HealthPlugin extends CordovaPlugin {
         }
     }
 
-    // stores a data point
+    /**
+     * Stores a datapoint
+     * @param args
+     */
     private void store(final JSONArray args) {
         try {
             if (!args.getJSONObject(0).has("startDate")) {
@@ -638,7 +636,7 @@ public class HealthPlugin extends CordovaPlugin {
                 return;
             }
             String datatype = args.getJSONObject(0).getString("dataType");
-            KClass dt = dataTypeNameToClass(datatype);
+            KClass<? extends Record> dt = dataTypeNameToClass(datatype);
             if (dt == null) {
                 callbackContext.error("Datatype " + datatype + " not supported");
                 return;
@@ -649,14 +647,9 @@ public class HealthPlugin extends CordovaPlugin {
                 return;
             }
 
-            String sourceBundleId = cordova.getActivity().getApplicationContext().getPackageName();
-            if (args.getJSONObject(0).has("sourceBundleId")) {
-                sourceBundleId = args.getJSONObject(0).getString("sourceBundleId");
-            }
-
-
             if (datatype.equalsIgnoreCase("steps")) {
                 long steps = args.getJSONObject(0).getLong("value");
+                // TODO: we could add meta data when storing, including entry method, client ID and device
                 StepsRecord record = new StepsRecord(
                         Instant.ofEpochMilli(st), null,
                         Instant.ofEpochMilli(et), null,
@@ -676,7 +669,6 @@ public class HealthPlugin extends CordovaPlugin {
                 callbackContext.success(id);
             } else {
                 callbackContext.error("Datatype not supported " + datatype);
-                return;
             }
 
         } catch (JSONException ex) {
@@ -686,4 +678,57 @@ public class HealthPlugin extends CordovaPlugin {
         }
     }
 
+    /**
+     * Deletes datapoints
+     * @param args
+     */
+    private void delete(final JSONArray args) {
+        try {
+            String datatype = args.getJSONObject(0).getString("dataType");
+            KClass<? extends Record> dt = dataTypeNameToClass(datatype);
+            if (dt == null) {
+                callbackContext.error("Datatype " + datatype + " not supported");
+                return;
+            }
+
+            if (args.getJSONObject(0).has("id")) {
+                String id = args.getJSONObject(0).getString("id");
+
+                List<String> recordids = new LinkedList<>();
+                recordids.add(id);
+                BuildersKt.runBlocking(
+                        EmptyCoroutineContext.INSTANCE,
+                        (s, c) -> healthConnectClient.deleteRecords(dt, recordids, new LinkedList<>(), c)
+                );
+                Log.d(TAG, "Data deleted by ID of type " + datatype);
+
+                callbackContext.success();
+            } else {
+                if (args.getJSONObject(0).has("startDate")) {
+                    callbackContext.error("Missing argument startDate");
+                    return;
+                }
+                final long st = args.getJSONObject(0).getLong("startDate");
+
+                if (!args.getJSONObject(0).has("endDate")) {
+                    callbackContext.error("Missing argument endDate");
+                    return;
+                }
+                final long et = args.getJSONObject(0).getLong("endDate");
+
+                TimeRangeFilter timeRange = TimeRangeFilter.between(Instant.ofEpochMilli(st), Instant.ofEpochMilli(et));
+                BuildersKt.runBlocking(
+                        EmptyCoroutineContext.INSTANCE,
+                        (s, c) -> healthConnectClient.deleteRecords(dt, timeRange, c)
+                );
+                Log.d(TAG, "Data deleted by time range of type " + datatype);
+
+                callbackContext.success();
+            }
+        } catch (JSONException ex) {
+            callbackContext.error("Cannot parse request object " + ex.getMessage());
+        } catch (InterruptedException ex2) {
+            callbackContext.error("Thread interrupted" + ex2.getMessage());
+        }
+    }
 }
