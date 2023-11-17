@@ -89,3 +89,11 @@ Log of changes
 * added sleep sessions in simple query for "sleep" data type for Android
 * distance and calories are optional when querying activity (**API change**)
 * bugfixing
+
+
+
+### v3.0.0
+
+* [Breaking change] plugin is now accessed from `cordova.plugins.healt`
+* [Breaking change] authorization is asked using the `read` and `write` properties only
+* 
