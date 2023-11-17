@@ -430,7 +430,7 @@ public class HealthPlugin extends CordovaPlugin {
 
                         double kgs = weightDP.getWeight().getKilograms();
                         obj.put("value", kgs);
-                        obj.put("unit", "count");
+                        obj.put("unit", "kg");
                     }
 
                     // add to array

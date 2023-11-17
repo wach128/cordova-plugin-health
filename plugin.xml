@@ -99,7 +99,7 @@
       <uses-permission
         android:name="android.permission.health.READ_WEIGHT" />
       <uses-permission
-        android:name="android.permission.health.READ_WEIGHT" />
+        android:name="android.permission.health.WRITE_WEIGHT" />
 
       <!-- Check if Health Connect is installed -->
       <queries>

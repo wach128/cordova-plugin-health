@@ -59,7 +59,7 @@ As HealthKit does not allow adding custom data types, only a subset of data type
 | Data type       | Unit  |    HealthKit equivalent                       |  Health Connect equivalent               |
 |-----------------|-------|-----------------------------------------------|------------------------------------------|
 | steps           | count | HKQuantityTypeIdentifierStepCount             |   StepsRecord                            |
-| weight          | kg    | HKQuantityTypeIdentifierBodyMass              | TYPE_WEIGHT                              |
+| weight          | kg    | HKQuantityTypeIdentifierBodyMass              |   Weight                                 |
 
 
 **Note**: units of measurement are fixed!
@@ -127,7 +127,6 @@ cordova.plugins.health.launchPrivacyPolicy(successCallback, errorCallback)
 Requests read and/or write access to a set of data types.
 It is recommendable to always explain why the app needs access to the data before asking the user to authorize it.
 
-**Important:** this method must be called before using the query, store and delete methods, even if the authorization has already been given at some point in the past.
 
 ```
 cordova.plugins.requestAuthorization(datatypes, successCallback, errorCallback)
@@ -218,7 +217,7 @@ cordova.plugins.health.query({
 #### Android quirks
 
 - Health Connect can read data for up to 30 days prior to the time permission was first granted. If the app is reinstalled, the permission history is lost and you can only query from 30 days before installation. See [note here](https://developer.android.com/health-and-fitness/guides/health-connect/develop/read-data).
-
+- Not all datatypes support start and end timestamps, some, such as weight, only have one timestamp. The plugin will just set both start and end to the same value.
 
 ### queryAggregated()
 
@@ -300,6 +299,7 @@ cordova.plugins.health.store({
 #### Android quirks
 
 - This operation correponds to an insert, not an update. If you want to update the data point you need to delete it first.
+- Not all datatypes support start and end timestamps, some, such as weight, only have one timestamp. The plugin will use the start timestamp to set the actual one.
 
 
 ### delete()
