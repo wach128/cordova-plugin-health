@@ -16,6 +16,7 @@ import androidx.health.connect.client.aggregate.AggregationResult;
 import androidx.health.connect.client.aggregate.AggregationResultGroupedByDuration;
 import androidx.health.connect.client.aggregate.AggregationResultGroupedByPeriod;
 import androidx.health.connect.client.permission.HealthPermission;
+import androidx.health.connect.client.records.BodyFatRecord;
 import androidx.health.connect.client.records.Record;
 import androidx.health.connect.client.records.StepsRecord;
 import androidx.health.connect.client.records.WeightRecord;
@@ -30,6 +31,7 @@ import androidx.health.connect.client.response.InsertRecordsResponse;
 import androidx.health.connect.client.response.ReadRecordsResponse;
 import androidx.health.connect.client.time.TimeRangeFilter;
 import androidx.health.connect.client.units.Mass;
+import androidx.health.connect.client.units.Percentage;
 import androidx.health.platform.client.permission.Permission;
 
 import org.apache.cordova.CallbackContext;
@@ -214,6 +216,9 @@ public class HealthPlugin extends CordovaPlugin {
         if (name.equalsIgnoreCase("weight")) {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(WeightRecord.class);
         }
+        if (name.equalsIgnoreCase("fat_percentage")) {
+            return kotlin.jvm.JvmClassMappingKt.getKotlinClass(BodyFatRecord.class);
+        }
         return null;
     }
 
@@ -239,7 +244,12 @@ public class HealthPlugin extends CordovaPlugin {
             if (readWriteObj.has("read")) {
                 JSONArray readArray = readWriteObj.getJSONArray("read");
                 for (int j = 0; j < readArray.length(); j++) {
-                    KClass<? extends Record> datatype = dataTypeNameToClass(readArray.getString(j));
+                    String dataTypeStr = readArray.getString(j);
+                    KClass<? extends Record> datatype = dataTypeNameToClass(dataTypeStr);
+                    if (datatype == null) {
+                        callbackContext.error("Data type not supported " + dataTypeStr);
+                        return;
+                    }
                     String perm = HealthPermission.getReadPermission(datatype);
                     if (!grantedPermissions.contains(perm)) {
                         if (request) {
@@ -252,9 +262,14 @@ public class HealthPlugin extends CordovaPlugin {
                 }
             }
             if (readWriteObj.has("write")) {
-                JSONArray readArray = readWriteObj.getJSONArray("read");
-                for (int j = 0; j < readArray.length(); j++) {
-                    KClass<? extends Record> datatype = dataTypeNameToClass(readArray.getString(j));
+                JSONArray writeArray = readWriteObj.getJSONArray("write");
+                for (int j = 0; j < writeArray.length(); j++) {
+                    String dataTypeStr = writeArray.getString(j);
+                    KClass<? extends Record> datatype = dataTypeNameToClass(dataTypeStr);
+                    if (datatype == null) {
+                        callbackContext.error("Data type not supported " + dataTypeStr);
+                        return;
+                    }
                     String perm = HealthPermission.getWritePermission(datatype);
                     if (!grantedPermissions.contains(perm)) {
                         if (request) {
@@ -431,6 +446,17 @@ public class HealthPlugin extends CordovaPlugin {
                         double kgs = weightDP.getWeight().getKilograms();
                         obj.put("value", kgs);
                         obj.put("unit", "kg");
+                    } else if (datapoint instanceof BodyFatRecord) {
+                        BodyFatRecord bodyFatDP = (BodyFatRecord) datapoint;
+                        obj.put("startDate",bodyFatDP.getTime().toEpochMilli());
+                        obj.put("endDate", bodyFatDP.getTime().toEpochMilli());
+
+                        double perc = bodyFatDP.getPercentage().getValue();
+                        obj.put("value", perc);
+                        obj.put("unit", "%");
+                    } else {
+                        callbackContext.error("Sample received of unknown type " + datatype.toString());
+                        return;
                     }
 
                     // add to array
@@ -690,6 +716,25 @@ public class HealthPlugin extends CordovaPlugin {
                         Metadata.EMPTY
                 );
                 List<WeightRecord> data = new LinkedList<>();
+                data.add(record);
+                InsertRecordsResponse response = BuildersKt.runBlocking(
+                        EmptyCoroutineContext.INSTANCE,
+                        (s, c) -> healthConnectClient.insertRecords(data, c)
+                );
+                Log.d(TAG, "Data written of type " + datatype);
+
+                String id = response.getRecordIdsList().get(0);
+
+                callbackContext.success(id);
+            } if (datatype.equalsIgnoreCase("fat_percentage")) {
+                double perc = args.getJSONObject(0).getDouble("value");
+
+                BodyFatRecord record = new BodyFatRecord(
+                        Instant.ofEpochMilli(st), null,
+                        new Percentage(perc),
+                        Metadata.EMPTY
+                );
+                List<BodyFatRecord> data = new LinkedList<>();
                 data.add(record);
                 InsertRecordsResponse response = BuildersKt.runBlocking(
                         EmptyCoroutineContext.INSTANCE,

@@ -60,6 +60,7 @@ As HealthKit does not allow adding custom data types, only a subset of data type
 |-----------------|-------|-----------------------------------------------|------------------------------------------|
 | steps           | count | HKQuantityTypeIdentifierStepCount             |   StepsRecord                            |
 | weight          | kg    | HKQuantityTypeIdentifierBodyMass              |   Weight                                 |
+| fat_percentage  | %     | HKQuantityTypeIdentifierBodyFatPercentage     |   BodyFatRecord                          |
 
 
 **Note**: units of measurement are fixed!
@@ -83,6 +84,7 @@ Example values:
 |----------------|-----------------------------------|
 | steps          | 34                                |
 | weight         | 83.3                              |
+| fat_percentage | 0.312                             |
 
 
 ## Methods
