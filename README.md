@@ -302,7 +302,7 @@ cordova.plugins.health.store({
 
 ### delete()
 
-Deletes data points. You can either delete a single data point (using its id), or a set of them within a time range.
+Deletes data points. You can either delete a single data point (using its id, Android only), or a set of them within a time range.
 
 ```javascript
 cordova.plugins.health.delete({
@@ -312,7 +312,7 @@ cordova.plugins.health.delete({
 }, successCallback, errorCallback)
 ```
 
-or:
+or (Android only):
 
 ```javascript
 cordova.plugins.health.delete({
@@ -323,7 +323,7 @@ cordova.plugins.health.delete({
 
 - startDate: start date from which to delete data
 - endDate: end date to which to delete the data
-- id: id of the point to be deleted
+- id: id of the point to be deleted (Android only for now)
 - dataType: the data type to be deleted
 - successCallback: called if all OK
 - errorCallback: called if something went wrong, argument contains a textual description of the problem

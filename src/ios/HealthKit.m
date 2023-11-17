@@ -1845,7 +1845,9 @@ static NSString *const HKPluginKeyUUID = @"UUID";
 
 /**
  * Delete matching samples from the HealthKit store.
- * See https://developer.apple.com/library/ios/documentation/HealthKit/Reference/HKHealthStore_Class/#//apple_ref/occ/instm/HKHealthStore/deleteObject:withCompletion:
+ * TODO: consider adding deletion by ID, this will likely require a query, to retrieve the object, and the a deletion
+ * for querying, we may need to run: https://developer.apple.com/documentation/healthkit/hkquery/1614783-predicateforobjectwithuuid?language=objc
+ * for deleting, we may need to use: https://developer.apple.com/documentation/healthkit/hkhealthstore/1614155-deleteobject
  *
  * @param command *CDVInvokedUrlCommand
  */
