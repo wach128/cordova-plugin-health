@@ -18,6 +18,7 @@ import androidx.health.connect.client.aggregate.AggregationResultGroupedByPeriod
 import androidx.health.connect.client.permission.HealthPermission;
 import androidx.health.connect.client.records.Record;
 import androidx.health.connect.client.records.StepsRecord;
+import androidx.health.connect.client.records.WeightRecord;
 import androidx.health.connect.client.records.metadata.DataOrigin;
 import androidx.health.connect.client.records.metadata.Device;
 import androidx.health.connect.client.records.metadata.Metadata;
@@ -28,6 +29,7 @@ import androidx.health.connect.client.request.ReadRecordsRequest;
 import androidx.health.connect.client.response.InsertRecordsResponse;
 import androidx.health.connect.client.response.ReadRecordsResponse;
 import androidx.health.connect.client.time.TimeRangeFilter;
+import androidx.health.connect.client.units.Mass;
 import androidx.health.platform.client.permission.Permission;
 
 import org.apache.cordova.CallbackContext;
@@ -208,6 +210,9 @@ public class HealthPlugin extends CordovaPlugin {
     private KClass<? extends androidx.health.connect.client.records.Record> dataTypeNameToClass(String name) {
         if (name.equalsIgnoreCase("steps")) {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(StepsRecord.class);
+        }
+        if (name.equalsIgnoreCase("weight")) {
+            return kotlin.jvm.JvmClassMappingKt.getKotlinClass(WeightRecord.class);
         }
         return null;
     }
@@ -417,6 +422,14 @@ public class HealthPlugin extends CordovaPlugin {
 
                         long steps = stepsDP.getCount();
                         obj.put("value", steps);
+                        obj.put("unit", "count");
+                    } else if (datapoint instanceof WeightRecord) {
+                        WeightRecord weightDP = (WeightRecord) datapoint;
+                        obj.put("startDate",weightDP.getTime().toEpochMilli());
+                        obj.put("endDate", weightDP.getTime().toEpochMilli());
+
+                        double kgs = weightDP.getWeight().getKilograms();
+                        obj.put("value", kgs);
                         obj.put("unit", "count");
                     }
 
@@ -657,6 +670,26 @@ public class HealthPlugin extends CordovaPlugin {
                         Metadata.EMPTY
                         );
                 List<StepsRecord> data = new LinkedList<>();
+                data.add(record);
+                InsertRecordsResponse response = BuildersKt.runBlocking(
+                        EmptyCoroutineContext.INSTANCE,
+                        (s, c) -> healthConnectClient.insertRecords(data, c)
+                );
+                Log.d(TAG, "Data written of type " + datatype);
+
+                String id = response.getRecordIdsList().get(0);
+
+                callbackContext.success(id);
+            } if (datatype.equalsIgnoreCase("weight")) {
+                double kgs = args.getJSONObject(0).getDouble("value");
+
+                // TODO: we could add meta data when storing, including entry method, client ID and device
+                WeightRecord record = new WeightRecord(
+                        Instant.ofEpochMilli(st), null,
+                        Mass.kilograms(kgs),
+                        Metadata.EMPTY
+                );
+                List<WeightRecord> data = new LinkedList<>();
                 data.add(record);
                 InsertRecordsResponse response = BuildersKt.runBlocking(
                         EmptyCoroutineContext.INSTANCE,

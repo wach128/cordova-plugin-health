@@ -59,6 +59,7 @@ As HealthKit does not allow adding custom data types, only a subset of data type
 | Data type       | Unit  |    HealthKit equivalent                       |  Health Connect equivalent               |
 |-----------------|-------|-----------------------------------------------|------------------------------------------|
 | steps           | count | HKQuantityTypeIdentifierStepCount             |   StepsRecord                            |
+| weight          | kg    | HKQuantityTypeIdentifierBodyMass              | TYPE_WEIGHT                              |
 
 
 **Note**: units of measurement are fixed!
@@ -81,6 +82,7 @@ Example values:
 | Data type      | Value                             |
 |----------------|-----------------------------------|
 | steps          | 34                                |
+| weight         | 83.3                              |
 
 
 ## Methods
