@@ -17,6 +17,9 @@ import androidx.health.connect.client.aggregate.AggregationResultGroupedByDurati
 import androidx.health.connect.client.aggregate.AggregationResultGroupedByPeriod;
 import androidx.health.connect.client.permission.HealthPermission;
 import androidx.health.connect.client.records.BodyFatRecord;
+import androidx.health.connect.client.records.ExerciseLap;
+import androidx.health.connect.client.records.ExerciseSegment;
+import androidx.health.connect.client.records.ExerciseSessionRecord;
 import androidx.health.connect.client.records.Record;
 import androidx.health.connect.client.records.StepsRecord;
 import androidx.health.connect.client.records.WeightRecord;
@@ -218,6 +221,9 @@ public class HealthPlugin extends CordovaPlugin {
         }
         if (name.equalsIgnoreCase("fat_percentage")) {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(BodyFatRecord.class);
+        }
+        if (name.equalsIgnoreCase("activity")) {
+            return kotlin.jvm.JvmClassMappingKt.getKotlinClass(ExerciseSessionRecord.class);
         }
         return null;
     }
@@ -453,6 +459,16 @@ public class HealthPlugin extends CordovaPlugin {
 
                         double perc = bodyFatDP.getPercentage().getValue();
                         obj.put("value", perc);
+                        obj.put("unit", "%");
+                    } else if (datapoint instanceof ExerciseSessionRecord) {
+                        ExerciseSessionRecord activityDP = (ExerciseSessionRecord) datapoint;
+                        obj.put("startDate",activityDP.getStartTime().toEpochMilli());
+                        obj.put("endDate", activityDP.getEndTime().toEpochMilli());
+
+                        int exType = activityDP.getExerciseType();
+                        String activityStr = ActivityMapper.activityFromExerciseType(exType);
+
+                        obj.put("value", activityStr);
                         obj.put("unit", "%");
                     } else {
                         callbackContext.error("Sample received of unknown type " + datatype.toString());
@@ -735,6 +751,33 @@ public class HealthPlugin extends CordovaPlugin {
                         Metadata.EMPTY
                 );
                 List<BodyFatRecord> data = new LinkedList<>();
+                data.add(record);
+                InsertRecordsResponse response = BuildersKt.runBlocking(
+                        EmptyCoroutineContext.INSTANCE,
+                        (s, c) -> healthConnectClient.insertRecords(data, c)
+                );
+                Log.d(TAG, "Data written of type " + datatype);
+
+                String id = response.getRecordIdsList().get(0);
+
+                callbackContext.success(id);
+            } if (datatype.equalsIgnoreCase("activity")) {
+                String activityStr = args.getJSONObject(0).getString("value");
+                int exerciseType = ActivityMapper.exerciseTypeFromActivity(activityStr);
+                String title = null;
+                String notes = null;
+                List<ExerciseSegment> segments = new LinkedList<>();
+                List<ExerciseLap> laps = new LinkedList<>();
+
+                ExerciseSessionRecord record = new ExerciseSessionRecord(
+                        Instant.ofEpochMilli(st), null,
+                        Instant.ofEpochMilli(et), null,
+                        exerciseType,
+                        title, notes,
+                        Metadata.EMPTY,
+                        segments, laps
+                );
+                List<ExerciseSessionRecord> data = new LinkedList<>();
                 data.add(record);
                 InsertRecordsResponse response = BuildersKt.runBlocking(
                         EmptyCoroutineContext.INSTANCE,
