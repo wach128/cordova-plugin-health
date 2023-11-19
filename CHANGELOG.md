@@ -96,4 +96,67 @@ Log of changes
 
 * [Breaking change] plugin is now accessed from `cordova.plugins.healt`
 * [Breaking change] authorization is asked using the `read` and `write` properties only
-* 
+* With Health Connect several activities have disappeared.
+* Added following activities:
+ * bootcamp
+ * stretching
+ * dancing.cardio
+ * exercise_class
+ * strength_training.functional
+ * guided_breathing
+
+* Removed following activities:
+ * aerobics
+ * biathlon
+ * biking.hand
+ * biking.mountain
+ * biking.road
+ * biking.spinning
+ * biking.utility
+ * circuit_training
+ * diving
+ * elevator
+ * ergometer
+ * escalator
+ * functional_strength
+ * gardening
+ * housework
+ * in_vehicle
+ * interval_training
+ * kayaking
+ * kettlebell_training
+ * kick_scooter
+ * kitesurfing
+ * martial_arts.mixed
+ * on_foot
+ * p90x
+ * polo
+ * running.jogging
+ * running.sand
+ * skateboarding
+ * skating.cross
+ * skating.indoor
+ * skating.inline
+ * skiing.back_country
+ * skiing.kite
+ * skiing.roller
+ * sledding
+ * sleep (all types)
+ * snowmobile
+ * standup_paddleboarding
+ * still
+ * stairs
+ * team_sports
+ * tilting
+ * unknown
+ * volleyball.beach
+ * volleyball.indoor
+ * wakeboarding
+ * walking.fitness
+ * walking.nordic
+ * walking.treadmill
+ * walking.stroller
+ * treadmill
+ * windsurfing
+ * zumba
+

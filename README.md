@@ -61,6 +61,7 @@ As HealthKit does not allow adding custom data types, only a subset of data type
 | steps           | count | HKQuantityTypeIdentifierStepCount             |   StepsRecord                            |
 | weight          | kg    | HKQuantityTypeIdentifierBodyMass              |   Weight                                 |
 | fat_percentage  | %     | HKQuantityTypeIdentifierBodyFatPercentage     |   BodyFatRecord                          |
+| activity        | activityType | HKWorkoutTypeIdentifier                |   ExerciseSessionRecord                  |
 
 
 **Note**: units of measurement are fixed!
@@ -85,6 +86,7 @@ Example values:
 | steps          | 34                                |
 | weight         | 83.3                              |
 | fat_percentage | 0.312                             |
+| activity       | "walking"<br />**Notes**: recognized activities and their mappings in Health Connect / HealthKit can be found [here](activities_map.md) <br /> the query also returns calories (kcal) and distance (m)<br />**Warning** If you want to fetch activities you also have to request permission for 'calories' and 'distance'. |
 
 
 ## Methods
