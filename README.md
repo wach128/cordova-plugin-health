@@ -63,6 +63,7 @@ As HealthKit does not allow adding custom data types, only a subset of data type
 | fat_percentage  | %     | HKQuantityTypeIdentifierBodyFatPercentage     |   BodyFatRecord                          |
 | activity        | activityType | HKWorkoutTypeIdentifier                |   ExerciseSessionRecord                  |
 | calories.active | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned    | ActiveCaloriesBurnedRecord               |
+| calories.basal  | kcal  | HKQuantityTypeIdentifierBasalEnergyBurned     | BasalMetabolicRateRecord * time window   |
 
 
 **Note**: units of measurement are fixed!
@@ -87,7 +88,11 @@ Example values:
 | steps          | 34                                |
 | weight         | 83.3                              |
 | fat_percentage | 0.312                             |
+| calories.X     | 245.3                             |
 | activity       | "walking"<br />**Notes**: recognized activities and their mappings in Health Connect / HealthKit can be found [here](activities_map.md) <br /> the query also returns calories (kcal) and distance (m)<br />**Warning** If you want to fetch activities you also have to request permission for 'calories' and 'distance'. |
+| gender         | "male" <br/>**Notes**: only available on iOS |
+| date_of_birth  | { day: 3, month: 12, year: 1978 } <br/>**Notes**: currently only available on iOS |
+| mindfulness     | 1800 <br/>**Notes**: only available on iOS |
 
 
 ## Methods
@@ -144,7 +149,7 @@ cordova.plugins.requestAuthorization(datatypes, successCallback, errorCallback)
   write : ['steps', 'weight']  // Write permission
 }
 ```
-- successCallback: called if permission process completed, called independently of if the user has granted permissions or not
+- successCallback: called if permission process completed, called independently of if the user has granted permissions or not, the argument may indicate if the permissions have been granted (but it is not guaranteed that all have been granted)
 - errorCallback: called if something went wrong, the argument contains a textual description of the problem
 
 #### Android quirks
@@ -220,6 +225,8 @@ cordova.plugins.health.query({
 
 - Health Connect can read data for up to 30 days prior to the time permission was first granted. If the app is reinstalled, the permission history is lost and you can only query from 30 days before installation. See [note here](https://developer.android.com/health-and-fitness/guides/health-connect/develop/read-data).
 - Not all datatypes support start and end timestamps, some, such as weight, only have one timestamp. The plugin will just set both start and end to the same value in those cases.
+- Active and basal calories can be automatically calculated by Health Connect.
+- calories.basal is returned as an average per day (kcal/day), and is usually stored quite sparely (it rarely change. but chnages in height trigger a ricalculation).
 
 
 ### queryAggregated()

@@ -39,10 +39,14 @@ import androidx.health.connect.client.time.TimeRangeFilter;
 import androidx.health.connect.client.units.Energy;
 import androidx.health.connect.client.units.Mass;
 import androidx.health.connect.client.units.Percentage;
+import androidx.health.connect.client.units.Power;
 import androidx.health.platform.client.permission.Permission;
 
 import org.apache.cordova.CallbackContext;
+import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CordovaWebView;
+import org.apache.cordova.LOG;
 import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -260,6 +264,9 @@ public class HealthPlugin extends CordovaPlugin {
         if (name.equalsIgnoreCase("calories.active")) {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(ActiveCaloriesBurnedRecord.class);
         }
+        if (name.equalsIgnoreCase("calories.basal")) {
+            return kotlin.jvm.JvmClassMappingKt.getKotlinClass(BasalMetabolicRateRecord.class);
+        }
 
         return null;
     }
@@ -469,6 +476,16 @@ public class HealthPlugin extends CordovaPlugin {
 
                         obj.put("value", kcals);
                         obj.put("unit", "kcal");
+                    } else if (datapoint instanceof BasalMetabolicRateRecord) {
+                        BasalMetabolicRateRecord basalRateDP = (BasalMetabolicRateRecord) datapoint;
+                        obj.put("startDate",basalRateDP.getTime().toEpochMilli());
+                        obj.put("endDate", basalRateDP.getTime().toEpochMilli());
+
+                        Power pow = basalRateDP.getBasalMetabolicRate();
+                        if (pow != null) {
+                            obj.put("value", pow.getKilocaloriesPerDay());
+                            obj.put("unit", "kcal/day");
+                        }
                     } else {
                         callbackContext.error("Sample received of unknown type " + datatype.toString());
                         return;
@@ -579,6 +596,10 @@ public class HealthPlugin extends CordovaPlugin {
                         Set<AggregateMetric<Energy>> metrics = new HashSet<>();
                         metrics.add(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL);
                         request = new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
+                    } else if (datatype.equalsIgnoreCase("calories.basal")) {
+                        Set<AggregateMetric<Energy>> metrics = new HashSet<>();
+                        metrics.add(BasalMetabolicRateRecord.BASAL_CALORIES_TOTAL);
+                        request = new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
                     } else {
                         callbackContext.error("Datatype not recognized " + datatype);
                         return;
@@ -618,6 +639,10 @@ public class HealthPlugin extends CordovaPlugin {
                     } else if (datatype.equalsIgnoreCase("calories.active")) {
                         Set<AggregateMetric<Energy>> metrics = new HashSet<>();
                         metrics.add(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL);
+                        request = new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
+                    } else if (datatype.equalsIgnoreCase("calories.basal")) {
+                        Set<AggregateMetric<Energy>> metrics = new HashSet<>();
+                        metrics.add(BasalMetabolicRateRecord.BASAL_CALORIES_TOTAL);
                         request = new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
                     } else {
                         callbackContext.error("Datatype not recognized " + datatype);
@@ -662,6 +687,10 @@ public class HealthPlugin extends CordovaPlugin {
                     Set<AggregateMetric<Energy>> metrics = new HashSet<>();
                     metrics.add(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL);
                     request = new AggregateRequest(metrics, timeRange, dor);
+                } else if (datatype.equalsIgnoreCase("calories.basal")) {
+                    Set<AggregateMetric<Energy>> metrics = new HashSet<>();
+                    metrics.add(BasalMetabolicRateRecord.BASAL_CALORIES_TOTAL);
+                    request = new AggregateRequest(metrics, timeRange, dor);
                 } else {
                     callbackContext.error("Datatype not recognized " + datatype);
                     return;
@@ -690,18 +719,44 @@ public class HealthPlugin extends CordovaPlugin {
     private void setAggregatedVal(String datatype, JSONObject retObj, AggregationResult response) throws JSONException {
         // DATA_TYPE add here new data types when extending
         if (datatype.equalsIgnoreCase("steps")) {
-            long val = response.get(StepsRecord.COUNT_TOTAL);
-            retObj.put("value", val);
-            retObj.put("unit", "'count'");
+            if (response.get(StepsRecord.COUNT_TOTAL) != null) {
+                long val = response.get(StepsRecord.COUNT_TOTAL);
+                retObj.put("value", val);
+                retObj.put("unit", "'count'");
+            } else {
+                retObj.put("value", 0);
+                retObj.put("unit", "'count'");
+            }
         } else if (datatype.equalsIgnoreCase("activity")) {
             Duration val = response.get(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
-            long millis = val.getSeconds() * 1000;
-            retObj.put("value", millis);
-            retObj.put("unit", "ms");
+            if (val != null) {
+                long millis = val.getSeconds() * 1000;
+                retObj.put("value", millis);
+                retObj.put("unit", "ms");
+            } else {
+                retObj.put("value", 0);
+                retObj.put("unit", "ms");
+            }
         } else if (datatype.equalsIgnoreCase("calories.active")) {
-            double kcals = response.get(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL).getKilocalories();
-            retObj.put("value", kcals);
-            retObj.put("unit", "kcal");
+            if (response.get(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL) != null) {
+                double kcals = response.get(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL).getKilocalories();
+                retObj.put("value", kcals);
+                retObj.put("unit", "kcal");
+            } else {
+                retObj.put("value", 0);
+                retObj.put("unit", "kcal");
+            }
+        } else if (datatype.equalsIgnoreCase("calories.basal")) {
+            if (response.get(BasalMetabolicRateRecord.BASAL_CALORIES_TOTAL) != null) {
+                double kcals = response.get(BasalMetabolicRateRecord.BASAL_CALORIES_TOTAL).getKilocalories();
+                retObj.put("value", kcals);
+                retObj.put("unit", "kcal");
+            } else {
+                retObj.put("value", 0);
+                retObj.put("unit", "kcal");
+            }
+        } else {
+            LOG.e(TAG, "Data type not recognized " + datatype);
         }
     }
 
@@ -836,6 +891,29 @@ public class HealthPlugin extends CordovaPlugin {
                         Metadata.EMPTY
                 );
                 List<ActiveCaloriesBurnedRecord> data = new LinkedList<>();
+                data.add(record);
+                InsertRecordsResponse response = BuildersKt.runBlocking(
+                        EmptyCoroutineContext.INSTANCE,
+                        (s, c) -> healthConnectClient.insertRecords(data, c)
+                );
+                Log.d(TAG, "Data written of type " + datatype);
+
+                String id = response.getRecordIdsList().get(0);
+
+                callbackContext.success(id);
+            } else if (datatype.equalsIgnoreCase("calories.basal")) {
+                double kcals = args.getJSONObject(0).getDouble("value");
+                // convert kcals to power
+                Duration dur = Duration.between(Instant.ofEpochMilli(st), Instant.ofEpochMilli(et));
+                double kcalsDay = kcals / (dur.toMillis() / (86400000));
+                Power pow = Power.kilocaloriesPerDay(kcalsDay);
+
+                BasalMetabolicRateRecord record = new BasalMetabolicRateRecord(
+                        Instant.ofEpochMilli(st), null,
+                        pow,
+                        Metadata.EMPTY
+                );
+                List<BasalMetabolicRateRecord> data = new LinkedList<>();
                 data.add(record);
                 InsertRecordsResponse response = BuildersKt.runBlocking(
                         EmptyCoroutineContext.INSTANCE,
