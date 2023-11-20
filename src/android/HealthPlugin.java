@@ -409,8 +409,12 @@ public class HealthPlugin extends CordovaPlugin {
 
                     Device dev = datapoint.getMetadata().getDevice();
                     if (dev != null) {
-                        String device = dev.getManufacturer() + " " + dev.getModel();
-                        obj.put("sourceDevice", device);
+                        String device = "";
+                        String manufacturer = dev.getManufacturer();
+                        String model = dev.getModel();
+                        if (manufacturer != null || model != null){
+                            obj.put("sourceDevice", manufacturer + " " + model);
+                        }
                     }
 
                     DataOrigin origin = datapoint.getMetadata().getDataOrigin();
