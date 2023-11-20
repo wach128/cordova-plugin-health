@@ -91,9 +91,39 @@ public class HealthPlugin extends CordovaPlugin {
     private HealthConnectClient healthConnectClient;
 
     /**
+     * Used to get permissions
+     */
+    ActivityResultLauncher permissionsLauncher;
+
+    /**
      * Constructor
      */
     public HealthPlugin() {
+    }
+
+    @Override
+    public void initialize(CordovaInterface cordova, CordovaWebView webView) {
+        super.initialize(cordova, webView);
+
+        ActivityResultContract<Set<String>, Set<String>> requestPermissionActivityContract = PermissionController.createRequestPermissionResultContract();
+        permissionsLauncher = cordova.getActivity().registerForActivityResult(requestPermissionActivityContract, new ActivityResultCallback<Set<String>>() {
+            @Override
+            public void onActivityResult(Set<String> result) {
+                Log.d(TAG, "got results from authorization request");
+                if (callbackContext != null) {
+                    for (String res : result) {
+                        LOG.d(TAG, res);
+                    }
+                    if (result.isEmpty()) {
+                        callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, false));
+                    } else {
+                        callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, true));
+                    }
+                } else {
+                    LOG.e(TAG, "Got activity results before callback was created");
+                }
+            }
+        });
     }
 
 
@@ -297,11 +327,7 @@ public class HealthPlugin extends CordovaPlugin {
             if (request && !permissionsToRequest.isEmpty()) {
                 Log.d(TAG, "requesting authorization");
 
-                ActivityResultContract<Set<String>, Set<String>> requestPermissionActivityContract = PermissionController.createRequestPermissionResultContract();
-
-                Intent intent = requestPermissionActivityContract.createIntent(cordova.getActivity().getApplicationContext(), permissionsToRequest);
-                // intent.setPackage(cordova.getContext().getPackageName()); // see https://developer.android.com/about/versions/14/behavior-changes-14#safer-intents
-                cordova.startActivityForResult(this, intent, PERMISSIONS_INTENT);
+                permissionsLauncher.launch(permissionsToRequest);
             } else {
                 callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, true));
             }
@@ -309,52 +335,6 @@ public class HealthPlugin extends CordovaPlugin {
             callbackContext.error("Cannot read request object" + ex.getMessage());
         } catch (InterruptedException ex2) {
             callbackContext.error("Thread interrupted" + ex2.getMessage());
-        }
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        super.onActivityResult(requestCode, resultCode, intent);
-
-        if (requestCode == PERMISSIONS_INTENT) {
-            Log.d(TAG, "authorization results received");
-            if (resultCode == Activity.RESULT_OK) {
-
-                // return the list of authorizations that have been granted
-                try {
-                    // Example:
-                    // request_blocked: 2
-                    // request_blocked_reason: [android.permission.health.READ_STEPS] is not declared!
-
-                    int blocked = intent.getExtras().getInt("request_blocked");
-                    if (blocked != 0) {
-                        String reason = intent.getExtras().getString("request_blocked_reason");
-                        callbackContext.error("Request blocked, reason: " + reason);
-                    } else {
-                        // example:
-                        // granted_permissions_string
-                        // [androidx.health.platform.client.permission.Permission@20fb2c40]
-                        Bundle bd = intent.getExtras();
-                        Set<String> keys = bd.keySet();
-                        for (String key : keys) {
-                            Log.d(TAG, key);
-                            Object v = bd.get(key);
-                            if (v instanceof Permission) {
-                                Permission p = (Permission) v;
-                                Log.d(TAG, p.toString());
-                            } else {
-                                Log.d(TAG, v.toString());
-                            }
-                        }
-
-                        callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, true));
-                    }
-                } catch (Exception ex) {
-                    callbackContext.error("Cannot create response object " + ex.getMessage());
-                }
-            } else {
-                callbackContext.error("Could not receive authorization");
-            }
         }
     }
 
