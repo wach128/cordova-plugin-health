@@ -19,6 +19,7 @@ import androidx.health.connect.client.aggregate.AggregationResultGroupedByDurati
 import androidx.health.connect.client.aggregate.AggregationResultGroupedByPeriod;
 import androidx.health.connect.client.permission.HealthPermission;
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord;
+import androidx.health.connect.client.records.BasalMetabolicRateRecord;
 import androidx.health.connect.client.records.BodyFatRecord;
 import androidx.health.connect.client.records.ExerciseLap;
 import androidx.health.connect.client.records.ExerciseSegment;
@@ -904,8 +905,8 @@ public class HealthPlugin extends CordovaPlugin {
             } else if (datatype.equalsIgnoreCase("calories.basal")) {
                 double kcals = args.getJSONObject(0).getDouble("value");
                 // convert kcals to power
-                Duration dur = Duration.between(Instant.ofEpochMilli(st), Instant.ofEpochMilli(et));
-                double kcalsDay = kcals / (dur.toMillis() / (86400000));
+                double ms = (et - st);
+                double kcalsDay = kcals / (ms / (double)(86400000));
                 Power pow = Power.kilocaloriesPerDay(kcalsDay);
 
                 BasalMetabolicRateRecord record = new BasalMetabolicRateRecord(
