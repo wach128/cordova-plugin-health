@@ -96,7 +96,7 @@ Log of changes
 
 * [Breaking change] plugin is now accessed from `cordova.plugins.healt`
 * [Breaking change] authorization is asked using the `read` and `write` properties only
-* With Health Connect several activities have disappeared.
+* [Breaking change] total calories have been removed, now you either treat active or basal ones
 * Added following activities:
  * bootcamp
  * stretching
@@ -104,7 +104,6 @@ Log of changes
  * exercise_class
  * strength_training.functional
  * guided_breathing
-
 * Removed following activities:
  * aerobics
  * biathlon

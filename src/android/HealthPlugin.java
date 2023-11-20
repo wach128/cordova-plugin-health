@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContract;
 import androidx.health.connect.client.HealthConnectClient;
 import androidx.health.connect.client.PermissionController;
@@ -16,6 +18,7 @@ import androidx.health.connect.client.aggregate.AggregationResult;
 import androidx.health.connect.client.aggregate.AggregationResultGroupedByDuration;
 import androidx.health.connect.client.aggregate.AggregationResultGroupedByPeriod;
 import androidx.health.connect.client.permission.HealthPermission;
+import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord;
 import androidx.health.connect.client.records.BodyFatRecord;
 import androidx.health.connect.client.records.ExerciseLap;
 import androidx.health.connect.client.records.ExerciseSegment;
@@ -33,6 +36,7 @@ import androidx.health.connect.client.request.ReadRecordsRequest;
 import androidx.health.connect.client.response.InsertRecordsResponse;
 import androidx.health.connect.client.response.ReadRecordsResponse;
 import androidx.health.connect.client.time.TimeRangeFilter;
+import androidx.health.connect.client.units.Energy;
 import androidx.health.connect.client.units.Mass;
 import androidx.health.connect.client.units.Percentage;
 import androidx.health.platform.client.permission.Permission;
@@ -208,12 +212,8 @@ public class HealthPlugin extends CordovaPlugin {
         }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
 
-
+    // DATA_TYPE add here when supporting new ones
     private KClass<? extends androidx.health.connect.client.records.Record> dataTypeNameToClass(String name) {
         if (name.equalsIgnoreCase("steps")) {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(StepsRecord.class);
@@ -227,6 +227,10 @@ public class HealthPlugin extends CordovaPlugin {
         if (name.equalsIgnoreCase("activity")) {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(ExerciseSessionRecord.class);
         }
+        if (name.equalsIgnoreCase("calories.active")) {
+            return kotlin.jvm.JvmClassMappingKt.getKotlinClass(ActiveCaloriesBurnedRecord.class);
+        }
+
         return null;
     }
 
@@ -292,8 +296,11 @@ public class HealthPlugin extends CordovaPlugin {
 
             if (request && !permissionsToRequest.isEmpty()) {
                 Log.d(TAG, "requesting authorization");
+
                 ActivityResultContract<Set<String>, Set<String>> requestPermissionActivityContract = PermissionController.createRequestPermissionResultContract();
-                Intent intent = requestPermissionActivityContract.createIntent(cordova.getContext(), permissionsToRequest);
+
+                Intent intent = requestPermissionActivityContract.createIntent(cordova.getActivity().getApplicationContext(), permissionsToRequest);
+                // intent.setPackage(cordova.getContext().getPackageName()); // see https://developer.android.com/about/versions/14/behavior-changes-14#safer-intents
                 cordova.startActivityForResult(this, intent, PERMISSIONS_INTENT);
             } else {
                 callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, true));
@@ -473,6 +480,15 @@ public class HealthPlugin extends CordovaPlugin {
 
                         obj.put("value", activityStr);
                         obj.put("unit", "activityType");
+                    } else if (datapoint instanceof ActiveCaloriesBurnedRecord) {
+                        ActiveCaloriesBurnedRecord caloriesDP = (ActiveCaloriesBurnedRecord) datapoint;
+                        obj.put("startDate",caloriesDP.getStartTime().toEpochMilli());
+                        obj.put("endDate", caloriesDP.getEndTime().toEpochMilli());
+
+                        double kcals = caloriesDP.getEnergy().getKilocalories();
+
+                        obj.put("value", kcals);
+                        obj.put("unit", "kcal");
                     } else {
                         callbackContext.error("Sample received of unknown type " + datatype.toString());
                         return;
@@ -570,6 +586,7 @@ public class HealthPlugin extends CordovaPlugin {
                 }
                 if(period != null) {
                     AggregateGroupByPeriodRequest request;
+                    // DATA_TYPE: add here support for new data types
                     if (datatype.equalsIgnoreCase("steps")) {
                         Set<AggregateMetric<Long>> metrics = new HashSet<>();
                         metrics.add(StepsRecord.COUNT_TOTAL);
@@ -577,6 +594,10 @@ public class HealthPlugin extends CordovaPlugin {
                     } else if (datatype.equalsIgnoreCase("activity")) {
                         Set<AggregateMetric<Duration>> metrics = new HashSet<>();
                         metrics.add(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
+                        request = new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
+                    } else if (datatype.equalsIgnoreCase("calories.active")) {
+                        Set<AggregateMetric<Energy>> metrics = new HashSet<>();
+                        metrics.add(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL);
                         request = new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
                     } else {
                         callbackContext.error("Datatype not recognized " + datatype);
@@ -605,6 +626,7 @@ public class HealthPlugin extends CordovaPlugin {
                     callbackContext.success(retBucketsArr);
                 } else {
                     AggregateGroupByDurationRequest request;
+                    // DATA_TYPE: add here support for new data types
                     if (datatype.equalsIgnoreCase("steps")) {
                         Set<AggregateMetric<Long>> metrics = new HashSet<>();
                         metrics.add(StepsRecord.COUNT_TOTAL);
@@ -612,6 +634,10 @@ public class HealthPlugin extends CordovaPlugin {
                     } else if (datatype.equalsIgnoreCase("activity")) {
                         Set<AggregateMetric<Duration>> metrics = new HashSet<>();
                         metrics.add(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
+                        request = new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
+                    } else if (datatype.equalsIgnoreCase("calories.active")) {
+                        Set<AggregateMetric<Energy>> metrics = new HashSet<>();
+                        metrics.add(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL);
                         request = new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
                     } else {
                         callbackContext.error("Datatype not recognized " + datatype);
@@ -643,6 +669,7 @@ public class HealthPlugin extends CordovaPlugin {
                 TimeRangeFilter timeRange = TimeRangeFilter.between(Instant.ofEpochMilli(st), Instant.ofEpochMilli(et));
 
                 AggregateRequest request;
+                // DATA_TYPE add here support for new data types
                 if (datatype.equalsIgnoreCase("steps")) {
                     Set<AggregateMetric<Long>> metrics = new HashSet<>();
                     metrics.add(StepsRecord.COUNT_TOTAL);
@@ -650,6 +677,10 @@ public class HealthPlugin extends CordovaPlugin {
                 } else if (datatype.equalsIgnoreCase("activity")) {
                     Set<AggregateMetric<Duration>> metrics = new HashSet<>();
                     metrics.add(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
+                    request = new AggregateRequest(metrics, timeRange, dor);
+                } else if (datatype.equalsIgnoreCase("calories.active")) {
+                    Set<AggregateMetric<Energy>> metrics = new HashSet<>();
+                    metrics.add(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL);
                     request = new AggregateRequest(metrics, timeRange, dor);
                 } else {
                     callbackContext.error("Datatype not recognized " + datatype);
@@ -677,6 +708,7 @@ public class HealthPlugin extends CordovaPlugin {
     }
 
     private void setAggregatedVal(String datatype, JSONObject retObj, AggregationResult response) throws JSONException {
+        // DATA_TYPE add here new data types when extending
         if (datatype.equalsIgnoreCase("steps")) {
             long val = response.get(StepsRecord.COUNT_TOTAL);
             retObj.put("value", val);
@@ -686,6 +718,10 @@ public class HealthPlugin extends CordovaPlugin {
             long millis = val.getSeconds() * 1000;
             retObj.put("value", millis);
             retObj.put("unit", "ms");
+        } else if (datatype.equalsIgnoreCase("calories.active")) {
+            double kcals = response.get(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL).getKilocalories();
+            retObj.put("value", kcals);
+            retObj.put("unit", "kcal");
         }
     }
 
@@ -744,7 +780,7 @@ public class HealthPlugin extends CordovaPlugin {
                 String id = response.getRecordIdsList().get(0);
 
                 callbackContext.success(id);
-            } if (datatype.equalsIgnoreCase("weight")) {
+            } else if (datatype.equalsIgnoreCase("weight")) {
                 double kgs = args.getJSONObject(0).getDouble("value");
 
                 // TODO: we could add meta data when storing, including entry method, client ID and device
@@ -764,7 +800,7 @@ public class HealthPlugin extends CordovaPlugin {
                 String id = response.getRecordIdsList().get(0);
 
                 callbackContext.success(id);
-            } if (datatype.equalsIgnoreCase("fat_percentage")) {
+            } else if (datatype.equalsIgnoreCase("fat_percentage")) {
                 double perc = args.getJSONObject(0).getDouble("value");
 
                 BodyFatRecord record = new BodyFatRecord(
@@ -783,7 +819,7 @@ public class HealthPlugin extends CordovaPlugin {
                 String id = response.getRecordIdsList().get(0);
 
                 callbackContext.success(id);
-            } if (datatype.equalsIgnoreCase("activity")) {
+            } else if (datatype.equalsIgnoreCase("activity")) {
                 String activityStr = args.getJSONObject(0).getString("value");
                 int exerciseType = ActivityMapper.exerciseTypeFromActivity(activityStr);
                 String title = null;
@@ -810,9 +846,30 @@ public class HealthPlugin extends CordovaPlugin {
                 String id = response.getRecordIdsList().get(0);
 
                 callbackContext.success(id);
+            } else if (datatype.equalsIgnoreCase("calories.active")) {
+                double kcals = args.getJSONObject(0).getDouble("value");
+
+                ActiveCaloriesBurnedRecord record = new ActiveCaloriesBurnedRecord(
+                        Instant.ofEpochMilli(st), null,
+                        Instant.ofEpochMilli(et), null,
+                        Energy.kilocalories(kcals),
+                        Metadata.EMPTY
+                );
+                List<ActiveCaloriesBurnedRecord> data = new LinkedList<>();
+                data.add(record);
+                InsertRecordsResponse response = BuildersKt.runBlocking(
+                        EmptyCoroutineContext.INSTANCE,
+                        (s, c) -> healthConnectClient.insertRecords(data, c)
+                );
+                Log.d(TAG, "Data written of type " + datatype);
+
+                String id = response.getRecordIdsList().get(0);
+
+                callbackContext.success(id);
             } else {
                 callbackContext.error("Datatype not supported " + datatype);
             }
+
 
         } catch (JSONException ex) {
             callbackContext.error("Cannot parse request object " + ex.getMessage());

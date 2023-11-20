@@ -62,6 +62,7 @@ As HealthKit does not allow adding custom data types, only a subset of data type
 | weight          | kg    | HKQuantityTypeIdentifierBodyMass              |   Weight                                 |
 | fat_percentage  | %     | HKQuantityTypeIdentifierBodyFatPercentage     |   BodyFatRecord                          |
 | activity        | activityType | HKWorkoutTypeIdentifier                |   ExerciseSessionRecord                  |
+| calories.active | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned    | ActiveCaloriesBurnedRecord               |
 
 
 **Note**: units of measurement are fixed!
@@ -209,19 +210,17 @@ cordova.plugins.health.query({
 
 #### iOS quirks
 
-- HealthKit does not calculate active and basal calories - these must be inputted from an app
-- HealthKit does not detect activities automatically - these must be inputted from an app
+- HealthKit does not calculate active and basal calories - these must be input from an app
+- HealthKit does not detect activities automatically - these must be input from an app
 - When querying for activities, only events whose startDate and endDate are **both** in the query range will be returned.
-- Activities can include a duration (in seconds), this may be different than the endTime - startTime and actually more accurate.
-- When querying for nutrition, HealthKit only returns those stored as correlation. To be sure to get all stored quantities, it's better to query nutrients individually (e.g. MyFitnessPal doesn't store meals as correlations).
-- nutrition.vitamin_a is given in micrograms. Automatic conversion to international units is not trivial and depends on the actual substance (see [here](https://dietarysupplementdatabase.usda.nih.gov/ingredient_calculator/help.php#q9)).
-- The blood glucose meal information is stored by the Health App as preprandial (before a meal) or postprandial (after a meal), which are mapped to 'before_meal' and 'after_meal'. These two specific values are only used in iOS and can't be used in Android apps.
+- When duration (in seconds) is returned, this may be different than the endTime - startTime and actually more accurate.
 
 
 #### Android quirks
 
 - Health Connect can read data for up to 30 days prior to the time permission was first granted. If the app is reinstalled, the permission history is lost and you can only query from 30 days before installation. See [note here](https://developer.android.com/health-and-fitness/guides/health-connect/develop/read-data).
-- Not all datatypes support start and end timestamps, some, such as weight, only have one timestamp. The plugin will just set both start and end to the same value.
+- Not all datatypes support start and end timestamps, some, such as weight, only have one timestamp. The plugin will just set both start and end to the same value in those cases.
+
 
 ### queryAggregated()
 
@@ -241,9 +240,9 @@ cordova.plugins.health.queryAggregated({
 - endDate: end data to which to get the data
 - dataType: the data type to be queried (see below for supported data types)
 - bucket: if specified, aggregation is grouped an array of "buckets" (windows of time), supported values are: 'hour', 'day', 'week', 'month', 'year'
+- filterOutUserInput: optional, filters out user-entered activities if set to true (only works on iOS)
 - successCallback: called if all OK, argument contains the result of the query, see below for returned data types. If no buckets is specified, the result is an object. If a bucketing strategy is specified, the result is an array.
 - errorCallback: called if something went wrong, argument contains a textual description of the problem
-- filterOutUserInput: optional, filters out user-entered activities if set to true (only works on iOS)
 
 
 Not all data types are supported for aggregated queries.
@@ -252,25 +251,20 @@ The following table shows what types are supported and examples of the returned 
 | Data type       | Example of returned object |
 |-----------------|----------------------------|
 | steps           | { startDate: Date, endDate: Date, value: 5780, unit: 'count' } |
-| activity        | { startDate: Date, endDate: Date, value: { still: { duration: 520000 }, walking: { duration: 223000 }}, unit: 'activitySummary' }<br />**Note:** duration is expressed in milliseconds |
+| activity        | Android: { startDate: Date, endDate: Date, value: 567000, unit: 'ms' } <br /> iOS: { startDate: Date, endDate: Date, value: { still: { duration: 520000 }, walking: { duration: 223000 }}, unit: 'activitySummary' }<br />**Note:** durations are expressed in milliseconds |
 
 
 #### Quirks
 
+- Health Connect does not currently support grouping by activity type, therefore only the total time for all activities can be returned.
 - The start and end dates returned are the date of the first and the last available samples. If no samples are found, start and end may not be set.
 - When bucketing, buckets will include the whole hour / day / month / week / year where start and end times fall into. For example, if your start time is 2016-10-21 10:53:34, the first daily bucket will start at 2016-10-21 00:00:00.
 - Weeks start on Monday.
 
 
-#### iOS quirks
-
-- When querying for nutrition, HealthKit only returns those stored as correlation. To be sure to get all stored quantities, it's better to query nutrients individually (e.g. MyFitnessPal doesn't store meals as correlations).
-- nutrition.vitamin_a is given in micrograms. Automatic conversion to international units is not trivial and depends on the actual substance (see [here](https://dietarysupplementdatabase.usda.nih.gov/ingredient_calculator/help.php#q9)).
-
 #### Android quirks
 
-- nutrition.vitamin_a is given in international units. Automatic conversion to micrograms is not trivial and depends on the actual substance (see [here](https://dietarysupplementdatabase.usda.nih.gov/ingredient_calculator/help.php#q9)).
-- `filterOutUserInput: true` has no effect for aggregated queries currently.
+- Currently, it is not possible to group by activity type in aggregated queries, only the total time for all activities can be returned. See discussion [here](https://stackoverflow.com/questions/77512832/how-to-aggregate-by-exercise-type-in-the-android-health-connect-api/77512845#77512845).
 
 
 ### store()
@@ -296,10 +290,10 @@ cordova.plugins.health.store({
 
 #### iOS quirks
 
-- When storing an activity, you can also specify calories (active, in kcal) and/or distance (in meters). For example: `dataType: 'activity', value: 'walking', calories: 20, distance: 520`. Distance is set as DistanceWalkingRunning unless an additional `cycling: true` is added to the object. Be aware that you need permission to write calories and distance first, or the call will fail.
 - In iOS you cannot store the total calories, you need to specify either basal or active. If you use total calories, the active ones will be stored.
 - In iOS distance is assumed to be of type WalkingRunning, if you want to explicitly set it to Cycling you need to add the field `cycling: true`.
-- The blood glucose meal information can be stored as 'before_meal' and 'after_meal', but these two can't be used in Android.
+- When storing an activity, you can also specify calories (active, in kcal) and/or distance (in meters). For example: `dataType: 'activity', value: 'walking', calories: 20, distance: 520`. Distance is set as DistanceWalkingRunning unless an additional `cycling: true` is added to the object. Be aware that you need permission to write calories and distance first, or the call will fail.
+- In iOS you cannot store the total calories, you need to specify either basal or active. If you use total calories, the active ones will be stored.
 
 #### Android quirks
 
