@@ -252,6 +252,7 @@ The following table shows what types are supported and examples of the returned 
 | Data type       | Example of returned object |
 |-----------------|----------------------------|
 | steps           | { startDate: Date, endDate: Date, value: 5780, unit: 'count' } |
+| activity        | { startDate: Date, endDate: Date, value: { still: { duration: 520000 }, walking: { duration: 223000 }}, unit: 'activitySummary' }<br />**Note:** duration is expressed in milliseconds |
 
 
 #### Quirks

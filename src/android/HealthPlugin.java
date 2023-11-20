@@ -51,7 +51,9 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
+import java.time.temporal.TemporalUnit;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -436,6 +438,7 @@ public class HealthPlugin extends CordovaPlugin {
                     }
                     obj.put("entryMethod", method);
 
+                    // DATA_TYPES here we need to add support for each different data type
                     if (datapoint instanceof StepsRecord) {
                         StepsRecord stepsDP = (StepsRecord) datapoint;
                         obj.put("startDate",stepsDP.getStartTime().toEpochMilli());
@@ -469,7 +472,7 @@ public class HealthPlugin extends CordovaPlugin {
                         String activityStr = ActivityMapper.activityFromExerciseType(exType);
 
                         obj.put("value", activityStr);
-                        obj.put("unit", "%");
+                        obj.put("unit", "activityType");
                     } else {
                         callbackContext.error("Sample received of unknown type " + datatype.toString());
                         return;
@@ -571,6 +574,10 @@ public class HealthPlugin extends CordovaPlugin {
                         Set<AggregateMetric<Long>> metrics = new HashSet<>();
                         metrics.add(StepsRecord.COUNT_TOTAL);
                         request = new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
+                    } else if (datatype.equalsIgnoreCase("activity")) {
+                        Set<AggregateMetric<Duration>> metrics = new HashSet<>();
+                        metrics.add(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
+                        request = new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
                     } else {
                         callbackContext.error("Datatype not recognized " + datatype);
                         return;
@@ -601,6 +608,10 @@ public class HealthPlugin extends CordovaPlugin {
                     if (datatype.equalsIgnoreCase("steps")) {
                         Set<AggregateMetric<Long>> metrics = new HashSet<>();
                         metrics.add(StepsRecord.COUNT_TOTAL);
+                        request = new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
+                    } else if (datatype.equalsIgnoreCase("activity")) {
+                        Set<AggregateMetric<Duration>> metrics = new HashSet<>();
+                        metrics.add(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
                         request = new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
                     } else {
                         callbackContext.error("Datatype not recognized " + datatype);
@@ -636,6 +647,10 @@ public class HealthPlugin extends CordovaPlugin {
                     Set<AggregateMetric<Long>> metrics = new HashSet<>();
                     metrics.add(StepsRecord.COUNT_TOTAL);
                     request = new AggregateRequest(metrics, timeRange, dor);
+                } else if (datatype.equalsIgnoreCase("activity")) {
+                    Set<AggregateMetric<Duration>> metrics = new HashSet<>();
+                    metrics.add(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
+                    request = new AggregateRequest(metrics, timeRange, dor);
                 } else {
                     callbackContext.error("Datatype not recognized " + datatype);
                     return;
@@ -665,6 +680,12 @@ public class HealthPlugin extends CordovaPlugin {
         if (datatype.equalsIgnoreCase("steps")) {
             long val = response.get(StepsRecord.COUNT_TOTAL);
             retObj.put("value", val);
+            retObj.put("unit", "'count'");
+        } else if (datatype.equalsIgnoreCase("activity")) {
+            Duration val = response.get(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
+            long millis = val.getSeconds() * 1000;
+            retObj.put("value", millis);
+            retObj.put("unit", "ms");
         }
     }
 
@@ -702,6 +723,7 @@ public class HealthPlugin extends CordovaPlugin {
                 return;
             }
 
+            // DATA_TYPES here we need to add support for each different data type
             if (datatype.equalsIgnoreCase("steps")) {
                 long steps = args.getJSONObject(0).getLong("value");
                 // TODO: we could add meta data when storing, including entry method, client ID and device

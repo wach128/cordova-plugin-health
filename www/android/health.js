@@ -74,9 +74,6 @@ module.exports = {
       data.startDate = data.startDate.getTime()
     if (data.endDate && (typeof data.endDate == 'object'))
       data.endDate = data.endDate.getTime()
-    if (data.dataType == 'activity') {
-      data.value = navigator.health.toFitActivity(data.value);
-    }
     exec(onSuccess, onError, "health", "delete", [data]);
   }
 }
