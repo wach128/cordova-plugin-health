@@ -1,7 +1,7 @@
 # Activities mapping
 
-"NA" is automatically converted "other".
-This means that, for example, if you try to save "aerobics" in an iOS application, you will get back "other" when querying.
+"NA" is automatically converted "other". This means that, for example, if you try to save "bootcamp" in an iOS application, you will get back "other" when querying. When two activities can be mapped to the same data type on the native platform, an asterisk indicates the activity that is returned when querying it back. For example, when storing `stretching` on iOS, it is saved as `HKWorkoutActivityTypePreparationAndRecovery`, when querying for acitivities, `preparation_and_recovery` is actually returned. Another example: when you store `wheelchair.walkpace` on Android, you get back `wheelchair` when querying.
+
 * [List of activities in Health Connect](https://developer.android.com/reference/kotlin/androidx/health/connect/client/records/ExerciseSessionRecord)
 * [List of activities in HealthKit](https://developer.apple.com/documentation/healthkit/hkworkoutactivitytype?language=objc)
 
@@ -20,8 +20,8 @@ This means that, for example, if you try to save "aerobics" in an iOS applicatio
 | calisthenics      | EXERCISE_TYPE_CALISTHENICS | NA                               |
 | cricket           | EXERCISE_TYPE_CRICKET     | HKWorkoutActivityTypeCricket      |
 |   cooldown        | NA                        | HKWorkoutActivityTypeCooldown     |
-| core_training	    | STRENGTH_TRAINING	        | HKWorkoutActivityTypeCoreTraining	|
-| crossfit	        | STRENGTH_TRAINING	        | HKWorkoutActivityTypeCrossTraining|
+| core_training	    | EXERCISE_TYPE_STRENGTH_TRAINING | HKWorkoutActivityTypeCoreTraining	|
+| crossfit	        | EXERCISE_TYPE_STRENGTH_TRAINING | HKWorkoutActivityTypeCrossTraining|
 | curling	        | NA	                    |	HKWorkoutActivityTypeCurling	|
 | dancing           | EXERCISE_TYPE_DANCING     | HKWorkoutActivityTypeCardioDance  |
 | dancing.social    | EXERCISE_TYPE_DANCING     | HKWorkoutActivityTypeSocialDance  |
@@ -39,9 +39,9 @@ This means that, for example, if you try to save "aerobics" in an iOS applicatio
 | frisbee_disc      | EXERCISE_TYPE_FRISBEE_DISC | NA                            |
 | golf              | EXERCISE_TYPE_GOLF        | HKWorkoutActivityTypeGolf       |
 | guided_breathing  | EXERCISE_TYPE_GUIDED_BREATHING | NA                      |
-| gymnastics	    | EXERCISE_TYPE_GYMNASTICS  | HKWorkoutActivityTypeGymnastics  |
+| gymnastics	    | EXERCISE_TYPE_GYMNASTICS * | HKWorkoutActivityTypeGymnastics  |
 | handball	        | EXERCISE_TYPE_HANDBALL    | HKWorkoutActivityTypeHandball    |
-| interval_training.high_intensity | EXERCISE_TYPE_HIGH_INTENSITY_INTERVAL_TRAINING  HKWorkoutActivityTypeHighIntensityIntervalTraining |
+| interval_training.high_intensity | EXERCISE_TYPE_HIGH_INTENSITY_INTERVAL_TRAINING |  HKWorkoutActivityTypeHighIntensityIntervalTraining |
 | hiking            | EXERCISE_TYPE_HIKING     | HKWorkoutActivityTypeHiking      |
 | hockey            | EXERCISE_TYPE_ICE_HOCKEY | HKWorkoutActivityTypeHockey      |
 | hockey.roller     | EXERCISE_TYPE_ROLLER_HOCKEY | HKWorkoutActivityTypeHockey   |
@@ -60,7 +60,7 @@ This means that, for example, if you try to save "aerobics" in an iOS applicatio
 | pilates	        | EXERCISE_TYPE_PILATES	    | HKWorkoutActivityTypePilates	    |
 | play	            | NA	                    | HKWorkoutActivityTypePlay	        |
 | pickleball        | NA                        | HKWorkoutActivityTypePickleball   |
-| preparation_and_recovery | EXERCISE_TYPE_STRETCHING |	HKWorkoutActivityTypePreparationAndRecovery	|
+| preparation_and_recovery | EXERCISE_TYPE_STRETCHING |	HKWorkoutActivityTypePreparationAndRecovery *	|
 | racquetball	    | EXERCISE_TYPE_RACQUETBALL	| HKWorkoutActivityTypeRacquetball	    |
 | rock_climbing	    | EXERCISE_TYPE_ROCK_CLIMBING	|	HKWorkoutActivityTypeClimbing	|
 | rowing	        | EXERCISE_TYPE_ROWING	|	HKWorkoutActivityTypeRowing	|
@@ -71,9 +71,9 @@ This means that, for example, if you try to save "aerobics" in an iOS applicatio
 | sailing	        | EXERCISE_TYPE_SAILING	    | HKWorkoutActivityTypeSailing	|
 | scuba_diving	    | EXERCISE_TYPE_SCUBA_DIVING | HKWorkoutActivityTypeWaterSports	|
 | skating       	| EXERCISE_TYPE_SKATING	    | HKWorkoutActivityTypeSkatingSports	|
-| skiing	        | EXERCISE_TYPE_SKIING	| HKWorkoutActivityTypeSnowSports	|
+| skiing	        | EXERCISE_TYPE_SKIING *	| HKWorkoutActivityTypeDownhillSkiing	|
 | skiing.cross_country|	EXERCISE_TYPE_SKIING    | HKWorkoutActivityTypeCrossCountrySkiing	|
-| skiing.downhill	| EXERCISE_TYPE_SKIING	|	HKWorkoutActivityTypeDownhillSkiing	|
+| skiing.downhill	| EXERCISE_TYPE_SKIING	    | HKWorkoutActivityTypeDownhillSkiing *	|
 | snowboarding	    | EXERCISE_TYPE_SNOWBOARDING	| HKWorkoutActivityTypeSnowboarding	|
 | snowshoeing	    | EXERCISE_TYPE_SNOWSHOEING	| HKWorkoutActivityTypeSnowSports	|
 | snow_sports	    | NA	                    | HKWorkoutActivityTypeSnowSports	|
@@ -81,12 +81,12 @@ This means that, for example, if you try to save "aerobics" in an iOS applicatio
 | squash	        | EXERCISE_TYPE_SQUASH	    | HKWorkoutActivityTypeSquash	|
 | stair_climbing	| EXERCISE_TYPE_STAIR_CLIMBING	| HKWorkoutActivityTypeStairs	|
 | stair_climbing.machine | EXERCISE_TYPE_STAIR_CLIMBING_MACHINE	| HKWorkoutActivityTypeStairClimbing	|
-| strength_training	| EXERCISE_TYPE_STRENGTH_TRAINING	|	HKWorkoutActivityTypeTraditionalStrengthTraining	|
+| strength_training	| EXERCISE_TYPE_STRENGTH_TRAINING * |	HKWorkoutActivityTypeTraditionalStrengthTraining * |
 | strength_training.functional | EXERCISE_TYPE_STRENGTH_TRAINING | HKWorkoutActivityTypeFunctionalStrengthTraining	|
-| stretching	    | EXERCISE_TYPE_STRETCHING	| HKWorkoutActivityTypePreparationAndRecovery	|
+| stretching	    | EXERCISE_TYPE_STRETCHING * | HKWorkoutActivityTypePreparationAndRecovery	|
 | surfing	        | EXERCISE_TYPE_SURFING 	| HKWorkoutActivityTypeSurfingSports	|
-| swimming	        | EXERCISE_TYPE_SWIMMING_POOL|	HKWorkoutActivityTypeSwimming	|
-| swimming.pool	    | EXERCISE_TYPE_SWIMMING_POOL |	HKWorkoutActivityTypeSwimming	|
+| swimming	        | EXERCISE_TYPE_SWIMMING_POOL|	HKWorkoutActivityTypeSwimming * |
+| swimming.pool	    | EXERCISE_TYPE_SWIMMING_POOL * |	HKWorkoutActivityTypeSwimming	|
 | swimming.open_water | EXERCISE_TYPE_SWIMMING_OPEN_WATER	| HKWorkoutActivityTypeSwimming	|
 | table_tennis	    | EXERCISE_TYPE_TABLE_TENNIS | HKWorkoutActivityTypeTableTennis	|
 | tai_chi           | NA                        | HKWorkoutActivityTypeTaiChi       |
@@ -98,7 +98,7 @@ This means that, for example, if you try to save "aerobics" in an iOS applicatio
 | water_polo	    | EXERCISE_TYPE_WATER_POLO	| HKWorkoutActivityTypeWaterPolo	|
 | water_sports	    | NA	                    | HKWorkoutActivityTypeWaterSports	|
 | weightlifting	    | EXERCISE_TYPE_WEIGHTLIFTING |	HKWorkoutActivityTypeTraditionalStrengthTraining	|
-| wheelchair	    | EXERCISE_TYPE_WHEELCHAIR	| HKWorkoutActivityTypeWheelchairRunPace |
+| wheelchair	    | EXERCISE_TYPE_WHEELCHAIR * | HKWorkoutActivityTypeWheelchairRunPace |
 | wheelchair.walkpace |	EXERCISE_TYPE_WHEELCHAIR |HKWorkoutActivityTypeWheelchairWalkPace	|
 | wheelchair.runpace | EXERCISE_TYPE_WHEELCHAIR	|	HKWorkoutActivityTypeWheelchairRunPace	|
 | wrestling	        |	NA	|	HKWorkoutActivityTypeWrestling	|

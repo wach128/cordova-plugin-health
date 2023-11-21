@@ -97,6 +97,8 @@ Log of changes
 * [Breaking change] plugin is now accessed from `cordova.plugins.healt`
 * [Breaking change] authorization is asked using the `read` and `write` properties only
 * [Breaking change] total calories have been removed, now you either treat active or basal ones
+* [Breaking change] when querying for activities, you can specify `includeCalories` and `includeDistance` separately
+
 * Added following activities:
  * bootcamp
  * stretching

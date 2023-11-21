@@ -100,8 +100,6 @@
 
     case HKWorkoutActivityTypePilates:  return @"pilates";
 
-    case HKWorkoutActivityTypePreparationAndRecovery:  return @"preparation_and_recovery";
-
     case HKWorkoutActivityTypeRacquetball:  return @"racquetball";
 
     case HKWorkoutActivityTypeClimbing:  return @"rock_climbing";
@@ -321,7 +319,7 @@
 
   } else if ([which isEqualToString:@"skating"]) { return HKWorkoutActivityTypeSkatingSports;
 
-  } else if ([which isEqualToString:@"skiing"]) { return HKWorkoutActivityTypeSnowSports;
+  } else if ([which isEqualToString:@"skiing"]) { return HKWorkoutActivityTypeDownhillSkiing;
 
   } else if ([which isEqualToString:@"skiing.cross_country"]) { return HKWorkoutActivityTypeCrossCountrySkiing;
 

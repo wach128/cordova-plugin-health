@@ -89,7 +89,7 @@ Example values:
 | weight         | 83.3                              |
 | fat_percentage | 0.312                             |
 | calories.X     | 245.3                             |
-| activity       | "walking"<br />**Notes**: recognized activities and their mappings in Health Connect / HealthKit can be found [here](activities_map.md) <br /> the query also returns calories (kcal) and distance (m)<br />**Warning** If you want to fetch activities you also have to request permission for 'calories' and 'distance'. |
+| activity       | "walking"<br />**Notes**: recognized activities and their mappings in Health Connect / HealthKit can be found [here](activities_map.md) <br /> additional calories (in kcal) and distance (in m) can be added if the query has the `includeCalories` and/or `includeDistance` flags set. **Warning** If you want to fetch calories and/or distance permission to access those quantities should be requested. |
 | gender         | "male" <br/>**Notes**: only available on iOS |
 | date_of_birth  | { day: 3, month: 12, year: 1978 } <br/>**Notes**: currently only available on iOS |
 | mindfulness     | 1800 <br/>**Notes**: only available on iOS |
@@ -209,9 +209,10 @@ cordova.plugins.health.query({
 - limit: optional, sets a maximum number of returned values, default is 1000
 - ascending: optional, datapoints are ordered in an descending fashion (from newer to older) se this to true to revert this behaviour
 - filterOutUserInput: optional, if true, filters out user-entered activities (iOS only)
+- includeCalories: optional, used only for dataType "activity". When querying, for each activity, also the active calories (in kcal) will be added. ***Warning*** the app requires access to calories.active to be granted
+- includeDistance: optional, used only for dataType "activity". When querying, for each activity, also the distance, run or cycled, (in m) will be added. ***Warning*** the app requires access to distance to be granted
 - successCallback: called if all OK, argument contains the result of the query in the form of an array of: { startDate: Date, endDate: Date, value: xxx, unit: 'xxx', sourceName: 'aaaa', sourceBundleId: 'bbbb' }
 - errorCallback: called if something went wrong, argument contains a textual description of the problem
-
 
 #### iOS quirks
 
@@ -226,8 +227,8 @@ cordova.plugins.health.query({
 - Health Connect can read data for up to 30 days prior to the time permission was first granted. If the app is reinstalled, the permission history is lost and you can only query from 30 days before installation. See [note here](https://developer.android.com/health-and-fitness/guides/health-connect/develop/read-data).
 - Not all datatypes support start and end timestamps, some, such as weight, only have one timestamp. The plugin will just set both start and end to the same value in those cases.
 - Active and basal calories can be automatically calculated by Health Connect.
-- calories.basal is returned as an average per day (kcal/day), and is usually stored quite sparely (it rarely change. but chnages in height trigger a ricalculation).
-
+- calories.basal is returned as an average per day (kcal/day), and is usually stored quite sparsely (it rarely change, but chnages in weight and height trigger a ricalculation).
+- Calories and distance for activities are actually queried indipendently, using the timestamps for each returned activity. This may considerably slow down the query if the returned activities are many. Use with care.
 
 ### queryAggregated()
 
@@ -258,6 +259,8 @@ The following table shows what types are supported and examples of the returned 
 | Data type       | Example of returned object |
 |-----------------|----------------------------|
 | steps           | { startDate: Date, endDate: Date, value: 5780, unit: 'count' } |
+| calories.active | { startDate: Date, endDate: Date, value: 25698.4, unit: 'kcal' } |
+| calories.basal  | { startDate: Date, endDate: Date, value: 3547.3, unit: 'kcal' } |
 | activity        | Android: { startDate: Date, endDate: Date, value: 567000, unit: 'ms' } <br /> iOS: { startDate: Date, endDate: Date, value: { still: { duration: 520000 }, walking: { duration: 223000 }}, unit: 'activitySummary' }<br />**Note:** durations are expressed in milliseconds |
 
 
@@ -306,6 +309,7 @@ cordova.plugins.health.store({
 
 - This operation correponds to an insert, not an update. If you want to update the data point you need to delete it first.
 - Not all datatypes support start and end timestamps, some, such as weight, only have one timestamp. The plugin will use the start timestamp to set the actual one.
+- In Android you can only store basal rate, that is a power. This is estimated from the kcals provided as an argument, divided by the time between the start and end time. When you query the individual sample, you get the kcal/day back, not the kcal, unless you do an aggregated query.
 
 
 ### delete()

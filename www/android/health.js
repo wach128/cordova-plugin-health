@@ -30,20 +30,78 @@ module.exports = {
       opts.startDate = opts.startDate.getTime()
     if (opts.endDate && (typeof opts.endDate == 'object'))
       opts.endDate = opts.endDate.getTime();
-    exec(function (data) {
-      for (var i = 0; i < data.length; i++) {
-        // convert timestamps to date
-        if (data[i].startDate) data[i].startDate = new Date(data[i].startDate)
-        if (data[i].endDate) data[i].endDate = new Date(data[i].endDate)
+    exec((data) => {
+      // here we use a recursive function instead of a simple loop
+      // this is to deal with additional queries required for the special case
+      // of activity with calories and/or distance
+      finalizeResult = (i) => {
+        if (i >= data.length) {
+          // completed, return results
+          onSuccess(data);
+        } else {
+          // iterate
+          // convert timestamps to date
+          if (data[i].startDate) data[i].startDate = new Date(data[i].startDate)
+          if (data[i].endDate) data[i].endDate = new Date(data[i].endDate)
+
+          if (opts.dataType == 'activity' && (opts.includeCalories || opts.includeDistance)) {
+            // we need to also fetch calories and/or distance
+
+            // helper function to get aggregated calories for that activity
+            getCals = (onDone) => {
+              this.queryAggregated({
+                startDate: data[i].startDate,
+                endDate: data[i].endDate,
+                dataType: 'calories.active'
+              }, (cals) => {
+                data[i].calories = cals.value
+                onDone()
+              }, onError)
+            }
+            // helper function to get aggregated distance for that activity
+            getDist = (onDone) => {
+              this.queryAggregated({
+                startDate: data[i].startDate,
+                endDate: data[i].endDate,
+                dataType: 'distance'
+              }, (dist) => {
+                data[i].distance = dist.value
+                onDone()
+              }, onError)
+            }
+
+            if (opts.includeCalories) {
+              // calories are needed, fetch them
+              getCals(() => {
+                // now get the distance, if needed
+                if (opts.includeDistance) {
+                  getDist(() => {
+                    finalizeResult(i + 1)
+                  })
+                } else {
+                  // no distance needed, move on
+                  finalizeResult(i + 1)
+                }
+              })
+            } else {
+              // distance only is needed
+              getDist(() => {
+                finalizeResult(i + 1)
+              })
+            }
+          } else {
+            finalizeResult(i + 1)
+          }
+        }
       }
-      onSuccess(data);
+      finalizeResult(0);
     }, onError, "health", "query", [opts])
   },
 
   queryAggregated (opts, onSuccess, onError) {
     if (typeof opts.startDate == 'object') opts.startDate = opts.startDate.getTime()
     if (typeof opts.endDate == 'object') opts.endDate = opts.endDate.getTime()
-    exec(function (data) {
+    exec((data) => {
       //reconvert the dates back to Date objects
       if (Object.prototype.toString.call(data) === '[object Array]') {
         //it's an array, iterate through each item
@@ -60,7 +118,7 @@ module.exports = {
     }, onError, 'health', 'queryAggregated', [opts])
   },
 
-  store: function (data, onSuccess, onError) {
+  store (data, onSuccess, onError) {
     if (data.startDate && (typeof data.startDate == 'object'))
       data.startDate = data.startDate.getTime()
     if (data.endDate && (typeof data.endDate == 'object'))
