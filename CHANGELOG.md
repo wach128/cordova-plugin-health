@@ -89,3 +89,10 @@ Log of changes
 * added sleep sessions in simple query for "sleep" data type for Android
 * distance and calories are optional when querying activity (**API change**)
 * bugfixing
+
+### v2.1.1
+
+* added duration in activities when present (iOS)
+* added flag `filterOutUserInput` on iOS
+* oxygen saturation on Android
+* body temeprature on Android

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
   id="cordova-plugin-health"
-  version="2.1.0">
+  version="2.1.1">
 
   <name>Cordova Health</name>
 
@@ -20,7 +20,7 @@
   <issue>https://github.com/dariosalvi78/cordova-plugin-health/issues</issue>
 
   <engines>
-    <engine name="cordova" version=">=6.0.0"/>
+    <engine name="cordova" version=">=6.0.0" />
   </engines>
 
 
@@ -36,11 +36,12 @@
 
     <config-file target="config.xml" parent="/*">
       <feature name="HealthKit">
-        <param name="ios-package" value="HealthKit"/>
+        <param name="ios-package" value="HealthKit" />
       </feature>
     </config-file>
 
-    <!-- Commented this because it means you can't download/use the app on iOS devices that don't support Apple Health (e.g. iPad) -->
+    <!-- Commented this because it means you can't download/use the app on iOS devices that don't
+    support Apple Health (e.g. iPad) -->
     <!-- See https://github.com/dariosalvi78/cordova-plugin-health/issues/59 -->
     <!-- <config-file target="*-Info.plist" parent="UIRequiredDeviceCapabilities">
       <array>
@@ -59,25 +60,25 @@
     </config-file>
 
     <config-file target="*/Entitlements-Debug.plist" parent="com.apple.developer.healthkit">
-      <true/>
+      <true />
     </config-file>
     <config-file target="*/Entitlements-Debug.plist" parent="com.apple.developer.healthkit.access">
-      <array/>
+      <array />
     </config-file>
 
     <config-file target="*/Entitlements-Release.plist" parent="com.apple.developer.healthkit">
-      <true/>
+      <true />
     </config-file>
     <config-file target="*/Entitlements-Release.plist" parent="com.apple.developer.healthkit.access">
-      <array/>
+      <array />
     </config-file>
 
-    <header-file src="src/ios/WorkoutActivityConversion.h"/>
-    <source-file src="src/ios/WorkoutActivityConversion.m"/>
-    <header-file src="src/ios/HKHealthStore+AAPLExtensions.h"/>
-    <source-file src="src/ios/HKHealthStore+AAPLExtensions.m"/>
-    <header-file src="src/ios/HealthKit.h"/>
-    <source-file src="src/ios/HealthKit.m"/>
+    <header-file src="src/ios/WorkoutActivityConversion.h" />
+    <source-file src="src/ios/WorkoutActivityConversion.m" />
+    <header-file src="src/ios/HKHealthStore+AAPLExtensions.h" />
+    <source-file src="src/ios/HKHealthStore+AAPLExtensions.m" />
+    <header-file src="src/ios/HealthKit.h" />
+    <source-file src="src/ios/HealthKit.m" />
 
     <framework src="HealthKit.framework" weak="true" />
   </platform>
@@ -85,10 +86,10 @@
   <!-- android -->
   <platform name="android">
     <framework src="com.google.android.gms:play-services-fitness:$FIT_API_VERSION" />
-    <preference name="FIT_API_VERSION" default="21.1.0"/>
+    <preference name="FIT_API_VERSION" default="21.1.0" />
 
     <framework src="com.google.android.gms:play-services-auth:$PLAY_AUTH_VERSION" />
-    <preference name="PLAY_AUTH_VERSION" default="20.2.0"/>
+    <preference name="PLAY_AUTH_VERSION" default="20.2.0" />
 
 
     <config-file target="AndroidManifest.xml" parent="/*">
@@ -97,7 +98,7 @@
       <uses-permission android:name="android.permission.BODY_SENSORS" />
       <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
       <!-- Use the following if API target is < 29 -->
-      <uses-permission android:name="android.gms.permission.ACTIVITY_RECOGNITION"/>
+      <uses-permission android:name="android.gms.permission.ACTIVITY_RECOGNITION" />
       <!-- Use the following if API target is > 30 -->
       <queries>
         <package android:name="com.google.android.apps.fitness" />
