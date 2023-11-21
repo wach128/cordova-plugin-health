@@ -367,12 +367,12 @@ Health.prototype.queryAggregated = function (opts, onSuccess, onError) {
     opts.aggregation = opts.bucket;
     if (opts.dataType === 'activity') {
       // query and manually aggregate
-      navigator.health.query(opts, function (data) {
+      cordova.plugins.health.query(opts, function (data) {
         onSuccess(bucketize(data, opts.bucket, startD, endD, 'activitySummary', mergeActivitySamples));
       }, onError);
     } else if (opts.dataType === 'nutrition') {
       // query and manually aggregate
-      navigator.health.query(opts, function (data) {
+      cordova.plugins.health.query(opts, function (data) {
         onSuccess(bucketize(data, opts.bucket, startD, endD, 'nutrition', mergeNutritionSamples));
       }, onError);
     } else {
@@ -404,13 +404,13 @@ Health.prototype.queryAggregated = function (opts, onSuccess, onError) {
   } else {
     // ---- no bucketing, just sum
     if (opts.dataType === 'activity') {
-      navigator.health.query(opts, function (data) {
+      cordova.plugins.health.query(opts, function (data) {
         // manually aggregate by activity
         onSuccess(aggregateIntoResult(data, 'activitySummary', mergeActivitySamples));
       }, onError);
     } else if (opts.dataType === 'nutrition') {
       // manually aggregate by nutrition
-      navigator.health.query(opts, function (data) {
+      cordova.plugins.health.query(opts, function (data) {
         onSuccess(aggregateIntoResult(data, 'nutrition', mergeNutritionSamples));
       }, onError);
     } else {
@@ -595,8 +595,8 @@ Health.prototype.delete = function (data, onSuccess, onError) {
 };
 
 cordova.addConstructor(function () {
-  navigator.health = new Health();
-  return navigator.health;
+  cordova.plugins.health = new Health();
+  return cordova.plugins.health;
 });
 
 
