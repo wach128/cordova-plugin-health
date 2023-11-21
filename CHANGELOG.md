@@ -90,6 +90,12 @@ Log of changes
 * distance and calories are optional when querying activity (**API change**)
 * bugfixing
 
+### v2.1.1
+
+* added duration in activities when present (iOS)
+* added flag `filterOutUserInput` on iOS
+* oxygen saturation on Android
+* body temeprature on Android
 
 
 ### v3.0.0
