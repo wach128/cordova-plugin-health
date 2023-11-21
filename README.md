@@ -4,7 +4,6 @@
 ![MIT license](https://badgers.space/badge/license/mit/cyan)  
 
 
-
 A plugin that abstracts fitness and health repositories like Apple HealthKit or Google Health Connect.
 
 This work is based on [cordova healthkit plugin](https://github.com/Telerik-Verified-Plugins/HealthKit). This plugin is kept up to date and requires a recent version of cordova (12 and on) as well as recent iOS and Android SDKs.
@@ -13,10 +12,12 @@ For general question or small issue, please use the [gitter channel](https://git
 
 ## Warning about Health Connect
 
-This is a complete rewrite of the Android version of the plugin to support the new [HealthConnect API](https://developer.android.com/health-and-fitness/guides/health-connect). Google Fit APIs are deprecated and [should be made obsolete in 2024](https://developer.android.com/health-and-fitness/guides/health-connect/migrate/comparison-guide#turn-down-fit-android).
+This is a complete rewrite of the Android version of the plugin to support the new [HealthConnect API](https://developer.android.com/health-and-fitness/guides/health-connect). Google Fit APIs are deprecated and [will be made obsolete in 2024](https://developer.android.com/health-and-fitness/guides/health-connect/migrate/comparison-guide#turn-down-fit-android).
 
-Google Fit is no longer supported by this plugin. If, for any masochistic reason, you want to use Google Fit, you need to use an older version of this pluign (2.X.X).
+Google Fit is no longer supported by this plugin. If, for any masochistic reason, you want to use Google Fit, you need to use an older version of this pluign (2.1.1).
 
+Please be remindful that ***THIS IS STILL A WORK-IN-PROGRESS***. While all functionalities listed here are implemented and working, there are several data types that were supported in older versions and are not supported in this version *YET*.
+If you need support for a given data type, please check if it is already implemented in iOS, then either add support in Java and send a pull request, or add an issue and I will prioritize it.
 
 ## Installation
 
@@ -46,6 +47,7 @@ The workaround consists in fixing gradle version (to 8.4), gradle plugin (to 8.1
 * When publishing the app, you need to comply to [these requests from Google](https://developer.android.com/health-and-fitness/guides/health-connect/publish/request-access).
 * You need to include a Privacy Policy in HTML format. This can be done either by adding a file with the name privacypolicy.html inside your root www folder, or by using the `setPrivacyPolicyURL()` function (see below).
 * This plugin uses AndroidX. You may need to [activate AndroidX](https://cordova.apache.org/announcements/2020/06/29/cordova-android-9.0.0.html) in the Android platform and make sure all other plugins you use are AndroidX compatible.
+* Health Connect requires that each data type accessed is listed as permission in the AndroidManifest.xml file. This plugin will add permissions for ALL SUPPORTED data types, both read and write. However, this is a LONG LIST and it may be problematic when submitting to the Play Store. **It is strongly suggested to review the list and remove those that are actually not needed**. See [this](https://developer.android.com/health-and-fitness/guides/health-connect/plan/data-types) to understand which permissions that you can remove and which ones you should keep.
 
 ## Mandatory Privacy Policy on Android
 
