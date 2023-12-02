@@ -53,10 +53,61 @@ The workaround consists in fixing gradle version (to 8.4), gradle plugin (to 8.1
 
 A Privacy Policy must be present on Android in order for the app to be approved for distribution. The plugin includes a simple webview, with no JS activated, to show the Privacy Policy when requested. The Privacy Policy must be formatted as an HTML page (no JS) and placed as a file with name: `privacypolicy.html` under the `www` folder of the project (in other words, the webview loads the following URL: `file:///android_asset/www/privacypolicy.html`). It is possible to change that URL using the function setPrivacyPolicyURL(). To test the Privacy Policy view, you can call launchPrivacyPolicy().
 
+## Manual setup in Capacitor (Ionic)
+
+Capacitor does not automatically include all changes to AndroidManifest.xml or gradle files from plugin.xml. This is a short guide to do this manually. Based on plugin v3.0.0 and @capacitor/android v5.5.1. Future versions may be different.
+
+1. add the Privacy Policy activity to AndroidManifest.xml, inside <application></application>:
+```xml
+      <!-- For supported versions through Android 13, create an activity to show the rationale
+       of Health Connect permissions once users click the privacy policy link. -->
+      <activity
+        android:name="org.apache.cordova.health.PermissionsRationaleActivity"
+        android:exported="true">
+        <intent-filter>
+          <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+        </intent-filter>
+      </activity>
+
+      <!-- For versions starting Android 14, create an activity alias to show the rationale
+       of Health Connect permissions once users click the privacy policy link. -->
+      <activity-alias
+        android:name="ViewPermissionUsageActivity"
+        android:exported="true"
+        android:targetActivity="org.apache.cordova.health.PermissionsRationaleActivity"
+        android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+        <intent-filter>
+          <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+          <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+        </intent-filter>
+      </activity-alias>
+```
+2. add the possibility to query for the presence of Health Connect to AndroidManifest.xml, inside the root tag:
+```xml
+      <!-- Check if Health Connect is installed -->
+      <queries>
+        <package android:name="com.google.android.apps.healthdata" />
+      </queries>
+```
+3. add permissions to AndroidManifest.xml , inside the root tag. This depends on the actual data types you want to access. See [this](https://developer.android.com/health-and-fitness/guides/health-connect/plan/data-types) for a list.
+```xml
+      <uses-permission android:name="android.permission.health.READ_STEPS" />
+      <uses-permission android:name="android.permission.health.WRITE_STEPS" />
+```
+4. modify the main build.gradle file and update:
+```gradle
+classpath 'com.android.tools.build:gradle:8.1.1'
+```
+5. modify the variables.gradle file, particularly:
+```gradle
+minSdkVersion = 26
+targetSdkVersion = 34
+compileSdkVersion = 34
+```
 
 ## Supported data types
 
-As HealthKit does not allow adding custom data types, only a subset of data types supported by HealthKit has been chosen.
+These are currently supported. Please notice that older versions of this plugin included more data types, but worked with Google Fit, not Health Connect. Support for those data types has not been removed on iOS, it's simply not listed here. The plan is to complete the porting of all previously supported data types from Google Fit to Health Connect, just be patient, or give us a hand.
 
 | Data type       | Unit  |    HealthKit equivalent                       |  Health Connect equivalent               |
 |-----------------|-------|-----------------------------------------------|------------------------------------------|
