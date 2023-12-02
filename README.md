@@ -10,7 +10,7 @@ This work is based on [cordova healthkit plugin](https://github.com/Telerik-Veri
 For bugs and improvements use the [issues tracker](https://github.com/dariosalvi78/cordova-plugin-health/issues).
 For general question or small issue, please use the [gitter channel](https://gitter.im/cordova-plugin-health/Lobby).
 
-## Warning about Health Connect
+## Warning aboutthe new version (3+)
 
 This is a complete rewrite of the Android version of the plugin to support the new [HealthConnect API](https://developer.android.com/health-and-fitness/guides/health-connect). Google Fit APIs are deprecated and [will be made obsolete in 2024](https://developer.android.com/health-and-fitness/guides/health-connect/migrate/comparison-guide#turn-down-fit-android).
 
@@ -45,15 +45,17 @@ The workaround consists in fixing gradle version (to 8.4), gradle plugin (to 8.1
 * If you use Android Studio, download at least version Hedgehog.
 * Be aware that Health Connect requires the user to have screen lock enabled with a PIN, pattern, or password.
 * When publishing the app, you need to comply to [these requests from Google](https://developer.android.com/health-and-fitness/guides/health-connect/publish/request-access).
-* You need to include a Privacy Policy in HTML format. This can be done either by adding a file with the name privacypolicy.html inside your root www folder, or by using the `setPrivacyPolicyURL()` function (see below).
 * This plugin uses AndroidX. You may need to [activate AndroidX](https://cordova.apache.org/announcements/2020/06/29/cordova-android-9.0.0.html) in the Android platform and make sure all other plugins you use are AndroidX compatible.
-* Health Connect requires that each data type accessed is listed as permission in the AndroidManifest.xml file. This plugin will add permissions for ALL SUPPORTED data types, both read and write. However, this is a LONG LIST and it may be problematic when submitting to the Play Store. **It is strongly suggested to review the list and remove those that are actually not needed**. See [this](https://developer.android.com/health-and-fitness/guides/health-connect/plan/data-types) to understand which permissions that you can remove and which ones you should keep.
 
-## Mandatory Privacy Policy on Android
+### Permissions in AndroidManifest.xml
+
+Health Connect requires that each data type accessed is listed as permission in the AndroidManifest.xml file. This plugin will add permissions for *ALL SUPPORTED* data types, both read and write. However, this is a LONG LIST and it may be problematic when submitting to the Play Store. **It is strongly suggested to review the list and remove those that are actually not needed**. See [this](https://developer.android.com/health-and-fitness/guides/health-connect/plan/data-types) to understand which permissions you can remove and which ones you should keep, depending on the data that you actually need.
+
+### Mandatory Privacy Policy on Android
 
 A Privacy Policy must be present on Android in order for the app to be approved for distribution. The plugin includes a simple webview, with no JS activated, to show the Privacy Policy when requested. The Privacy Policy must be formatted as an HTML page (no JS) and placed as a file with name: `privacypolicy.html` under the `www` folder of the project (in other words, the webview loads the following URL: `file:///android_asset/www/privacypolicy.html`). It is possible to change that URL using the function setPrivacyPolicyURL(). To test the Privacy Policy view, you can call launchPrivacyPolicy().
 
-## Manual setup in Capacitor (Ionic)
+### Manual setup in Capacitor (Ionic)
 
 Capacitor does not automatically include all changes to AndroidManifest.xml or gradle files from plugin.xml. This is a short guide to do this manually. Based on plugin v3.0.0 and @capacitor/android v5.5.1. Future versions may be different.
 
@@ -107,7 +109,7 @@ compileSdkVersion = 34
 
 ## Supported data types
 
-These are currently supported. Please notice that older versions of this plugin included more data types, but worked with Google Fit, not Health Connect. Support for those data types has not been removed on iOS, it's simply not listed here. The plan is to complete the porting of all previously supported data types from Google Fit to Health Connect, just be patient, or give us a hand.
+These are currently supported in both Android and iOS. Please notice that older versions of this plugin included more data types, but with Google Fit, not Health Connect. Support for previously supported data types has not been removed on iOS, it's simply not listed here. The plan is to complete the porting of all previously supported data types from Google Fit to Health Connect, just be patient, or give us a hand.
 
 | Data type       | Unit  |    HealthKit equivalent                       |  Health Connect equivalent               |
 |-----------------|-------|-----------------------------------------------|------------------------------------------|
