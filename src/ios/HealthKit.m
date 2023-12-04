@@ -132,12 +132,11 @@ static NSString *const HKPluginKeyUUID = @"UUID";
  * @return      *NSString
  */
 + (NSString *)stringFromDate:(NSDate *)date {
-    __strong static NSDateFormatter *formatter = nil;
+    __strong static NSISO8601DateFormatter *formatter = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        formatter = [[NSDateFormatter alloc] init];
-        [formatter setLocale:[NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"]];
-        [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ssZZZZZ"];
+        formatter = [[NSISO8601DateFormatter alloc] init];
+        formatter.formatOptions = NSISO8601DateFormatWithFractionalSeconds | NSISO8601DateFormatWithInternetDateTime;
     });
 
     return [formatter stringFromDate:date];
