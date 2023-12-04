@@ -32,7 +32,7 @@
       <clobbers target="window.plugins.healthkit" />
     </js-module>
     <js-module src="www/ios/health.js" name="health">
-      <clobbers target="navigator.health" />
+      <clobbers target="cordova.plugins.health" />
     </js-module>
 
     <config-file target="config.xml" parent="/*">

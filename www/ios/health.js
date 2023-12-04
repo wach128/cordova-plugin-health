@@ -1,5 +1,3 @@
-var exec = require('cordova/exec');
-
 var Health = function () {
   this.name = 'health';
 };
@@ -136,8 +134,8 @@ var getReadWriteTypes = function (dts, success, error) {
   let readTypes = [];
   let writeTypes = [];
   let HKDataTypes = [];
-  if (dts[i]['read']) {
-    HKDataTypes = getHKDataTypes(dts[i]['read']);
+  if (dts.read) {
+    HKDataTypes = getHKDataTypes(dts.read);
     if (Array.isArray(HKDataTypes)) {
       readTypes = readTypes.concat(HKDataTypes);
     } else {
@@ -145,8 +143,8 @@ var getReadWriteTypes = function (dts, success, error) {
       return;
     }
   }
-  if (dts[i]['write']) {
-    HKDataTypes = getHKDataTypes(dts[i]['write']);
+  if (dts.write) {
+    HKDataTypes = getHKDataTypes(dts.write);
     if (Array.isArray(HKDataTypes)) {
       writeTypes = writeTypes.concat(HKDataTypes);
     } else {
