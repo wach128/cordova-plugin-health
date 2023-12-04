@@ -297,7 +297,7 @@
     }
   } else if ([which isEqualToString:@"pilates"]) { return HKWorkoutActivityTypePilates;
 
-  }else if ([which isEqualToString:@"preparation_and_recovery"]) { return HKWorkoutActivityTypePreparationAndRecovery;
+  } else if ([which isEqualToString:@"preparation_and_recovery"]) { return HKWorkoutActivityTypePreparationAndRecovery;
 
   } else if ([which isEqualToString:@"racquetball"]) { return HKWorkoutActivityTypeRacquetball;
 

@@ -405,17 +405,28 @@ static NSString *const HKPluginKeyUUID = @"UUID";
 }
 
 - (NSNumber*) getCategoryValueByName:(NSString *) categoryValue type:(HKCategoryType*) type {
-    NSDictionary * map = @{
-      @"HKCategoryTypeIdentifierSleepAnalysis":@{
-        @"HKCategoryValueSleepAnalysisInBed":@(HKCategoryValueSleepAnalysisInBed),
-        @"HKCategoryValueSleepAnalysisAsleep":@(HKCategoryValueSleepAnalysisAsleep),
-        @"HKCategoryValueSleepAnalysisAwake":@(HKCategoryValueSleepAnalysisAwake),
-        @"HKCategoryValueSleepAnalysisAsleepCore":@(HKCategoryValueSleepAnalysisAsleepCore),
-        @"HKCategoryValueSleepAnalysisAsleepDeep":@(HKCategoryValueSleepAnalysisAsleepDeep),
-        @"HKCategoryValueSleepAnalysisAsleepREM":@(HKCategoryValueSleepAnalysisAsleepREM)
-      }
-    };
-
+    NSDictionary * map;
+    if (@available(iOS 16.0, *)) {
+        map = @{
+            @"HKCategoryTypeIdentifierSleepAnalysis":@{
+                @"HKCategoryValueSleepAnalysisInBed":@(HKCategoryValueSleepAnalysisInBed),
+                @"HKCategoryValueSleepAnalysisAsleep":@(HKCategoryValueSleepAnalysisAsleep),
+                @"HKCategoryValueSleepAnalysisAwake":@(HKCategoryValueSleepAnalysisAwake),
+                @"HKCategoryValueSleepAnalysisAsleepCore":@(HKCategoryValueSleepAnalysisAsleepCore),
+                @"HKCategoryValueSleepAnalysisAsleepDeep":@(HKCategoryValueSleepAnalysisAsleepDeep),
+                @"HKCategoryValueSleepAnalysisAsleepREM":@(HKCategoryValueSleepAnalysisAsleepREM)
+            }
+        };
+    } else {
+        map = @{
+              @"HKCategoryTypeIdentifierSleepAnalysis":@{
+                @"HKCategoryValueSleepAnalysisInBed":@(HKCategoryValueSleepAnalysisInBed),
+                @"HKCategoryValueSleepAnalysisAsleep":@(HKCategoryValueSleepAnalysisAsleep),
+                @"HKCategoryValueSleepAnalysisAwake":@(HKCategoryValueSleepAnalysisAwake),
+            }
+        };
+    }
+    
     NSDictionary * valueMap = map[type.identifier];
     if (!valueMap) {
       return HKCategoryValueNotApplicable;
