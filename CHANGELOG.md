@@ -4,7 +4,7 @@ Log of changes
 ### v3.0.1
 
 * bugfixes
-
+* return ISO8601 when parsing dates from HealthKit
 
 ### v3.0.0
 
