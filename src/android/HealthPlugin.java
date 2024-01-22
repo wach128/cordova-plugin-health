@@ -967,7 +967,7 @@ public class HealthPlugin extends CordovaPlugin {
 
                 callbackContext.success();
             } else {
-                if (args.getJSONObject(0).has("startDate")) {
+                if (!args.getJSONObject(0).has("startDate")) {
                     callbackContext.error("Missing argument startDate");
                     return;
                 }
