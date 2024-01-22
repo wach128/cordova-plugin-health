@@ -1,6 +1,10 @@
 Log of changes
 ==============
 
+### v3.0.2
+
+* bugfixes
+
 ### v3.0.1
 
 * bugfixes
