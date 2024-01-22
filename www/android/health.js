@@ -14,7 +14,7 @@ module.exports = {
   },
 
   setPrivacyPolicyURL (url, onSuccess, onError) {
-    exec(onSuccess, onError, "Tester", "setPrivacyPolicyURL", [url])
+    exec(onSuccess, onError, "health", "setPrivacyPolicyURL", [url])
   },
 
   isAuthorized (authObj, onSuccess, onError) {
