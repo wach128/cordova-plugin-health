@@ -59,7 +59,10 @@ A Privacy Policy must be present on Android in order for the app to be approved 
 
 Capacitor does not automatically include all changes to AndroidManifest.xml or gradle files from plugin.xml. This is a short guide to do this manually. Based on plugin v3.0.0 and @capacitor/android v5.5.1. Future versions may be different.
 
-1. add the Privacy Policy activity to AndroidManifest.xml, inside <application></application>:
+1. install the plugin, DO NOT USE awesome-codova-plugin, it hasn't been updated yet
+`npm install cordova-plugin-health`. Build the app as you would normally do `npm run build`, sync it with the android code `npx cap sync` and get the Android project in Android Studio (suggested) `npx cap open android` or another editor.
+
+2. add the Privacy Policy activity to AndroidManifest.xml, inside <application></application>:
 ```xml
       <!-- For supported versions through Android 13, create an activity to show the rationale
        of Health Connect permissions once users click the privacy policy link. -->
@@ -84,23 +87,24 @@ Capacitor does not automatically include all changes to AndroidManifest.xml or g
         </intent-filter>
       </activity-alias>
 ```
-2. add the possibility to query for the presence of Health Connect to AndroidManifest.xml, inside the root tag:
+3. add the possibility to query for the presence of Health Connect to AndroidManifest.xml, inside the root tag:
 ```xml
       <!-- Check if Health Connect is installed -->
       <queries>
         <package android:name="com.google.android.apps.healthdata" />
       </queries>
 ```
-3. add permissions to AndroidManifest.xml , inside the root tag. This depends on the actual data types you want to access. See [this](https://developer.android.com/health-and-fitness/guides/health-connect/plan/data-types) for a list.
+4. add permissions to AndroidManifest.xml , inside the root tag. This depends on the actual data types you want to access. See [this](https://developer.android.com/health-and-fitness/guides/health-connect/plan/data-types) for a list.
 ```xml
       <uses-permission android:name="android.permission.health.READ_STEPS" />
       <uses-permission android:name="android.permission.health.WRITE_STEPS" />
 ```
-4. modify the main build.gradle file and update:
+5. modify the main build.gradle file and update:
 ```gradle
 classpath 'com.android.tools.build:gradle:8.1.1'
 ```
-5. modify the variables.gradle file, particularly:
+
+6. modify the variables.gradle file, particularly:
 ```gradle
 minSdkVersion = 26
 targetSdkVersion = 34
