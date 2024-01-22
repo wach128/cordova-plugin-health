@@ -4,6 +4,9 @@ Log of changes
 ### v3.0.3
 
 * added support for blood_glucose in Android
+* redocumented support for gender, date_of_birth, bmi, mindfulness and UVexposure on iOS
+
+
 ### v3.0.2
 
 * bugfixes
@@ -177,7 +180,7 @@ Log of changes
 * Android and iOS return the same object when queried for activity
 
 
-## v 1.0.5
+### v 1.0.5
 
 * updated README
 * added `filtered` flag to steps also for iOS (but only in aggregatedQuery)
@@ -185,7 +188,7 @@ Log of changes
 * added support for blood pressure store and query on both Android and iOS
 
 
-## v 1.0.4
+### v 1.0.4
 
 * updated README with better documentation
 * minor bug fixes

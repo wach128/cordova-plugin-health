@@ -117,13 +117,19 @@ These are currently supported in both Android and iOS. Please notice that older 
 
 | Data type       | Unit  |    HealthKit equivalent                       |  Health Connect equivalent               |
 |-----------------|-------|-----------------------------------------------|------------------------------------------|
+| gender          |       | HKCharacteristicTypeIdentifierBiologicalSex   | NA        |
+| date_of_birth   |       | HKCharacteristicTypeIdentifierDateOfBirth     | NA        |
 | steps           | count | HKQuantityTypeIdentifierStepCount             |   StepsRecord                            |
 | weight          | kg    | HKQuantityTypeIdentifierBodyMass              |   Weight                                 |
+| bmi             | count | HKQuantityTypeIdentifierBodyMassIndex         | NA                                       |
 | fat_percentage  | %     | HKQuantityTypeIdentifierBodyFatPercentage     |   BodyFatRecord                          |
 | activity        | activityType | HKWorkoutTypeIdentifier                |   ExerciseSessionRecord                  |
 | calories.active | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned    | ActiveCaloriesBurnedRecord               |
 | calories.basal  | kcal  | HKQuantityTypeIdentifierBasalEnergyBurned     | BasalMetabolicRateRecord * time window   |
 | blood_glucose   | mmol/L | HKQuantityTypeIdentifierBloodGlucose         | BloodGlucoseRecord                       |
+| mindfulness     | sec   | HKCategoryTypeIdentifierMindfulSession        | NA                                       |
+| UVexposure      | count | HKQuantityTypeIdentifierUVExposure            | NA        |
+
 
 
 **Note**: units of measurement are fixed!
@@ -143,17 +149,20 @@ Returned objects contain a set of fixed fields:
 
 Example values:
 
+
 | Data type      | Value                             |
 |----------------|-----------------------------------|
+| gender         | "male" <br/>**Notes**: only available on iOS |
+| date_of_birth  | { day: 3, month: 12, year: 1978 } <br/>**Notes**: currently only available on iOS |
 | steps          | 34                                |
 | weight         | 83.3                              |
+| bmi            | 180 <br/>**Notes**: only available on iOS |
 | fat_percentage | 0.312                             |
 | calories.X     | 245.3                             |
 | activity       | "walking"<br />**Notes**: recognized activities and their mappings in Health Connect / HealthKit can be found [here](activities_map.md) <br /> additional calories (in kcal) and distance (in m) can be added if the query has the `includeCalories` and/or `includeDistance` flags set. **Warning** If you want to fetch calories and/or distance permission to access those quantities should be requested. |
-| gender         | "male" <br/>**Notes**: only available on iOS |
-| date_of_birth  | { day: 3, month: 12, year: 1978 } <br/>**Notes**: currently only available on iOS |
-| mindfulness     | 1800 <br/>**Notes**: only available on iOS |
 | blood_glucose  | { glucose: 5.5, meal: 'breakfast', sleep: 'fully_awake', source: 'capillary_blood' }<br />**Notes**: <br />to convert to mg/dL, multiply by `18.01559` ([The molar mass of glucose is 180.1559](http://www.convertunits.com/molarmass/Glucose))<br />`meal` can be: 'before_' / 'after_' + 'meal' (iOS only), 'fasting', 'breakfast', 'dinner', 'lunch', 'snack', 'unknown'<br />`sleep` can be (iOS only): 'fully_awake', 'before_sleep', 'on_waking', 'during_sleep'<br />`source` can be: 'capillary_blood' ,'interstitial_fluid', 'plasma', 'serum', 'tears', whole_blood', 'unknown'|
+| mindfulness    | 1800 <br/>**Notes**: only available on iOS |
+| UVexposure     | 12 <br/>**Notes**: only available on iOS |
 
 
 ## Methods
