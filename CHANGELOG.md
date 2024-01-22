@@ -1,6 +1,9 @@
 Log of changes
 ==============
 
+### v3.0.3
+
+* added support for blood_glucose in Android
 ### v3.0.2
 
 * bugfixes

@@ -20,10 +20,12 @@ import androidx.health.connect.client.aggregate.AggregationResultGroupedByPeriod
 import androidx.health.connect.client.permission.HealthPermission;
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord;
 import androidx.health.connect.client.records.BasalMetabolicRateRecord;
+import androidx.health.connect.client.records.BloodGlucoseRecord;
 import androidx.health.connect.client.records.BodyFatRecord;
 import androidx.health.connect.client.records.ExerciseLap;
 import androidx.health.connect.client.records.ExerciseSegment;
 import androidx.health.connect.client.records.ExerciseSessionRecord;
+import androidx.health.connect.client.records.MealType;
 import androidx.health.connect.client.records.Record;
 import androidx.health.connect.client.records.StepsRecord;
 import androidx.health.connect.client.records.WeightRecord;
@@ -37,6 +39,7 @@ import androidx.health.connect.client.request.ReadRecordsRequest;
 import androidx.health.connect.client.response.InsertRecordsResponse;
 import androidx.health.connect.client.response.ReadRecordsResponse;
 import androidx.health.connect.client.time.TimeRangeFilter;
+import androidx.health.connect.client.units.BloodGlucose;
 import androidx.health.connect.client.units.Energy;
 import androidx.health.connect.client.units.Mass;
 import androidx.health.connect.client.units.Percentage;
@@ -268,6 +271,9 @@ public class HealthPlugin extends CordovaPlugin {
         if (name.equalsIgnoreCase("calories.basal")) {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(BasalMetabolicRateRecord.class);
         }
+        if (name.equalsIgnoreCase("blood_glucose")) {
+            return kotlin.jvm.JvmClassMappingKt.getKotlinClass(BloodGlucoseRecord.class);
+        }
 
         return null;
     }
@@ -397,7 +403,7 @@ public class HealthPlugin extends CordovaPlugin {
             Log.d(TAG, "Data query successful");
             JSONArray resultset = new JSONArray();
 
-            for (Object datapointObj: response.getRecords()) {
+            for (Object datapointObj : response.getRecords()) {
                 if (datapointObj instanceof androidx.health.connect.client.records.Record) {
                     androidx.health.connect.client.records.Record datapoint = (androidx.health.connect.client.records.Record) datapointObj;
                     JSONObject obj = new JSONObject();
@@ -412,7 +418,7 @@ public class HealthPlugin extends CordovaPlugin {
                         String device = "";
                         String manufacturer = dev.getManufacturer();
                         String model = dev.getModel();
-                        if (manufacturer != null || model != null){
+                        if (manufacturer != null || model != null) {
                             obj.put("sourceDevice", manufacturer + " " + model);
                         }
                     }
@@ -426,13 +432,13 @@ public class HealthPlugin extends CordovaPlugin {
                     String method = "unknown";
                     switch (methodInt) {
                         case 1:
-                            method= "actively_recorded";
+                            method = "actively_recorded";
                             break;
                         case 2:
-                            method= "automatically_recorded";
+                            method = "automatically_recorded";
                             break;
                         case 3:
-                            method= "manual_entry";
+                            method = "manual_entry";
                             break;
                     }
                     obj.put("entryMethod", method);
@@ -440,7 +446,7 @@ public class HealthPlugin extends CordovaPlugin {
                     // DATA_TYPES here we need to add support for each different data type
                     if (datapoint instanceof StepsRecord) {
                         StepsRecord stepsDP = (StepsRecord) datapoint;
-                        obj.put("startDate",stepsDP.getStartTime().toEpochMilli());
+                        obj.put("startDate", stepsDP.getStartTime().toEpochMilli());
                         obj.put("endDate", stepsDP.getEndTime().toEpochMilli());
 
                         long steps = stepsDP.getCount();
@@ -448,7 +454,7 @@ public class HealthPlugin extends CordovaPlugin {
                         obj.put("unit", "count");
                     } else if (datapoint instanceof WeightRecord) {
                         WeightRecord weightDP = (WeightRecord) datapoint;
-                        obj.put("startDate",weightDP.getTime().toEpochMilli());
+                        obj.put("startDate", weightDP.getTime().toEpochMilli());
                         obj.put("endDate", weightDP.getTime().toEpochMilli());
 
                         double kgs = weightDP.getWeight().getKilograms();
@@ -456,7 +462,7 @@ public class HealthPlugin extends CordovaPlugin {
                         obj.put("unit", "kg");
                     } else if (datapoint instanceof BodyFatRecord) {
                         BodyFatRecord bodyFatDP = (BodyFatRecord) datapoint;
-                        obj.put("startDate",bodyFatDP.getTime().toEpochMilli());
+                        obj.put("startDate", bodyFatDP.getTime().toEpochMilli());
                         obj.put("endDate", bodyFatDP.getTime().toEpochMilli());
 
                         double perc = bodyFatDP.getPercentage().getValue();
@@ -464,7 +470,7 @@ public class HealthPlugin extends CordovaPlugin {
                         obj.put("unit", "%");
                     } else if (datapoint instanceof ExerciseSessionRecord) {
                         ExerciseSessionRecord activityDP = (ExerciseSessionRecord) datapoint;
-                        obj.put("startDate",activityDP.getStartTime().toEpochMilli());
+                        obj.put("startDate", activityDP.getStartTime().toEpochMilli());
                         obj.put("endDate", activityDP.getEndTime().toEpochMilli());
 
                         int exType = activityDP.getExerciseType();
@@ -474,7 +480,7 @@ public class HealthPlugin extends CordovaPlugin {
                         obj.put("unit", "activityType");
                     } else if (datapoint instanceof ActiveCaloriesBurnedRecord) {
                         ActiveCaloriesBurnedRecord caloriesDP = (ActiveCaloriesBurnedRecord) datapoint;
-                        obj.put("startDate",caloriesDP.getStartTime().toEpochMilli());
+                        obj.put("startDate", caloriesDP.getStartTime().toEpochMilli());
                         obj.put("endDate", caloriesDP.getEndTime().toEpochMilli());
 
                         double kcals = caloriesDP.getEnergy().getKilocalories();
@@ -483,7 +489,7 @@ public class HealthPlugin extends CordovaPlugin {
                         obj.put("unit", "kcal");
                     } else if (datapoint instanceof BasalMetabolicRateRecord) {
                         BasalMetabolicRateRecord basalRateDP = (BasalMetabolicRateRecord) datapoint;
-                        obj.put("startDate",basalRateDP.getTime().toEpochMilli());
+                        obj.put("startDate", basalRateDP.getTime().toEpochMilli());
                         obj.put("endDate", basalRateDP.getTime().toEpochMilli());
 
                         Power pow = basalRateDP.getBasalMetabolicRate();
@@ -491,6 +497,74 @@ public class HealthPlugin extends CordovaPlugin {
                             obj.put("value", pow.getKilocaloriesPerDay());
                             obj.put("unit", "kcal/day");
                         }
+                    } else if (datapoint instanceof BloodGlucoseRecord) {
+                        BloodGlucoseRecord bloodGlucose = (BloodGlucoseRecord) datapoint;
+                        obj.put("startDate", bloodGlucose.getTime().toEpochMilli());
+                        obj.put("endDate", bloodGlucose.getTime().toEpochMilli());
+
+                        BloodGlucose gluco = bloodGlucose.getLevel();
+                        double val = gluco.getMillimolesPerLiter();
+
+                        //  { glucose: 5.5,
+                        //  meal: 'breakfast',
+                        // `meal` can be: 'before_' / 'after_' + 'meal' (iOS only), 'fasting', 'breakfast', 'dinner', 'lunch', 'snack', 'unknown'
+                        //  sleep: 'fully_awake',
+                        // `sleep` can be (iOS only): 'fully_awake', 'before_sleep', 'on_waking', 'during_sleep'
+                        //  source: 'capillary_blood' }
+                        // `source` can be: 'capillary_blood' ,'interstitial_fluid', 'plasma', 'serum', 'tears', whole_blood', 'unknown'
+                        JSONObject glucob = new JSONObject();
+                        glucob.put("glucose", val);
+
+                        int temp_to_meal = bloodGlucose.getRelationToMeal();
+                        String meal = "";
+                        if (temp_to_meal == BloodGlucoseRecord.RELATION_TO_MEAL_AFTER_MEAL) {
+                            meal = "after_";
+                        } else if (temp_to_meal == BloodGlucoseRecord.RELATION_TO_MEAL_BEFORE_MEAL) {
+                            meal = "before_";
+                        } else if (temp_to_meal == BloodGlucoseRecord.RELATION_TO_MEAL_FASTING) {
+                            meal = "fasting";
+                        } else {
+                            meal = "";
+                        }
+
+                        temp_to_meal = bloodGlucose.getMealType();
+                        if (temp_to_meal == MealType.MEAL_TYPE_BREAKFAST) {
+                            meal += "breakfast";
+                        } else if (temp_to_meal == MealType.MEAL_TYPE_DINNER) {
+                            meal += "dinner";
+                        } else if (temp_to_meal == MealType.MEAL_TYPE_LUNCH) {
+                            meal += "lunch";
+                        } else if (temp_to_meal == MealType.MEAL_TYPE_SNACK) {
+                            meal += "snack";
+                        } else {
+                            meal += "unknown";
+                        }
+
+                        glucob.put("meal", meal);
+
+                        String source = "";
+                        int sourceInt = bloodGlucose.getSpecimenSource();
+                        if (sourceInt == BloodGlucoseRecord.SPECIMEN_SOURCE_INTERSTITIAL_FLUID) {
+                            source = "interstitial_fluid";
+                        } else if (sourceInt == BloodGlucoseRecord.SPECIMEN_SOURCE_CAPILLARY_BLOOD) {
+                            source = "capillary_blood";
+                        } else if (sourceInt == BloodGlucoseRecord.SPECIMEN_SOURCE_PLASMA) {
+                            source = "plasma";
+                        } else if (sourceInt == BloodGlucoseRecord.SPECIMEN_SOURCE_SERUM) {
+                            source = "serum";
+                        } else if (sourceInt == BloodGlucoseRecord.SPECIMEN_SOURCE_TEARS) {
+                            source = "tears";
+                        } else if (sourceInt == BloodGlucoseRecord.SPECIMEN_SOURCE_WHOLE_BLOOD) {
+                            source = "whole_blood";
+                        } else  {
+                            source = "unknown";
+                        }
+
+                        glucob.put("source", source);
+
+
+                        obj.put("value", glucob);
+                        obj.put("unit", "mmol/L");
                     } else {
                         callbackContext.error("Sample received of unknown type " + datatype.toString());
                         return;
@@ -551,17 +625,17 @@ public class HealthPlugin extends CordovaPlugin {
                 if (bucketType.equalsIgnoreCase("hour")) {
                     stLDT = LocalDateTime.of(stZDT.getYear(), stZDT.getMonth(), stZDT.getDayOfMonth(), stZDT.getHour(), 0, 0, 0);
                     // etLDT = LocalDateTime.of(etZDT.getYear(), etZDT.getMonth(), etZDT.getDayOfMonth(), etZDT.getHour(), 0, 0, 0);
-                } else if(bucketType.equalsIgnoreCase("day")) {
+                } else if (bucketType.equalsIgnoreCase("day")) {
                     stLDT = LocalDateTime.of(stZDT.getYear(), stZDT.getMonth(), stZDT.getDayOfMonth(), 0, 0, 0, 0);
                     // etLDT = LocalDateTime.of(etZDT.getYear(), etZDT.getMonth(), etZDT.getDayOfMonth(), 0, 0, 0, 0);
-                } else if(bucketType.equalsIgnoreCase("week")) {
+                } else if (bucketType.equalsIgnoreCase("week")) {
                     DayOfWeek weekStart = DayOfWeek.MONDAY;
                     stLDT = LocalDateTime.of(stZDT.getYear(), stZDT.getMonth(), stZDT.getDayOfMonth(), 0, 0, 0, 0).with(TemporalAdjusters.previousOrSame(weekStart));
                     // etLDT = LocalDateTime.of(etZDT.getYear(), etZDT.getMonth(), etZDT.getDayOfMonth(), 0, 0, 0, 0).with(TemporalAdjusters.previousOrSame(weekStart));
-                } else if(bucketType.equalsIgnoreCase("month")) {
+                } else if (bucketType.equalsIgnoreCase("month")) {
                     stLDT = LocalDateTime.of(stZDT.getYear(), stZDT.getMonth(), 1, 0, 0, 0, 0);
                     // etLDT = LocalDateTime.of(etZDT.getYear(), etZDT.getMonth(), 1, 0, 0, 0, 0);
-                } else if(bucketType.equalsIgnoreCase("year")) {
+                } else if (bucketType.equalsIgnoreCase("year")) {
                     stLDT = LocalDateTime.of(stZDT.getYear(), 1, 1, 0, 0, 0, 0);
                     // etLDT = LocalDateTime.of(etZDT.getYear(), 1, 1, 0, 0, 0, 0);
                 } else {
@@ -586,7 +660,7 @@ public class HealthPlugin extends CordovaPlugin {
                     callbackContext.error("Bucket length not recognized " + bucketType);
                     return;
                 }
-                if(period != null) {
+                if (period != null) {
                     AggregateGroupByPeriodRequest request;
                     // DATA_TYPE: add here support for new data types
                     if (datatype.equalsIgnoreCase("steps")) {
@@ -715,7 +789,7 @@ public class HealthPlugin extends CordovaPlugin {
                 callbackContext.success(retObject);
             }
         } catch (JSONException ex) {
-                callbackContext.error("Could not parse query object or write response object");
+            callbackContext.error("Could not parse query object or write response object");
         } catch (InterruptedException ex2) {
             callbackContext.error("Thread interrupted" + ex2.getMessage());
         }
@@ -767,6 +841,7 @@ public class HealthPlugin extends CordovaPlugin {
 
     /**
      * Stores a datapoint
+     *
      * @param args
      */
     private void store(final JSONArray args) {
@@ -799,7 +874,9 @@ public class HealthPlugin extends CordovaPlugin {
                 return;
             }
 
-            // DATA_TYPES here we need to add support for each different data type
+            InsertRecordsResponse response;
+
+            // DATA_TYPE here we need to add support for each different data type
             if (datatype.equalsIgnoreCase("steps")) {
                 long steps = args.getJSONObject(0).getLong("value");
                 // TODO: we could add meta data when storing, including entry method, client ID and device
@@ -808,18 +885,13 @@ public class HealthPlugin extends CordovaPlugin {
                         Instant.ofEpochMilli(et), null,
                         steps,
                         Metadata.EMPTY
-                        );
+                );
                 List<StepsRecord> data = new LinkedList<>();
                 data.add(record);
-                InsertRecordsResponse response = BuildersKt.runBlocking(
+                response = BuildersKt.runBlocking(
                         EmptyCoroutineContext.INSTANCE,
                         (s, c) -> healthConnectClient.insertRecords(data, c)
                 );
-                Log.d(TAG, "Data written of type " + datatype);
-
-                String id = response.getRecordIdsList().get(0);
-
-                callbackContext.success(id);
             } else if (datatype.equalsIgnoreCase("weight")) {
                 double kgs = args.getJSONObject(0).getDouble("value");
 
@@ -831,15 +903,10 @@ public class HealthPlugin extends CordovaPlugin {
                 );
                 List<WeightRecord> data = new LinkedList<>();
                 data.add(record);
-                InsertRecordsResponse response = BuildersKt.runBlocking(
+                response = BuildersKt.runBlocking(
                         EmptyCoroutineContext.INSTANCE,
                         (s, c) -> healthConnectClient.insertRecords(data, c)
                 );
-                Log.d(TAG, "Data written of type " + datatype);
-
-                String id = response.getRecordIdsList().get(0);
-
-                callbackContext.success(id);
             } else if (datatype.equalsIgnoreCase("fat_percentage")) {
                 double perc = args.getJSONObject(0).getDouble("value");
 
@@ -850,15 +917,10 @@ public class HealthPlugin extends CordovaPlugin {
                 );
                 List<BodyFatRecord> data = new LinkedList<>();
                 data.add(record);
-                InsertRecordsResponse response = BuildersKt.runBlocking(
+                response = BuildersKt.runBlocking(
                         EmptyCoroutineContext.INSTANCE,
                         (s, c) -> healthConnectClient.insertRecords(data, c)
                 );
-                Log.d(TAG, "Data written of type " + datatype);
-
-                String id = response.getRecordIdsList().get(0);
-
-                callbackContext.success(id);
             } else if (datatype.equalsIgnoreCase("activity")) {
                 String activityStr = args.getJSONObject(0).getString("value");
                 int exerciseType = ActivityMapper.exerciseTypeFromActivity(activityStr);
@@ -877,15 +939,10 @@ public class HealthPlugin extends CordovaPlugin {
                 );
                 List<ExerciseSessionRecord> data = new LinkedList<>();
                 data.add(record);
-                InsertRecordsResponse response = BuildersKt.runBlocking(
+                response = BuildersKt.runBlocking(
                         EmptyCoroutineContext.INSTANCE,
                         (s, c) -> healthConnectClient.insertRecords(data, c)
                 );
-                Log.d(TAG, "Data written of type " + datatype);
-
-                String id = response.getRecordIdsList().get(0);
-
-                callbackContext.success(id);
             } else if (datatype.equalsIgnoreCase("calories.active")) {
                 double kcals = args.getJSONObject(0).getDouble("value");
 
@@ -897,20 +954,15 @@ public class HealthPlugin extends CordovaPlugin {
                 );
                 List<ActiveCaloriesBurnedRecord> data = new LinkedList<>();
                 data.add(record);
-                InsertRecordsResponse response = BuildersKt.runBlocking(
+                response = BuildersKt.runBlocking(
                         EmptyCoroutineContext.INSTANCE,
                         (s, c) -> healthConnectClient.insertRecords(data, c)
                 );
-                Log.d(TAG, "Data written of type " + datatype);
-
-                String id = response.getRecordIdsList().get(0);
-
-                callbackContext.success(id);
             } else if (datatype.equalsIgnoreCase("calories.basal")) {
                 double kcals = args.getJSONObject(0).getDouble("value");
                 // convert kcals to power
                 double ms = (et - st);
-                double kcalsDay = kcals / (ms / (double)(86400000));
+                double kcalsDay = kcals / (ms / (double) (86400000));
                 Power pow = Power.kilocaloriesPerDay(kcalsDay);
 
                 BasalMetabolicRateRecord record = new BasalMetabolicRateRecord(
@@ -920,19 +972,86 @@ public class HealthPlugin extends CordovaPlugin {
                 );
                 List<BasalMetabolicRateRecord> data = new LinkedList<>();
                 data.add(record);
-                InsertRecordsResponse response = BuildersKt.runBlocking(
+                response = BuildersKt.runBlocking(
                         EmptyCoroutineContext.INSTANCE,
                         (s, c) -> healthConnectClient.insertRecords(data, c)
                 );
-                Log.d(TAG, "Data written of type " + datatype);
+            } else if (datatype.equalsIgnoreCase("blood_glucose")) {
 
-                String id = response.getRecordIdsList().get(0);
+                JSONObject glucoseobj = args.getJSONObject(0).getJSONObject("value");
+                double glucose = glucoseobj.getDouble("glucose");
+                BloodGlucose level = BloodGlucose.millimolesPerLiter(glucose);
 
-                callbackContext.success(id);
+                int mealType = MealType.MEAL_TYPE_UNKNOWN;
+                int relationToMeal = BloodGlucoseRecord.RELATION_TO_MEAL_UNKNOWN;
+
+                if (glucoseobj.has("meal")) {
+                    String meal = glucoseobj.getString("meal");
+                    if (meal.equalsIgnoreCase("fasting")) {
+                        mealType = MealType.MEAL_TYPE_UNKNOWN;
+                        relationToMeal = BloodGlucoseRecord.RELATION_TO_MEAL_FASTING;
+                    } else {
+                        if (meal.startsWith("before_")) {
+                            relationToMeal = BloodGlucoseRecord.RELATION_TO_MEAL_BEFORE_MEAL;
+                            meal = meal.substring("before_".length());
+                        } else if (meal.startsWith("after_")) {
+                            relationToMeal = BloodGlucoseRecord.RELATION_TO_MEAL_AFTER_MEAL;
+                            meal = meal.substring("after_".length());
+                        }
+                        if (meal.equalsIgnoreCase("dinner")) {
+                            mealType = MealType.MEAL_TYPE_DINNER;
+                        } else if (meal.equalsIgnoreCase("lunch")) {
+                            mealType = MealType.MEAL_TYPE_LUNCH;
+                        } else if (meal.equalsIgnoreCase("snack")) {
+                            mealType = MealType.MEAL_TYPE_SNACK;
+                        } else if (meal.equalsIgnoreCase("breakfast")) {
+                            mealType = MealType.MEAL_TYPE_BREAKFAST;
+                        }
+                    }
+                }
+
+                int specimenSource = BloodGlucoseRecord.SPECIMEN_SOURCE_UNKNOWN;
+                if (glucoseobj.has("source")) {
+                    String source = glucoseobj.getString("source");
+                    if (source.equalsIgnoreCase("interstitial_fluid")) {
+                        specimenSource = BloodGlucoseRecord.SPECIMEN_SOURCE_INTERSTITIAL_FLUID;
+                    } else if (source.equalsIgnoreCase("plasma")) {
+                        specimenSource = BloodGlucoseRecord.SPECIMEN_SOURCE_PLASMA;
+                    } else if (source.equalsIgnoreCase("serum")) {
+                        specimenSource = BloodGlucoseRecord.SPECIMEN_SOURCE_SERUM;
+                    } else if (source.equalsIgnoreCase("tears")) {
+                        specimenSource = BloodGlucoseRecord.SPECIMEN_SOURCE_TEARS;
+                    } else if (source.equalsIgnoreCase("whole_blood")) {
+                        specimenSource = BloodGlucoseRecord.SPECIMEN_SOURCE_WHOLE_BLOOD;
+                    } else if (source.equalsIgnoreCase("capillary_blood")) {
+                        specimenSource = BloodGlucoseRecord.SPECIMEN_SOURCE_CAPILLARY_BLOOD;
+                    }
+                }
+
+                BloodGlucoseRecord record = new BloodGlucoseRecord(
+                        Instant.ofEpochMilli(st),null,
+                        level,
+                        specimenSource,
+                        mealType,
+                        relationToMeal,
+                        Metadata.EMPTY);
+
+                List<BloodGlucoseRecord> data = new LinkedList<>();
+                data.add(record);
+                response = BuildersKt.runBlocking(
+                        EmptyCoroutineContext.INSTANCE,
+                        (s, c) -> healthConnectClient.insertRecords(data, c)
+                );
             } else {
                 callbackContext.error("Datatype not supported " + datatype);
+                return;
             }
 
+            Log.d(TAG, "Data written of type " + datatype);
+
+            String id = response.getRecordIdsList().get(0);
+
+            callbackContext.success(id);
 
         } catch (JSONException ex) {
             callbackContext.error("Cannot parse request object " + ex.getMessage());
@@ -943,6 +1062,7 @@ public class HealthPlugin extends CordovaPlugin {
 
     /**
      * Deletes datapoints
+     *
      * @param args
      */
     private void delete(final JSONArray args) {
@@ -967,7 +1087,7 @@ public class HealthPlugin extends CordovaPlugin {
 
                 callbackContext.success();
             } else {
-                if (!args.getJSONObject(0).has("startDate")) {
+                if (args.getJSONObject(0).has("startDate")) {
                     callbackContext.error("Missing argument startDate");
                     return;
                 }
