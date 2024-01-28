@@ -22,6 +22,7 @@ import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord;
 import androidx.health.connect.client.records.BasalMetabolicRateRecord;
 import androidx.health.connect.client.records.BloodGlucoseRecord;
 import androidx.health.connect.client.records.BodyFatRecord;
+import androidx.health.connect.client.records.DistanceRecord;
 import androidx.health.connect.client.records.ExerciseLap;
 import androidx.health.connect.client.records.ExerciseSegment;
 import androidx.health.connect.client.records.ExerciseSessionRecord;
@@ -41,6 +42,7 @@ import androidx.health.connect.client.response.ReadRecordsResponse;
 import androidx.health.connect.client.time.TimeRangeFilter;
 import androidx.health.connect.client.units.BloodGlucose;
 import androidx.health.connect.client.units.Energy;
+import androidx.health.connect.client.units.Length;
 import androidx.health.connect.client.units.Mass;
 import androidx.health.connect.client.units.Percentage;
 import androidx.health.connect.client.units.Power;
@@ -273,6 +275,9 @@ public class HealthPlugin extends CordovaPlugin {
         }
         if (name.equalsIgnoreCase("blood_glucose")) {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(BloodGlucoseRecord.class);
+        }
+        if (name.equalsIgnoreCase("distance")) {
+            return kotlin.jvm.JvmClassMappingKt.getKotlinClass(DistanceRecord.class);
         }
 
         return null;
@@ -565,6 +570,15 @@ public class HealthPlugin extends CordovaPlugin {
 
                         obj.put("value", glucob);
                         obj.put("unit", "mmol/L");
+                    } else if (datapoint instanceof DistanceRecord) {
+                        DistanceRecord disanceR = (DistanceRecord) datapoint;
+                        obj.put("startDate", disanceR.getStartTime().toEpochMilli());
+                        obj.put("endDate", disanceR.getEndTime().toEpochMilli());
+
+                        double meters = disanceR.getDistance().getMeters();
+
+                        obj.put("value", meters);
+                        obj.put("unit", "m");
                     } else {
                         callbackContext.error("Sample received of unknown type " + datatype.toString());
                         return;
@@ -679,6 +693,10 @@ public class HealthPlugin extends CordovaPlugin {
                         Set<AggregateMetric<Energy>> metrics = new HashSet<>();
                         metrics.add(BasalMetabolicRateRecord.BASAL_CALORIES_TOTAL);
                         request = new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
+                    } else if (datatype.equalsIgnoreCase("distance")) {
+                        Set<AggregateMetric<Length>> metrics = new HashSet<>();
+                        metrics.add(DistanceRecord.DISTANCE_TOTAL);
+                        request = new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
                     } else {
                         callbackContext.error("Datatype not recognized " + datatype);
                         return;
@@ -722,6 +740,10 @@ public class HealthPlugin extends CordovaPlugin {
                     } else if (datatype.equalsIgnoreCase("calories.basal")) {
                         Set<AggregateMetric<Energy>> metrics = new HashSet<>();
                         metrics.add(BasalMetabolicRateRecord.BASAL_CALORIES_TOTAL);
+                        request = new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
+                    } else if (datatype.equalsIgnoreCase("distance")) {
+                        Set<AggregateMetric<Length>> metrics = new HashSet<>();
+                        metrics.add(DistanceRecord.DISTANCE_TOTAL);
                         request = new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
                     } else {
                         callbackContext.error("Datatype not recognized " + datatype);
@@ -769,6 +791,10 @@ public class HealthPlugin extends CordovaPlugin {
                 } else if (datatype.equalsIgnoreCase("calories.basal")) {
                     Set<AggregateMetric<Energy>> metrics = new HashSet<>();
                     metrics.add(BasalMetabolicRateRecord.BASAL_CALORIES_TOTAL);
+                    request = new AggregateRequest(metrics, timeRange, dor);
+                } else if (datatype.equalsIgnoreCase("distance")) {
+                    Set<AggregateMetric<Length>> metrics = new HashSet<>();
+                    metrics.add(DistanceRecord.DISTANCE_TOTAL);
                     request = new AggregateRequest(metrics, timeRange, dor);
                 } else {
                     callbackContext.error("Datatype not recognized " + datatype);
@@ -830,6 +856,15 @@ public class HealthPlugin extends CordovaPlugin {
                 double kcals = response.get(BasalMetabolicRateRecord.BASAL_CALORIES_TOTAL).getKilocalories();
                 retObj.put("value", kcals);
                 retObj.put("unit", "kcal");
+            } else {
+                retObj.put("value", 0);
+                retObj.put("unit", "kcal");
+            }
+        } else if (datatype.equalsIgnoreCase("distance")) {
+            if (response.get(DistanceRecord.DISTANCE_TOTAL) != null) {
+                double meters = response.get(DistanceRecord.DISTANCE_TOTAL).getMeters();
+                retObj.put("value", meters);
+                retObj.put("unit", "m");
             } else {
                 retObj.put("value", 0);
                 retObj.put("unit", "kcal");
@@ -1037,6 +1072,22 @@ public class HealthPlugin extends CordovaPlugin {
                         Metadata.EMPTY);
 
                 List<BloodGlucoseRecord> data = new LinkedList<>();
+                data.add(record);
+                response = BuildersKt.runBlocking(
+                        EmptyCoroutineContext.INSTANCE,
+                        (s, c) -> healthConnectClient.insertRecords(data, c)
+                );
+            } else if (datatype.equalsIgnoreCase("distance")) {
+                double meters = args.getJSONObject(0).getDouble("value");
+               Length len = Length.meters(meters);
+
+               DistanceRecord record = new DistanceRecord(
+                       Instant.ofEpochMilli(st), null,
+                       Instant.ofEpochMilli(et), null,
+                       len,
+                       Metadata.EMPTY);
+
+                List<DistanceRecord> data = new LinkedList<>();
                 data.add(record);
                 response = BuildersKt.runBlocking(
                         EmptyCoroutineContext.INSTANCE,
