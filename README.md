@@ -128,6 +128,7 @@ These are currently supported in both Android and iOS. Please notice that older 
 | activity        | activityType | HKWorkoutTypeIdentifier                |   ExerciseSessionRecord                  |
 | calories.active | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned    | ActiveCaloriesBurnedRecord               |
 | calories.basal  | kcal  | HKQuantityTypeIdentifierBasalEnergyBurned     | BasalMetabolicRateRecord * time window   |
+| distance        | m     | HKQuantityTypeIdentifierDistanceWalkingRunning + HKQuantityTypeIdentifierDistanceCycling | DistanceRecord |
 | blood_glucose   | mmol/L | HKQuantityTypeIdentifierBloodGlucose         | BloodGlucoseRecord                       |
 | mindfulness     | sec   | HKCategoryTypeIdentifierMindfulSession        | NA                                       |
 | UVexposure      | count | HKQuantityTypeIdentifierUVExposure            | NA        |
@@ -337,6 +338,7 @@ The following table shows what types are supported and examples of the returned 
 | distance        | { startDate: Date, endDate: Date, value: 12500.0, unit: 'm' } |
 | calories.active | { startDate: Date, endDate: Date, value: 25698.4, unit: 'kcal' } |
 | calories.basal  | { startDate: Date, endDate: Date, value: 3547.3, unit: 'kcal' } |
+| distance        | { startDate: Date, endDate: Date, value: 12500.0, unit: 'm' } |
 | activity        | Android: { startDate: Date, endDate: Date, value: 567000, unit: 'ms' } <br /> iOS: { startDate: Date, endDate: Date, value: { still: { duration: 520000 }, walking: { duration: 223000 }}, unit: 'activitySummary' }<br />**Note:** durations are expressed in milliseconds |
 
 
