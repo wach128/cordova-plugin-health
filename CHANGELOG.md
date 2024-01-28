@@ -3,8 +3,7 @@ Log of changes
 
 ### v3.0.3
 
-* added support for blood_glucose in Android
-* added support for distance
+* added support for blood_glucose, distance and height
 * redocumented support for gender, date_of_birth, bmi, mindfulness and UVexposure on iOS
 
 

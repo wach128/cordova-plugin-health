@@ -119,14 +119,15 @@ These are currently supported in both Android and iOS. Please notice that older 
 |-----------------|-------|-----------------------------------------------|------------------------------------------|
 | gender          |       | HKCharacteristicTypeIdentifierBiologicalSex   | NA        |
 | date_of_birth   |       | HKCharacteristicTypeIdentifierDateOfBirth     | NA        |
-| steps           | count | HKQuantityTypeIdentifierStepCount             |   StepsRecord                            |
 | weight          | kg    | HKQuantityTypeIdentifierBodyMass              |   Weight                                 |
+| height          | m     | HKQuantityTypeIdentifierHeight                | HeightRecord                             |
 | bmi             | count | HKQuantityTypeIdentifierBodyMassIndex         | NA                                       |
 | fat_percentage  | %     | HKQuantityTypeIdentifierBodyFatPercentage     |   BodyFatRecord                          |
+| steps           | count | HKQuantityTypeIdentifierStepCount             |   StepsRecord                            |
+| distance        | m     | HKQuantityTypeIdentifierDistanceWalkingRunning + HKQuantityTypeIdentifierDistanceCycling | DistanceRecord |
 | activity        | activityType | HKWorkoutTypeIdentifier                |   ExerciseSessionRecord                  |
 | calories.active | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned    | ActiveCaloriesBurnedRecord               |
 | calories.basal  | kcal  | HKQuantityTypeIdentifierBasalEnergyBurned     | BasalMetabolicRateRecord * time window   |
-| distance        | m     | HKQuantityTypeIdentifierDistanceWalkingRunning + HKQuantityTypeIdentifierDistanceCycling | DistanceRecord |
 | blood_glucose   | mmol/L | HKQuantityTypeIdentifierBloodGlucose         | BloodGlucoseRecord                       |
 | mindfulness     | sec   | HKCategoryTypeIdentifierMindfulSession        | NA                                       |
 | UVexposure      | count | HKQuantityTypeIdentifierUVExposure            | NA        |
@@ -157,6 +158,7 @@ Example values:
 | date_of_birth  | { day: 3, month: 12, year: 1978 } <br/>**Notes**: currently only available on iOS |
 | steps          | 34                                |
 | weight         | 83.3                              |
+| height         | 1.72                              |
 | bmi            | 25 <br/>**Notes**: only available on iOS |
 | fat_percentage | 0.312                             |
 | calories.X     | 245.3                             |
@@ -330,10 +332,11 @@ The following table shows what types are supported and examples of the returned 
 
 | Data type       | Example of returned object |
 |-----------------|----------------------------|
+| height          | { startDate: Date, endDate: Date, value: { average: 1.8, min:1.7, max: 1.8 }, unit: 'count' } <br />**Note:** Android only |
 | steps           | { startDate: Date, endDate: Date, value: 5780, unit: 'count' } |
+| distance        | { startDate: Date, endDate: Date, value: 12500.0, unit: 'm' } |
 | calories.active | { startDate: Date, endDate: Date, value: 25698.4, unit: 'kcal' } |
 | calories.basal  | { startDate: Date, endDate: Date, value: 3547.3, unit: 'kcal' } |
-| distance        | { startDate: Date, endDate: Date, value: 12500.0, unit: 'm' } |
 | activity        | Android: { startDate: Date, endDate: Date, value: 567000, unit: 'ms' } <br /> iOS: { startDate: Date, endDate: Date, value: { still: { duration: 520000 }, walking: { duration: 223000 }}, unit: 'activitySummary' }<br />**Note:** durations are expressed in milliseconds |
 
 
@@ -343,6 +346,7 @@ The following table shows what types are supported and examples of the returned 
 - The start and end dates returned are the date of the first and the last available samples. If no samples are found, start and end may not be set.
 - When bucketing, buckets will include the whole hour / day / month / week / year where start and end times fall into. For example, if your start time is 2016-10-21 10:53:34, the first daily bucket will start at 2016-10-21 00:00:00.
 - Weeks start on Monday.
+- Aggreagated height only exists on Android.
 
 
 #### Android quirks

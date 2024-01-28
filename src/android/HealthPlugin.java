@@ -26,6 +26,7 @@ import androidx.health.connect.client.records.DistanceRecord;
 import androidx.health.connect.client.records.ExerciseLap;
 import androidx.health.connect.client.records.ExerciseSegment;
 import androidx.health.connect.client.records.ExerciseSessionRecord;
+import androidx.health.connect.client.records.HeightRecord;
 import androidx.health.connect.client.records.MealType;
 import androidx.health.connect.client.records.Record;
 import androidx.health.connect.client.records.StepsRecord;
@@ -278,6 +279,9 @@ public class HealthPlugin extends CordovaPlugin {
         }
         if (name.equalsIgnoreCase("distance")) {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(DistanceRecord.class);
+        }
+        if (name.equalsIgnoreCase("height")) {
+            return kotlin.jvm.JvmClassMappingKt.getKotlinClass(HeightRecord.class);
         }
 
         return null;
@@ -579,6 +583,15 @@ public class HealthPlugin extends CordovaPlugin {
 
                         obj.put("value", meters);
                         obj.put("unit", "m");
+                    } else if (datapoint instanceof HeightRecord) {
+                        HeightRecord heigthR = (HeightRecord) datapoint;
+                        obj.put("startDate", heigthR.getTime().toEpochMilli());
+                        obj.put("endDate", heigthR.getTime().toEpochMilli());
+
+                        double meters = heigthR.getHeight().getMeters();
+
+                        obj.put("value", meters);
+                        obj.put("unit", "m");
                     } else {
                         callbackContext.error("Sample received of unknown type " + datatype.toString());
                         return;
@@ -697,6 +710,12 @@ public class HealthPlugin extends CordovaPlugin {
                         Set<AggregateMetric<Length>> metrics = new HashSet<>();
                         metrics.add(DistanceRecord.DISTANCE_TOTAL);
                         request = new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
+                    } else if (datatype.equalsIgnoreCase("height")) {
+                        Set<AggregateMetric<Length>> metrics = new HashSet<>();
+                        metrics.add(HeightRecord.HEIGHT_AVG);
+                        metrics.add(HeightRecord.HEIGHT_MIN);
+                        metrics.add(HeightRecord.HEIGHT_MAX);
+                        request = new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
                     } else {
                         callbackContext.error("Datatype not recognized " + datatype);
                         return;
@@ -744,6 +763,12 @@ public class HealthPlugin extends CordovaPlugin {
                     } else if (datatype.equalsIgnoreCase("distance")) {
                         Set<AggregateMetric<Length>> metrics = new HashSet<>();
                         metrics.add(DistanceRecord.DISTANCE_TOTAL);
+                        request = new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
+                    } else if (datatype.equalsIgnoreCase("height")) {
+                        Set<AggregateMetric<Length>> metrics = new HashSet<>();
+                        metrics.add(HeightRecord.HEIGHT_AVG);
+                        metrics.add(HeightRecord.HEIGHT_MIN);
+                        metrics.add(HeightRecord.HEIGHT_MAX);
                         request = new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
                     } else {
                         callbackContext.error("Datatype not recognized " + datatype);
@@ -795,6 +820,12 @@ public class HealthPlugin extends CordovaPlugin {
                 } else if (datatype.equalsIgnoreCase("distance")) {
                     Set<AggregateMetric<Length>> metrics = new HashSet<>();
                     metrics.add(DistanceRecord.DISTANCE_TOTAL);
+                    request = new AggregateRequest(metrics, timeRange, dor);
+                } else if (datatype.equalsIgnoreCase("height")) {
+                    Set<AggregateMetric<Length>> metrics = new HashSet<>();
+                    metrics.add(HeightRecord.HEIGHT_AVG);
+                    metrics.add(HeightRecord.HEIGHT_MIN);
+                    metrics.add(HeightRecord.HEIGHT_MAX);
                     request = new AggregateRequest(metrics, timeRange, dor);
                 } else {
                     callbackContext.error("Datatype not recognized " + datatype);
@@ -868,6 +899,21 @@ public class HealthPlugin extends CordovaPlugin {
             } else {
                 retObj.put("value", 0);
                 retObj.put("unit", "kcal");
+            }
+        }  else if (datatype.equalsIgnoreCase("height")) {
+            if (response.get(DistanceRecord.DISTANCE_TOTAL) != null) {
+                JSONObject heightStats = new JSONObject();
+                double metersAvg = response.get(HeightRecord.HEIGHT_AVG).getMeters();
+                heightStats.put("average", metersAvg);
+                double metersMin = response.get(HeightRecord.HEIGHT_MIN).getMeters();
+                heightStats.put("min", metersMin);
+                double metersMax = response.get(HeightRecord.HEIGHT_MAX).getMeters();
+                heightStats.put("max", metersMax);
+                retObj.put("value", heightStats);
+                retObj.put("unit", "m");
+            } else {
+                retObj.put("value", null);
+                retObj.put("unit", "m");
             }
         } else {
             LOG.e(TAG, "Data type not recognized " + datatype);
@@ -1088,6 +1134,21 @@ public class HealthPlugin extends CordovaPlugin {
                        Metadata.EMPTY);
 
                 List<DistanceRecord> data = new LinkedList<>();
+                data.add(record);
+                response = BuildersKt.runBlocking(
+                        EmptyCoroutineContext.INSTANCE,
+                        (s, c) -> healthConnectClient.insertRecords(data, c)
+                );
+            } else if (datatype.equalsIgnoreCase("height")) {
+                double meters = args.getJSONObject(0).getDouble("value");
+                Length len = Length.meters(meters);
+
+                HeightRecord record = new HeightRecord(
+                        Instant.ofEpochMilli(st), null,
+                        len,
+                        Metadata.EMPTY);
+
+                List<HeightRecord> data = new LinkedList<>();
                 data.add(record);
                 response = BuildersKt.runBlocking(
                         EmptyCoroutineContext.INSTANCE,
