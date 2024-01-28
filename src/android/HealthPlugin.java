@@ -606,8 +606,10 @@ public class HealthPlugin extends CordovaPlugin {
             // done:
             callbackContext.success(resultset);
         } catch (JSONException ex) {
+            Log.e(TAG, "Could not parse query object", ex);
             callbackContext.error("Could not parse query object");
         } catch (InterruptedException ex2) {
+            Log.e(TAG, "Thread interrupted", ex2);
             callbackContext.error("Thread interrupted" + ex2.getMessage());
         }
     }
@@ -846,8 +848,10 @@ public class HealthPlugin extends CordovaPlugin {
                 callbackContext.success(retObject);
             }
         } catch (JSONException ex) {
+            Log.e(TAG, "Could not parse query object or write response object", ex);
             callbackContext.error("Could not parse query object or write response object");
         } catch (InterruptedException ex2) {
+            Log.e(TAG, "Thread interrupted", ex2);
             callbackContext.error("Thread interrupted" + ex2.getMessage());
         }
     }
