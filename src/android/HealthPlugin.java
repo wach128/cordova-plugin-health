@@ -30,6 +30,7 @@ import androidx.health.connect.client.records.HeightRecord;
 import androidx.health.connect.client.records.MealType;
 import androidx.health.connect.client.records.Record;
 import androidx.health.connect.client.records.StepsRecord;
+import androidx.health.connect.client.records.TotalCaloriesBurnedRecord;
 import androidx.health.connect.client.records.WeightRecord;
 import androidx.health.connect.client.records.metadata.DataOrigin;
 import androidx.health.connect.client.records.metadata.Device;
@@ -267,6 +268,9 @@ public class HealthPlugin extends CordovaPlugin {
         }
         if (name.equalsIgnoreCase("activity")) {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(ExerciseSessionRecord.class);
+        }
+        if (name.equalsIgnoreCase("calories")) {
+            return kotlin.jvm.JvmClassMappingKt.getKotlinClass(TotalCaloriesBurnedRecord.class);
         }
         if (name.equalsIgnoreCase("calories.active")) {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(ActiveCaloriesBurnedRecord.class);
