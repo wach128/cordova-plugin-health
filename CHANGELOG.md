@@ -1,6 +1,11 @@
 Log of changes
 ==============
 
+### v3.0.4
+
+* added support for total calories
+
+
 ### v3.0.3
 
 * added support for blood_glucose, distance and height
