@@ -30,6 +30,7 @@ import androidx.health.connect.client.records.HeightRecord;
 import androidx.health.connect.client.records.MealType;
 import androidx.health.connect.client.records.Record;
 import androidx.health.connect.client.records.StepsRecord;
+import androidx.health.connect.client.records.TotalCaloriesBurnedRecord;
 import androidx.health.connect.client.records.WeightRecord;
 import androidx.health.connect.client.records.metadata.DataOrigin;
 import androidx.health.connect.client.records.metadata.Device;
@@ -268,6 +269,9 @@ public class HealthPlugin extends CordovaPlugin {
         if (name.equalsIgnoreCase("activity")) {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(ExerciseSessionRecord.class);
         }
+        if (name.equalsIgnoreCase("calories")) {
+            return kotlin.jvm.JvmClassMappingKt.getKotlinClass(TotalCaloriesBurnedRecord.class);
+        }
         if (name.equalsIgnoreCase("calories.active")) {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(ActiveCaloriesBurnedRecord.class);
         }
@@ -487,6 +491,15 @@ public class HealthPlugin extends CordovaPlugin {
 
                         obj.put("value", activityStr);
                         obj.put("unit", "activityType");
+                    } else if (datapoint instanceof TotalCaloriesBurnedRecord) {
+                        TotalCaloriesBurnedRecord caloriesDP = (TotalCaloriesBurnedRecord) datapoint;
+                        obj.put("startDate", caloriesDP.getStartTime().toEpochMilli());
+                        obj.put("endDate", caloriesDP.getEndTime().toEpochMilli());
+
+                        double kcals = caloriesDP.getEnergy().getKilocalories();
+
+                        obj.put("value", kcals);
+                        obj.put("unit", "kcal");
                     } else if (datapoint instanceof ActiveCaloriesBurnedRecord) {
                         ActiveCaloriesBurnedRecord caloriesDP = (ActiveCaloriesBurnedRecord) datapoint;
                         obj.put("startDate", caloriesDP.getStartTime().toEpochMilli());
@@ -700,6 +713,10 @@ public class HealthPlugin extends CordovaPlugin {
                         Set<AggregateMetric<Duration>> metrics = new HashSet<>();
                         metrics.add(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
                         request = new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
+                    } else if (datatype.equalsIgnoreCase("calories")) {
+                        Set<AggregateMetric<Energy>> metrics = new HashSet<>();
+                        metrics.add(TotalCaloriesBurnedRecord.ENERGY_TOTAL);
+                        request = new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
                     } else if (datatype.equalsIgnoreCase("calories.active")) {
                         Set<AggregateMetric<Energy>> metrics = new HashSet<>();
                         metrics.add(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL);
@@ -753,6 +770,10 @@ public class HealthPlugin extends CordovaPlugin {
                     } else if (datatype.equalsIgnoreCase("activity")) {
                         Set<AggregateMetric<Duration>> metrics = new HashSet<>();
                         metrics.add(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
+                        request = new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
+                    } else if (datatype.equalsIgnoreCase("calories")) {
+                        Set<AggregateMetric<Energy>> metrics = new HashSet<>();
+                        metrics.add(TotalCaloriesBurnedRecord.ENERGY_TOTAL);
                         request = new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
                     } else if (datatype.equalsIgnoreCase("calories.active")) {
                         Set<AggregateMetric<Energy>> metrics = new HashSet<>();
@@ -810,6 +831,10 @@ public class HealthPlugin extends CordovaPlugin {
                 } else if (datatype.equalsIgnoreCase("activity")) {
                     Set<AggregateMetric<Duration>> metrics = new HashSet<>();
                     metrics.add(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
+                    request = new AggregateRequest(metrics, timeRange, dor);
+                } else if (datatype.equalsIgnoreCase("calories")) {
+                    Set<AggregateMetric<Energy>> metrics = new HashSet<>();
+                    metrics.add(TotalCaloriesBurnedRecord.ENERGY_TOTAL);
                     request = new AggregateRequest(metrics, timeRange, dor);
                 } else if (datatype.equalsIgnoreCase("calories.active")) {
                     Set<AggregateMetric<Energy>> metrics = new HashSet<>();
@@ -876,6 +901,15 @@ public class HealthPlugin extends CordovaPlugin {
             } else {
                 retObj.put("value", 0);
                 retObj.put("unit", "ms");
+            }
+        } else if (datatype.equalsIgnoreCase("calories")) {
+            if (response.get(TotalCaloriesBurnedRecord.ENERGY_TOTAL) != null) {
+                double kcals = response.get(TotalCaloriesBurnedRecord.ENERGY_TOTAL).getKilocalories();
+                retObj.put("value", kcals);
+                retObj.put("unit", "kcal");
+            } else {
+                retObj.put("value", 0);
+                retObj.put("unit", "kcal");
             }
         } else if (datatype.equalsIgnoreCase("calories.active")) {
             if (response.get(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL) != null) {
@@ -1028,6 +1062,21 @@ public class HealthPlugin extends CordovaPlugin {
                         EmptyCoroutineContext.INSTANCE,
                         (s, c) -> healthConnectClient.insertRecords(data, c)
                 );
+            } else if (datatype.equalsIgnoreCase("calories")) {
+                double kcals = args.getJSONObject(0).getDouble("value");
+
+                TotalCaloriesBurnedRecord record = new TotalCaloriesBurnedRecord(
+                    Instant.ofEpochMilli(st), null,
+                    Instant.ofEpochMilli(et), null,
+                    Energy.kilocalories(kcals),
+                    Metadata.EMPTY
+                );
+                List<TotalCaloriesBurnedRecord> data = new LinkedList<>();
+                data.add(record);
+                response = BuildersKt.runBlocking(
+                    EmptyCoroutineContext.INSTANCE,
+                    (s, c) -> healthConnectClient.insertRecords(data, c)
+                );
             } else if (datatype.equalsIgnoreCase("calories.active")) {
                 double kcals = args.getJSONObject(0).getDouble("value");
 
@@ -1129,13 +1178,13 @@ public class HealthPlugin extends CordovaPlugin {
                 );
             } else if (datatype.equalsIgnoreCase("distance")) {
                 double meters = args.getJSONObject(0).getDouble("value");
-               Length len = Length.meters(meters);
+                Length len = Length.meters(meters);
 
-               DistanceRecord record = new DistanceRecord(
-                       Instant.ofEpochMilli(st), null,
-                       Instant.ofEpochMilli(et), null,
-                       len,
-                       Metadata.EMPTY);
+                DistanceRecord record = new DistanceRecord(
+                        Instant.ofEpochMilli(st), null,
+                        Instant.ofEpochMilli(et), null,
+                        len,
+                        Metadata.EMPTY);
 
                 List<DistanceRecord> data = new LinkedList<>();
                 data.add(record);
