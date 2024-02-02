@@ -5,7 +5,6 @@ package org.apache.cordova.health;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.os.Bundle;
 import android.util.Log;
 
 import androidx.activity.result.ActivityResultCallback;
@@ -29,6 +28,7 @@ import androidx.health.connect.client.records.ExerciseSessionRecord;
 import androidx.health.connect.client.records.HeightRecord;
 import androidx.health.connect.client.records.MealType;
 import androidx.health.connect.client.records.Record;
+import androidx.health.connect.client.records.SleepSessionRecord;
 import androidx.health.connect.client.records.StepsRecord;
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord;
 import androidx.health.connect.client.records.WeightRecord;
@@ -48,7 +48,6 @@ import androidx.health.connect.client.units.Length;
 import androidx.health.connect.client.units.Mass;
 import androidx.health.connect.client.units.Percentage;
 import androidx.health.connect.client.units.Power;
-import androidx.health.platform.client.permission.Permission;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
@@ -67,9 +66,7 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
-import java.time.temporal.TemporalUnit;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -287,6 +284,9 @@ public class HealthPlugin extends CordovaPlugin {
         if (name.equalsIgnoreCase("height")) {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(HeightRecord.class);
         }
+        if (name.equalsIgnoreCase("sleep")) {
+            return kotlin.jvm.JvmClassMappingKt.getKotlinClass(SleepSessionRecord.class);
+        }
 
         return null;
     }
@@ -365,6 +365,44 @@ public class HealthPlugin extends CordovaPlugin {
         }
     }
 
+
+    private void populateMetaFromQuery (JSONObject obj, Record datapoint) throws JSONException {
+        String id = datapoint.getMetadata().getId();
+        if (id != null) {
+            obj.put("id", id);
+        }
+
+        Device dev = datapoint.getMetadata().getDevice();
+        if (dev != null) {
+            String device = "";
+            String manufacturer = dev.getManufacturer();
+            String model = dev.getModel();
+            if (manufacturer != null || model != null) {
+                obj.put("sourceDevice", manufacturer + " " + model);
+            }
+        }
+
+        DataOrigin origin = datapoint.getMetadata().getDataOrigin();
+        if (origin != null) {
+            obj.put("sourceBundleId", origin.getPackageName());
+        }
+
+        int methodInt = datapoint.getMetadata().getRecordingMethod();
+        String method = "unknown";
+        switch (methodInt) {
+            case 1:
+                method = "actively_recorded";
+                break;
+            case 2:
+                method = "automatically_recorded";
+                break;
+            case 3:
+                method = "manual_entry";
+                break;
+        }
+        obj.put("entryMethod", method);
+    }
+
     private void query(final JSONArray args) {
 
         try {
@@ -421,40 +459,7 @@ public class HealthPlugin extends CordovaPlugin {
                     androidx.health.connect.client.records.Record datapoint = (androidx.health.connect.client.records.Record) datapointObj;
                     JSONObject obj = new JSONObject();
 
-                    String id = datapoint.getMetadata().getId();
-                    if (id != null) {
-                        obj.put("id", id);
-                    }
-
-                    Device dev = datapoint.getMetadata().getDevice();
-                    if (dev != null) {
-                        String device = "";
-                        String manufacturer = dev.getManufacturer();
-                        String model = dev.getModel();
-                        if (manufacturer != null || model != null) {
-                            obj.put("sourceDevice", manufacturer + " " + model);
-                        }
-                    }
-
-                    DataOrigin origin = datapoint.getMetadata().getDataOrigin();
-                    if (origin != null) {
-                        obj.put("sourceBundleId", origin.getPackageName());
-                    }
-
-                    int methodInt = datapoint.getMetadata().getRecordingMethod();
-                    String method = "unknown";
-                    switch (methodInt) {
-                        case 1:
-                            method = "actively_recorded";
-                            break;
-                        case 2:
-                            method = "automatically_recorded";
-                            break;
-                        case 3:
-                            method = "manual_entry";
-                            break;
-                    }
-                    obj.put("entryMethod", method);
+                    populateMetaFromQuery(obj, datapoint);
 
                     // DATA_TYPES here we need to add support for each different data type
                     if (datapoint instanceof StepsRecord) {
@@ -605,13 +610,57 @@ public class HealthPlugin extends CordovaPlugin {
 
                         obj.put("value", meters);
                         obj.put("unit", "m");
+                    } else if (datapoint instanceof SleepSessionRecord) {
+                        SleepSessionRecord sleepSessR = (SleepSessionRecord) datapoint;
+                        for (SleepSessionRecord.Stage stage : sleepSessR.getStages()) {
+                            // this is a bit of a special case where each stage here should become
+                            // a separate return value, to be compatible with HealthKit
+                            JSONObject sleepObj = new JSONObject();
+                            populateMetaFromQuery(sleepObj, datapoint);
+                            sleepObj.put("startDate", stage.getStartTime().toEpochMilli());
+                            sleepObj.put("endDate",  stage.getEndTime().toEpochMilli());
+                            int stageType = stage.getStage();
+                            String sleepSegmentType = "sleep";
+                            switch (stageType) {
+                                case SleepSessionRecord.STAGE_TYPE_AWAKE:
+                                    sleepSegmentType = "sleep.awake";
+                                    break;
+                                case SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED:
+                                    sleepSegmentType = "sleep.inBed";
+                                    break;
+                                case SleepSessionRecord.STAGE_TYPE_DEEP:
+                                    sleepSegmentType = "sleep.deep";
+                                    break;
+                                case SleepSessionRecord.STAGE_TYPE_SLEEPING:
+                                    sleepSegmentType = "sleep";
+                                    break;
+                                case SleepSessionRecord.STAGE_TYPE_LIGHT:
+                                    sleepSegmentType = "sleep.light";
+                                    break;
+                                case SleepSessionRecord.STAGE_TYPE_OUT_OF_BED:
+                                    sleepSegmentType = "sleep.outOfBed";
+                                    break;
+                                case SleepSessionRecord.STAGE_TYPE_REM:
+                                    sleepSegmentType = "sleep.rem";
+                                    break;
+                                case SleepSessionRecord.STAGE_TYPE_UNKNOWN:
+                                    sleepSegmentType = "sleep";
+                                    break;
+                            }
+
+                            sleepObj.put("value", sleepSegmentType);
+                            sleepObj.put("unit", "sleepType");
+                            resultset.put(sleepObj);
+                        }
                     } else {
                         callbackContext.error("Sample received of unknown type " + datatype.toString());
                         return;
                     }
 
-                    // add to array
-                    resultset.put(obj);
+                    // add to result array
+                    if (! (datapoint instanceof SleepSessionRecord)){
+                        resultset.put(obj);
+                    }
                 } else {
                     Log.e(TAG, "Unrecognized type for record " + datapointObj.getClass());
                 }
