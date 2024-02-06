@@ -285,7 +285,7 @@ public class HealthPlugin extends CordovaPlugin {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(HeightRecord.class);
         }
         if (name.equalsIgnoreCase("sleep")) {
-            return kotlin.jvm.JvmClassMappingKt.getKotlinClass(SleepSessionRecord.class);
+            return SleepFunctions.dataTypeToClass();
         }
 
         return null;
@@ -366,7 +366,7 @@ public class HealthPlugin extends CordovaPlugin {
     }
 
 
-    private void populateMetaFromQuery (JSONObject obj, Record datapoint) throws JSONException {
+    protected static void populateMetaFromQueryObj(JSONObject obj, Record datapoint) throws JSONException {
         String id = datapoint.getMetadata().getId();
         if (id != null) {
             obj.put("id", id);
@@ -436,6 +436,12 @@ public class HealthPlugin extends CordovaPlugin {
                 ascending = args.getJSONObject(0).getBoolean("ascending");
             }
 
+            // special flags:
+            boolean keepSession = false;
+            if (args.getJSONObject(0).has("sleepSession")) {
+                keepSession = args.getJSONObject(0).getBoolean("sleepSession");
+            }
+
             if (this.healthConnectClient == null) {
                 callbackContext.error("You must call requestAuthorization() before query()");
                 return;
@@ -453,13 +459,15 @@ public class HealthPlugin extends CordovaPlugin {
 
             Log.d(TAG, "Data query successful");
             JSONArray resultset = new JSONArray();
+            // default behaviour is that each record corresponds to one element in the array, but there can be exceptions
+            boolean oneElementPerRecord = true;
 
             for (Object datapointObj : response.getRecords()) {
                 if (datapointObj instanceof androidx.health.connect.client.records.Record) {
                     androidx.health.connect.client.records.Record datapoint = (androidx.health.connect.client.records.Record) datapointObj;
                     JSONObject obj = new JSONObject();
 
-                    populateMetaFromQuery(obj, datapoint);
+                    populateMetaFromQueryObj(obj, datapoint);
 
                     // DATA_TYPES here we need to add support for each different data type
                     if (datapoint instanceof StepsRecord) {
@@ -611,54 +619,15 @@ public class HealthPlugin extends CordovaPlugin {
                         obj.put("value", meters);
                         obj.put("unit", "m");
                     } else if (datapoint instanceof SleepSessionRecord) {
-                        SleepSessionRecord sleepSessR = (SleepSessionRecord) datapoint;
-                        for (SleepSessionRecord.Stage stage : sleepSessR.getStages()) {
-                            // this is a bit of a special case where each stage here should become
-                            // a separate return value, to be compatible with HealthKit
-                            JSONObject sleepObj = new JSONObject();
-                            populateMetaFromQuery(sleepObj, datapoint);
-                            sleepObj.put("startDate", stage.getStartTime().toEpochMilli());
-                            sleepObj.put("endDate",  stage.getEndTime().toEpochMilli());
-                            int stageType = stage.getStage();
-                            String sleepSegmentType = "sleep";
-                            switch (stageType) {
-                                case SleepSessionRecord.STAGE_TYPE_AWAKE:
-                                    sleepSegmentType = "sleep.awake";
-                                    break;
-                                case SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED:
-                                    sleepSegmentType = "sleep.inBed";
-                                    break;
-                                case SleepSessionRecord.STAGE_TYPE_DEEP:
-                                    sleepSegmentType = "sleep.deep";
-                                    break;
-                                case SleepSessionRecord.STAGE_TYPE_SLEEPING:
-                                    sleepSegmentType = "sleep";
-                                    break;
-                                case SleepSessionRecord.STAGE_TYPE_LIGHT:
-                                    sleepSegmentType = "sleep.light";
-                                    break;
-                                case SleepSessionRecord.STAGE_TYPE_OUT_OF_BED:
-                                    sleepSegmentType = "sleep.outOfBed";
-                                    break;
-                                case SleepSessionRecord.STAGE_TYPE_REM:
-                                    sleepSegmentType = "sleep.rem";
-                                    break;
-                                case SleepSessionRecord.STAGE_TYPE_UNKNOWN:
-                                    sleepSegmentType = "sleep";
-                                    break;
-                            }
-
-                            sleepObj.put("value", sleepSegmentType);
-                            sleepObj.put("unit", "sleepType");
-                            resultset.put(sleepObj);
-                        }
+                        oneElementPerRecord = !keepSession; // flag it, so we don't add empty objs later
+                        SleepFunctions.populateFromQuery(datapoint, obj, resultset, keepSession);
                     } else {
                         callbackContext.error("Sample received of unknown type " + datatype.toString());
                         return;
                     }
 
                     // add to result array
-                    if (! (datapoint instanceof SleepSessionRecord)){
+                    if (oneElementPerRecord){
                         resultset.put(obj);
                     }
                 } else {
@@ -784,6 +753,8 @@ public class HealthPlugin extends CordovaPlugin {
                         metrics.add(HeightRecord.HEIGHT_MIN);
                         metrics.add(HeightRecord.HEIGHT_MAX);
                         request = new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
+                    } else if (datatype.equalsIgnoreCase("sleep")) {
+                        request = SleepFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
                     } else {
                         callbackContext.error("Datatype not recognized " + datatype);
                         return;
@@ -842,6 +813,8 @@ public class HealthPlugin extends CordovaPlugin {
                         metrics.add(HeightRecord.HEIGHT_MIN);
                         metrics.add(HeightRecord.HEIGHT_MAX);
                         request = new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
+                    } else if (datatype.equalsIgnoreCase("sleep")) {
+                        request = SleepFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
                     } else {
                         callbackContext.error("Datatype not recognized " + datatype);
                         return;
@@ -903,10 +876,13 @@ public class HealthPlugin extends CordovaPlugin {
                     metrics.add(HeightRecord.HEIGHT_MIN);
                     metrics.add(HeightRecord.HEIGHT_MAX);
                     request = new AggregateRequest(metrics, timeRange, dor);
+                } else if (datatype.equalsIgnoreCase("sleep")) {
+                    request = SleepFunctions.prepareAggregateRequest(timeRange, dor);
                 } else {
                     callbackContext.error("Datatype not recognized " + datatype);
                     return;
                 }
+
 
                 AggregationResult response = BuildersKt.runBlocking(
                         EmptyCoroutineContext.INSTANCE,
@@ -987,7 +963,7 @@ public class HealthPlugin extends CordovaPlugin {
                 retObj.put("value", 0);
                 retObj.put("unit", "kcal");
             }
-        }  else if (datatype.equalsIgnoreCase("height")) {
+        } else if (datatype.equalsIgnoreCase("height")) {
             if (response.get(DistanceRecord.DISTANCE_TOTAL) != null) {
                 JSONObject heightStats = new JSONObject();
                 double metersAvg = response.get(HeightRecord.HEIGHT_AVG).getMeters();
@@ -1002,6 +978,8 @@ public class HealthPlugin extends CordovaPlugin {
                 retObj.put("value", null);
                 retObj.put("unit", "m");
             }
+        } else if (datatype.equalsIgnoreCase("sleep")) {
+            SleepFunctions.populateFromAggregatedQuery(response, retObj);
         } else {
             LOG.e(TAG, "Data type not recognized " + datatype);
         }
@@ -1043,6 +1021,7 @@ public class HealthPlugin extends CordovaPlugin {
             }
 
             InsertRecordsResponse response;
+            List<Record> data = new LinkedList<>();
 
             // DATA_TYPE here we need to add support for each different data type
             if (datatype.equalsIgnoreCase("steps")) {
@@ -1054,12 +1033,7 @@ public class HealthPlugin extends CordovaPlugin {
                         steps,
                         Metadata.EMPTY
                 );
-                List<StepsRecord> data = new LinkedList<>();
                 data.add(record);
-                response = BuildersKt.runBlocking(
-                        EmptyCoroutineContext.INSTANCE,
-                        (s, c) -> healthConnectClient.insertRecords(data, c)
-                );
             } else if (datatype.equalsIgnoreCase("weight")) {
                 double kgs = args.getJSONObject(0).getDouble("value");
 
@@ -1069,12 +1043,8 @@ public class HealthPlugin extends CordovaPlugin {
                         Mass.kilograms(kgs),
                         Metadata.EMPTY
                 );
-                List<WeightRecord> data = new LinkedList<>();
                 data.add(record);
-                response = BuildersKt.runBlocking(
-                        EmptyCoroutineContext.INSTANCE,
-                        (s, c) -> healthConnectClient.insertRecords(data, c)
-                );
+
             } else if (datatype.equalsIgnoreCase("fat_percentage")) {
                 double perc = args.getJSONObject(0).getDouble("value");
 
@@ -1083,12 +1053,7 @@ public class HealthPlugin extends CordovaPlugin {
                         new Percentage(perc),
                         Metadata.EMPTY
                 );
-                List<BodyFatRecord> data = new LinkedList<>();
                 data.add(record);
-                response = BuildersKt.runBlocking(
-                        EmptyCoroutineContext.INSTANCE,
-                        (s, c) -> healthConnectClient.insertRecords(data, c)
-                );
             } else if (datatype.equalsIgnoreCase("activity")) {
                 String activityStr = args.getJSONObject(0).getString("value");
                 int exerciseType = ActivityMapper.exerciseTypeFromActivity(activityStr);
@@ -1105,12 +1070,7 @@ public class HealthPlugin extends CordovaPlugin {
                         Metadata.EMPTY,
                         segments, laps
                 );
-                List<ExerciseSessionRecord> data = new LinkedList<>();
                 data.add(record);
-                response = BuildersKt.runBlocking(
-                        EmptyCoroutineContext.INSTANCE,
-                        (s, c) -> healthConnectClient.insertRecords(data, c)
-                );
             } else if (datatype.equalsIgnoreCase("calories")) {
                 double kcals = args.getJSONObject(0).getDouble("value");
 
@@ -1120,12 +1080,7 @@ public class HealthPlugin extends CordovaPlugin {
                     Energy.kilocalories(kcals),
                     Metadata.EMPTY
                 );
-                List<TotalCaloriesBurnedRecord> data = new LinkedList<>();
                 data.add(record);
-                response = BuildersKt.runBlocking(
-                    EmptyCoroutineContext.INSTANCE,
-                    (s, c) -> healthConnectClient.insertRecords(data, c)
-                );
             } else if (datatype.equalsIgnoreCase("calories.active")) {
                 double kcals = args.getJSONObject(0).getDouble("value");
 
@@ -1135,12 +1090,7 @@ public class HealthPlugin extends CordovaPlugin {
                         Energy.kilocalories(kcals),
                         Metadata.EMPTY
                 );
-                List<ActiveCaloriesBurnedRecord> data = new LinkedList<>();
                 data.add(record);
-                response = BuildersKt.runBlocking(
-                        EmptyCoroutineContext.INSTANCE,
-                        (s, c) -> healthConnectClient.insertRecords(data, c)
-                );
             } else if (datatype.equalsIgnoreCase("calories.basal")) {
                 double kcals = args.getJSONObject(0).getDouble("value");
                 // convert kcals to power
@@ -1153,12 +1103,7 @@ public class HealthPlugin extends CordovaPlugin {
                         pow,
                         Metadata.EMPTY
                 );
-                List<BasalMetabolicRateRecord> data = new LinkedList<>();
                 data.add(record);
-                response = BuildersKt.runBlocking(
-                        EmptyCoroutineContext.INSTANCE,
-                        (s, c) -> healthConnectClient.insertRecords(data, c)
-                );
             } else if (datatype.equalsIgnoreCase("blood_glucose")) {
 
                 JSONObject glucoseobj = args.getJSONObject(0).getJSONObject("value");
@@ -1219,12 +1164,7 @@ public class HealthPlugin extends CordovaPlugin {
                         relationToMeal,
                         Metadata.EMPTY);
 
-                List<BloodGlucoseRecord> data = new LinkedList<>();
                 data.add(record);
-                response = BuildersKt.runBlocking(
-                        EmptyCoroutineContext.INSTANCE,
-                        (s, c) -> healthConnectClient.insertRecords(data, c)
-                );
             } else if (datatype.equalsIgnoreCase("distance")) {
                 double meters = args.getJSONObject(0).getDouble("value");
                 Length len = Length.meters(meters);
@@ -1235,12 +1175,7 @@ public class HealthPlugin extends CordovaPlugin {
                         len,
                         Metadata.EMPTY);
 
-                List<DistanceRecord> data = new LinkedList<>();
                 data.add(record);
-                response = BuildersKt.runBlocking(
-                        EmptyCoroutineContext.INSTANCE,
-                        (s, c) -> healthConnectClient.insertRecords(data, c)
-                );
             } else if (datatype.equalsIgnoreCase("height")) {
                 double meters = args.getJSONObject(0).getDouble("value");
                 Length len = Length.meters(meters);
@@ -1250,16 +1185,19 @@ public class HealthPlugin extends CordovaPlugin {
                         len,
                         Metadata.EMPTY);
 
-                List<HeightRecord> data = new LinkedList<>();
                 data.add(record);
-                response = BuildersKt.runBlocking(
-                        EmptyCoroutineContext.INSTANCE,
-                        (s, c) -> healthConnectClient.insertRecords(data, c)
-                );
+            } else if (datatype.equalsIgnoreCase("sleep")) {
+                SleepFunctions.prepareStoreRecords(args.getJSONObject(0), data);
             } else {
                 callbackContext.error("Datatype not supported " + datatype);
                 return;
             }
+
+            response = BuildersKt.runBlocking(
+                    EmptyCoroutineContext.INSTANCE,
+                    (s, c) -> healthConnectClient.insertRecords(data, c)
+            );
+
 
             Log.d(TAG, "Data written of type " + datatype);
 

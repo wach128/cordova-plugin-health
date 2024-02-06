@@ -126,10 +126,11 @@ These are currently supported in both Android and iOS. Please notice that older 
 | steps           | count | HKQuantityTypeIdentifierStepCount             |   StepsRecord                            |
 | distance        | m     | HKQuantityTypeIdentifierDistanceWalkingRunning + HKQuantityTypeIdentifierDistanceCycling | DistanceRecord |
 | activity        | activityType | HKWorkoutTypeIdentifier                |   ExerciseSessionRecord                  |
+| appleExerciseTime | min | HKQuantityTypeIdentifierAppleExerciseTime     | NA                                       |
+| sleep           | sleep | HKCategoryTypeIdentifierSleepAnalysis         | SleepSessionRecord                       |
 | calories.active | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned    | ActiveCaloriesBurnedRecord               |
 | calories.basal  | kcal  | HKQuantityTypeIdentifierBasalEnergyBurned     | BasalMetabolicRateRecord * time window   |
 | calories        | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned + HKQuantityTypeIdentifierBasalEnergyBurned | TotalCaloriesBurnedRecord |
-| distance        | m     | HKQuantityTypeIdentifierDistanceWalkingRunning + HKQuantityTypeIdentifierDistanceCycling | DistanceRecord |
 | blood_glucose   | mmol/L | HKQuantityTypeIdentifierBloodGlucose         | BloodGlucoseRecord                       |
 | mindfulness     | sec   | HKCategoryTypeIdentifierMindfulSession        | NA                                       |
 | UVexposure      | count | HKQuantityTypeIdentifierUVExposure            | NA        |
@@ -158,14 +159,16 @@ Example values:
 |----------------|-----------------------------------|
 | gender         | "male" <br/>**Notes**: only available on iOS |
 | date_of_birth  | { day: 3, month: 12, year: 1978 } <br/>**Notes**: currently only available on iOS |
-| steps          | 34                                |
 | weight         | 83.3                              |
 | height         | 1.72                              |
 | bmi            | 25 <br/>**Notes**: only available on iOS |
 | fat_percentage | 0.312                             |
-| calories.X     | 245.3                             |
+| steps          | 34                                |
 | distance       | 101.2                             |
 | activity       | "walking"<br />**Notes**: recognized activities and their mappings in Health Connect / HealthKit can be found [here](activities_map.md). Additional calories (in kcal) and distance (in m) can be added if the query has the `includeCalories` and/or `includeDistance` flags set. **Warning** If you want to fetch calories and/or distance, permission to access those quantities should be requested. |
+| appleExerciseTime | 24 <br/>**Notes**: only available on iOS|
+| sleep       | 'sleep.light' <br />**Notes**: recognized sleep stages and their mappings in HealthConnect / HealthKit can be found [here](sleep_map.md) <br> in Android it is also possible to retrieve an entire session, in which case the value is an array of sleep stages [ { startDate: Date, endDate: Date, stage: 'sleep.light' }, ...] |
+| calories.X     | 245.3                             |
 | blood_glucose  | { glucose: 5.5, meal: 'breakfast', sleep: 'fully_awake', source: 'capillary_blood' }<br />**Notes**: to convert to mg/dL, multiply by `18.01559` ([The molar mass of glucose is 180.1559](http://www.convertunits.com/molarmass/Glucose)). `meal` can be: 'before_' / 'after_' + 'meal' (iOS only), 'fasting', 'breakfast', 'dinner', 'lunch', 'snack', 'unknown'. `sleep` can be (iOS only): 'fully_awake', 'before_sleep', 'on_waking', 'during_sleep'. `source` can be: 'capillary_blood' ,'interstitial_fluid', 'plasma', 'serum', 'tears', whole_blood', 'unknown'|
 | mindfulness    | 1800 <br/>**Notes**: only available on iOS |
 | UVexposure     | 12 <br/>**Notes**: only available on iOS |
@@ -305,6 +308,7 @@ cordova.plugins.health.query({
 - Active and basal calories can be automatically calculated by Health Connect.
 - calories.basal is returned as an average per day (kcal/day), and is usually stored quite sparsely (it rarely change, but chnages in weight and height trigger a ricalculation).
 - Calories and distance for activities are actually queried indipendently, using the timestamps for each returned activity. This may considerably slow down the query if the returned activities are many. Use with care.
+- sleep in HealthConnect is stored in sessions composed of stages. If you want to retrieve sessions instead of single stages, add the following flag to the query object: `sleepSession: true`. The returned value will be an array of objects like: `[ { startDate: Date, endDate: Date, stage: 'sleep.light' }, ... ]`
 
 ### queryAggregated()
 
@@ -342,6 +346,8 @@ The following table shows what types are supported and examples of the returned 
 | calories        | { startDate: Date, endDate: Date, value: 2892.4, unit: 'kcal' } |
 | distance        | { startDate: Date, endDate: Date, value: 12500.0, unit: 'm' } |
 | activity        | Android: { startDate: Date, endDate: Date, value: 567000, unit: 'ms' } <br /> iOS: { startDate: Date, endDate: Date, value: { still: { duration: 520000 }, walking: { duration: 223000 }}, unit: 'activitySummary' }<br />**Note:** durations are expressed in milliseconds |
+| sleep           | { startDate: Date, endDate: Date, value: 493, unit: 's' }  <br/>**Notes**: Android iOS |
+| appleExerciseTime | { startDate: Date, endDate: Date, value: 500, unit: 'm' }  <br/>**Notes**: iOS only |
 
 
 #### Quirks
@@ -392,6 +398,7 @@ cordova.plugins.health.store({
 - This operation correponds to an insert, not an update. If you want to update the data point you need to delete it first.
 - Not all datatypes support start and end timestamps, some, such as weight, only have one timestamp. The plugin will use the start timestamp to set the actual one.
 - In Android you can only store basal rate, that is a power. This is estimated from the kcals provided as an argument, divided by the time between the start and end time. When you query the individual sample, you get the kcal/day back, not the kcal, unless you do an aggregated query.
+- sleep in HealthConnect is stored in sessions composed of stages. By default, this function will store each stage as an indipendent session, but if you want to aggregate the stages into a single session, use the flag: `sleepSession: true` and use an array of objects like `[ { startDate: Date, endDate: Date, stage: 'sleep.light' }, ... ]` as value.
 
 
 ### delete()

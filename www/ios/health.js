@@ -311,7 +311,7 @@ Health.prototype.query = function (opts, onSuccess, onError) {
                 res.value = 'sleep.rem';
                 break;
             }
-            res.unit = 'sleepType';
+            res.unit = 'sleep';
           } else {
             res.value = samples[i].quantity;
           }
@@ -351,6 +351,7 @@ Health.prototype.queryAggregated = function (opts, onSuccess, onError) {
   if ((opts.dataType !== 'steps') && (opts.dataType !== 'distance') &&
     (opts.dataType !== 'calories') && (opts.dataType !== 'calories.active') &&
     (opts.dataType !== 'calories.basal') && (opts.dataType !== 'activity') &&
+    // (opts.dataType !== 'sleep') &&
     (!opts.dataType.startsWith('nutrition')) && (opts.dataType !== 'appleExerciseTime')) {
     // unsupported datatype
     onError('Datatype ' + opts.dataType + ' not supported in queryAggregated');
