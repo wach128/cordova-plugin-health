@@ -1,6 +1,12 @@
 Log of changes
 ==============
 
+
+### v3.0.5
+
+* added support for sleep in Android
+
+
 ### v3.0.4
 
 * added support for total calories
