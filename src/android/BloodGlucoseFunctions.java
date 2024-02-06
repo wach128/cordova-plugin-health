@@ -45,7 +45,7 @@ public class BloodGlucoseFunctions {
         } else if (temp_to_meal == BloodGlucoseRecord.RELATION_TO_MEAL_BEFORE_MEAL) {
             meal = "before_";
         } else if (temp_to_meal == BloodGlucoseRecord.RELATION_TO_MEAL_FASTING) {
-            meal = "fasting";
+            meal = "fasting_";
         } else {
             meal = "";
         }
@@ -100,26 +100,24 @@ public class BloodGlucoseFunctions {
 
         if (glucoseobj.has("meal")) {
             String meal = glucoseobj.getString("meal");
-            if (meal.equalsIgnoreCase("fasting")) {
-                mealType = MealType.MEAL_TYPE_UNKNOWN;
+            if (meal.startsWith("before_")) {
+                relationToMeal = BloodGlucoseRecord.RELATION_TO_MEAL_BEFORE_MEAL;
+                meal = meal.substring("before_".length());
+            } else if (meal.startsWith("after_")) {
+                relationToMeal = BloodGlucoseRecord.RELATION_TO_MEAL_AFTER_MEAL;
+                meal = meal.substring("after_".length());
+            } else if (meal.startsWith("fasting_")) {
                 relationToMeal = BloodGlucoseRecord.RELATION_TO_MEAL_FASTING;
-            } else {
-                if (meal.startsWith("before_")) {
-                    relationToMeal = BloodGlucoseRecord.RELATION_TO_MEAL_BEFORE_MEAL;
-                    meal = meal.substring("before_".length());
-                } else if (meal.startsWith("after_")) {
-                    relationToMeal = BloodGlucoseRecord.RELATION_TO_MEAL_AFTER_MEAL;
-                    meal = meal.substring("after_".length());
-                }
-                if (meal.equalsIgnoreCase("dinner")) {
-                    mealType = MealType.MEAL_TYPE_DINNER;
-                } else if (meal.equalsIgnoreCase("lunch")) {
-                    mealType = MealType.MEAL_TYPE_LUNCH;
-                } else if (meal.equalsIgnoreCase("snack")) {
-                    mealType = MealType.MEAL_TYPE_SNACK;
-                } else if (meal.equalsIgnoreCase("breakfast")) {
-                    mealType = MealType.MEAL_TYPE_BREAKFAST;
-                }
+                meal = meal.substring("fasting_".length());
+            }
+            if (meal.equalsIgnoreCase("dinner")) {
+                mealType = MealType.MEAL_TYPE_DINNER;
+            } else if (meal.equalsIgnoreCase("lunch")) {
+                mealType = MealType.MEAL_TYPE_LUNCH;
+            } else if (meal.equalsIgnoreCase("snack")) {
+                mealType = MealType.MEAL_TYPE_SNACK;
+            } else if (meal.equalsIgnoreCase("breakfast")) {
+                mealType = MealType.MEAL_TYPE_BREAKFAST;
             }
         }
 

@@ -169,7 +169,7 @@ Example values:
 | appleExerciseTime | 24 <br/>**Notes**: only available on iOS|
 | sleep       | 'sleep.light' <br />**Notes**: recognized sleep stages and their mappings in HealthConnect / HealthKit can be found [here](sleep_map.md) <br> in Android it is also possible to retrieve an entire session, in which case the value is an array of sleep stages [ { startDate: Date, endDate: Date, stage: 'sleep.light' }, ...] |
 | calories.X     | 245.3                             |
-| blood_glucose  | { glucose: 5.5, meal: 'breakfast', sleep: 'fully_awake', source: 'capillary_blood' }<br />**Notes**: to convert to mg/dL, multiply by `18.01559` ([The molar mass of glucose is 180.1559](http://www.convertunits.com/molarmass/Glucose)). `meal` can be: 'before_' / 'after_' + 'meal' (iOS only), 'fasting', 'breakfast', 'dinner', 'lunch', 'snack', 'unknown'. `sleep` can be (iOS only): 'fully_awake', 'before_sleep', 'on_waking', 'during_sleep'. `source` can be: 'capillary_blood' ,'interstitial_fluid', 'plasma', 'serum', 'tears', whole_blood', 'unknown'|
+| blood_glucose  | { glucose: 5.5, meal: 'breakfast', sleep: 'fully_awake', source: 'capillary_blood' }<br />**Notes**: to convert to mg/dL, multiply by `18.01559` ([The molar mass of glucose is 180.1559](http://www.convertunits.com/molarmass/Glucose)). `meal` can be: 'before_' / 'after_' / 'fasting_' + 'meal' (iOS only), 'breakfast', 'dinner', 'lunch', 'snack', 'unknown'. `sleep` can be (iOS only): 'fully_awake', 'before_sleep', 'on_waking', 'during_sleep'. `source` can be: 'capillary_blood' ,'interstitial_fluid', 'plasma', 'serum', 'tears', whole_blood', 'unknown'|
 | mindfulness    | 1800 <br/>**Notes**: only available on iOS |
 | UVexposure     | 12 <br/>**Notes**: only available on iOS |
 
