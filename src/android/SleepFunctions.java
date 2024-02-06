@@ -2,17 +2,14 @@ package org.apache.cordova.health;
 
 import androidx.health.connect.client.aggregate.AggregateMetric;
 import androidx.health.connect.client.aggregate.AggregationResult;
-import androidx.health.connect.client.records.HeightRecord;
 import androidx.health.connect.client.records.Record;
 import androidx.health.connect.client.records.SleepSessionRecord;
-import androidx.health.connect.client.records.SleepStageRecord;
 import androidx.health.connect.client.records.metadata.DataOrigin;
 import androidx.health.connect.client.records.metadata.Metadata;
 import androidx.health.connect.client.request.AggregateGroupByDurationRequest;
 import androidx.health.connect.client.request.AggregateGroupByPeriodRequest;
 import androidx.health.connect.client.request.AggregateRequest;
 import androidx.health.connect.client.time.TimeRangeFilter;
-import androidx.health.connect.client.units.Length;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,9 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import kotlin.coroutines.EmptyCoroutineContext;
 import kotlin.reflect.KClass;
-import kotlinx.coroutines.BuildersKt;
 
 public class SleepFunctions {
     public static KClass<? extends Record> dataTypeToClass() {

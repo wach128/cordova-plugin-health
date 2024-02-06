@@ -85,11 +85,6 @@ public class HealthPlugin extends CordovaPlugin {
     public static String TAG = "cordova-plugin-health";
 
     /**
-     * Used to get results from intents
-     */
-    private final int PERMISSIONS_INTENT = 878;
-
-    /**
      * Callback context, reference needed when used in functions initialized before the plugin is called
      */
     private CallbackContext callbackContext;
