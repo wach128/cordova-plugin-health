@@ -248,7 +248,7 @@ public class HealthPlugin extends CordovaPlugin {
     // DATA_TYPE add here when supporting new ones
     private KClass<? extends androidx.health.connect.client.records.Record> dataTypeNameToClass(String name) {
         if (name.equalsIgnoreCase("steps")) {
-            return kotlin.jvm.JvmClassMappingKt.getKotlinClass(StepsRecord.class);
+            return StepsFunctions.dataTypeToClass();
         }
         if (name.equalsIgnoreCase("weight")) {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(WeightRecord.class);
@@ -464,13 +464,7 @@ public class HealthPlugin extends CordovaPlugin {
 
                     // DATA_TYPES here we need to add support for each different data type
                     if (datapoint instanceof StepsRecord) {
-                        StepsRecord stepsDP = (StepsRecord) datapoint;
-                        obj.put("startDate", stepsDP.getStartTime().toEpochMilli());
-                        obj.put("endDate", stepsDP.getEndTime().toEpochMilli());
-
-                        long steps = stepsDP.getCount();
-                        obj.put("value", steps);
-                        obj.put("unit", "count");
+                        StepsFunctions.populateFromQuery(datapoint, obj);
                     } else if (datapoint instanceof WeightRecord) {
                         WeightRecord weightDP = (WeightRecord) datapoint;
                         obj.put("startDate", weightDP.getTime().toEpochMilli());
@@ -651,9 +645,7 @@ public class HealthPlugin extends CordovaPlugin {
                     AggregateGroupByPeriodRequest request;
                     // DATA_TYPE: add here support for new data types
                     if (datatype.equalsIgnoreCase("steps")) {
-                        Set<AggregateMetric<Long>> metrics = new HashSet<>();
-                        metrics.add(StepsRecord.COUNT_TOTAL);
-                        request = new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
+                        request = StepsFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
                     } else if (datatype.equalsIgnoreCase("activity")) {
                         Set<AggregateMetric<Duration>> metrics = new HashSet<>();
                         metrics.add(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
@@ -711,9 +703,7 @@ public class HealthPlugin extends CordovaPlugin {
                     AggregateGroupByDurationRequest request;
                     // DATA_TYPE: add here support for new data types
                     if (datatype.equalsIgnoreCase("steps")) {
-                        Set<AggregateMetric<Long>> metrics = new HashSet<>();
-                        metrics.add(StepsRecord.COUNT_TOTAL);
-                        request = new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
+                        request = StepsFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
                     } else if (datatype.equalsIgnoreCase("activity")) {
                         Set<AggregateMetric<Duration>> metrics = new HashSet<>();
                         metrics.add(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
@@ -774,9 +764,7 @@ public class HealthPlugin extends CordovaPlugin {
                 AggregateRequest request;
                 // DATA_TYPE add here support for new data types
                 if (datatype.equalsIgnoreCase("steps")) {
-                    Set<AggregateMetric<Long>> metrics = new HashSet<>();
-                    metrics.add(StepsRecord.COUNT_TOTAL);
-                    request = new AggregateRequest(metrics, timeRange, dor);
+                    request = StepsFunctions.prepareAggregateRequest(timeRange, dor);
                 } else if (datatype.equalsIgnoreCase("activity")) {
                     Set<AggregateMetric<Duration>> metrics = new HashSet<>();
                     metrics.add(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
@@ -836,14 +824,7 @@ public class HealthPlugin extends CordovaPlugin {
     private void setAggregatedVal(String datatype, JSONObject retObj, AggregationResult response) throws JSONException {
         // DATA_TYPE add here new data types when extending
         if (datatype.equalsIgnoreCase("steps")) {
-            if (response.get(StepsRecord.COUNT_TOTAL) != null) {
-                long val = response.get(StepsRecord.COUNT_TOTAL);
-                retObj.put("value", val);
-                retObj.put("unit", "'count'");
-            } else {
-                retObj.put("value", 0);
-                retObj.put("unit", "'count'");
-            }
+            StepsFunctions.populateFromAggregatedQuery(response, retObj);
         } else if (datatype.equalsIgnoreCase("activity")) {
             Duration val = response.get(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
             if (val != null) {
@@ -952,15 +933,7 @@ public class HealthPlugin extends CordovaPlugin {
 
             // DATA_TYPE here we need to add support for each different data type
             if (datatype.equalsIgnoreCase("steps")) {
-                long steps = args.getJSONObject(0).getLong("value");
-                // TODO: we could add meta data when storing, including entry method, client ID and device
-                StepsRecord record = new StepsRecord(
-                        Instant.ofEpochMilli(st), null,
-                        Instant.ofEpochMilli(et), null,
-                        steps,
-                        Metadata.EMPTY
-                );
-                data.add(record);
+                StepsFunctions.prepareStoreRecords(args.getJSONObject(0), st, et, data);
             } else if (datatype.equalsIgnoreCase("weight")) {
                 double kgs = args.getJSONObject(0).getDouble("value");
 
