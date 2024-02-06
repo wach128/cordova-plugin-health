@@ -31,7 +31,7 @@ public class SleepFunctions {
     }
 
     public static void populateFromQuery(Record datapoint, JSONObject obj, JSONArray resultset, boolean keepSession) throws JSONException {
-        // holder of stages, only used if sessions are kept
+        // holder of stages, only used if returning sessions
         JSONArray sleepStages = new JSONArray();
 
         SleepSessionRecord sleepSessR = (SleepSessionRecord) datapoint;
@@ -105,6 +105,9 @@ public class SleepFunctions {
             } else {
                 obj.put("value", "sleep");
                 obj.put("unit", "sleep");
+                // need to add manually to the resultset in this case
+                // because it's skipped later
+                resultset.put(obj);
             }
         }
     }
@@ -113,10 +116,10 @@ public class SleepFunctions {
         if (response.get(SleepSessionRecord.SLEEP_DURATION_TOTAL) != null) {
             double sleepSecs = response.get(SleepSessionRecord.SLEEP_DURATION_TOTAL).getSeconds();
             retObj.put("value", sleepSecs);
-            retObj.put("unit", "m");
+            retObj.put("unit", "s");
         } else {
             retObj.put("value", 0);
-            retObj.put("unit", "m");
+            retObj.put("unit", "s");
         }
     }
 
@@ -214,8 +217,6 @@ public class SleepFunctions {
                 throw new JSONException("Missing endDate in stage");
             }
             long stageET = storeObj.getLong("endDate");
-
-            JSONArray stagesArr = storeObj.getJSONArray("value");
 
             String sleepType = storeObj.getString("value");
             SleepSessionRecord.Stage stage = new SleepSessionRecord.Stage(

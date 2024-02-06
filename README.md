@@ -347,7 +347,7 @@ The following table shows what types are supported and examples of the returned 
 | distance        | { startDate: Date, endDate: Date, value: 12500.0, unit: 'm' } |
 | activity        | Android: { startDate: Date, endDate: Date, value: 567000, unit: 'ms' } <br /> iOS: { startDate: Date, endDate: Date, value: { still: { duration: 520000 }, walking: { duration: 223000 }}, unit: 'activitySummary' }<br />**Note:** durations are expressed in milliseconds |
 | sleep           | { startDate: Date, endDate: Date, value: 493, unit: 's' }  <br/>**Notes**: Android iOS |
-| appleExerciseTime | { startDate: Date, endDate: Date, value: 500, unit: 'm' }  <br/>**Notes**: iOS only |
+| appleExerciseTime | { startDate: Date, endDate: Date, value: 500, unit: 'min' }  <br/>**Notes**: iOS only |
 
 
 #### Quirks

@@ -546,7 +546,7 @@ public class HealthPlugin extends CordovaPlugin {
                         obj.put("value", meters);
                         obj.put("unit", "m");
                     } else if (datapoint instanceof SleepSessionRecord) {
-                        oneElementPerRecord = !keepSession; // flag it, so we don't add empty objs later
+                        oneElementPerRecord = keepSession; // flag it, so we don't add empty objs later
                         SleepFunctions.populateFromQuery(datapoint, obj, resultset, keepSession);
                     } else {
                         callbackContext.error("Sample received of unknown type " + datatype.toString());
