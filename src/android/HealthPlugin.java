@@ -43,7 +43,6 @@ import androidx.health.connect.client.response.ReadRecordsResponse;
 import androidx.health.connect.client.time.TimeRangeFilter;
 import androidx.health.connect.client.units.Energy;
 import androidx.health.connect.client.units.Length;
-import androidx.health.connect.client.units.Mass;
 import androidx.health.connect.client.units.Percentage;
 import androidx.health.connect.client.units.Power;
 
@@ -275,7 +274,7 @@ public class HealthPlugin extends CordovaPlugin {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(DistanceRecord.class);
         }
         if (name.equalsIgnoreCase("height")) {
-            return kotlin.jvm.JvmClassMappingKt.getKotlinClass(HeightRecord.class);
+            return HeightFunctions.dataTypeToClass();
         }
         if (name.equalsIgnoreCase("sleep")) {
             return SleepFunctions.dataTypeToClass();
@@ -467,6 +466,8 @@ public class HealthPlugin extends CordovaPlugin {
                         StepsFunctions.populateFromQuery(datapoint, obj);
                     } else if (datapoint instanceof WeightRecord) {
                         WeightFunctions.populateFromQuery(datapoint, obj);
+                    } else if (datapoint instanceof HeightRecord) {
+                        HeightFunctions.populateFromQuery(datapoint, obj);
                     } else if (datapoint instanceof BodyFatRecord) {
                         BodyFatRecord bodyFatDP = (BodyFatRecord) datapoint;
                         obj.put("startDate", bodyFatDP.getTime().toEpochMilli());
@@ -521,15 +522,6 @@ public class HealthPlugin extends CordovaPlugin {
                         obj.put("endDate", disanceR.getEndTime().toEpochMilli());
 
                         double meters = disanceR.getDistance().getMeters();
-
-                        obj.put("value", meters);
-                        obj.put("unit", "m");
-                    } else if (datapoint instanceof HeightRecord) {
-                        HeightRecord heigthR = (HeightRecord) datapoint;
-                        obj.put("startDate", heigthR.getTime().toEpochMilli());
-                        obj.put("endDate", heigthR.getTime().toEpochMilli());
-
-                        double meters = heigthR.getHeight().getMeters();
 
                         obj.put("value", meters);
                         obj.put("unit", "m");
@@ -642,6 +634,8 @@ public class HealthPlugin extends CordovaPlugin {
                         request = StepsFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
                     } else if (datatype.equalsIgnoreCase("weight")) {
                         request = WeightFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
+                    } else if (datatype.equalsIgnoreCase("height")) {
+                        request = HeightFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
                     } else if (datatype.equalsIgnoreCase("activity")) {
                         Set<AggregateMetric<Duration>> metrics = new HashSet<>();
                         metrics.add(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
@@ -661,12 +655,6 @@ public class HealthPlugin extends CordovaPlugin {
                     } else if (datatype.equalsIgnoreCase("distance")) {
                         Set<AggregateMetric<Length>> metrics = new HashSet<>();
                         metrics.add(DistanceRecord.DISTANCE_TOTAL);
-                        request = new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
-                    } else if (datatype.equalsIgnoreCase("height")) {
-                        Set<AggregateMetric<Length>> metrics = new HashSet<>();
-                        metrics.add(HeightRecord.HEIGHT_AVG);
-                        metrics.add(HeightRecord.HEIGHT_MIN);
-                        metrics.add(HeightRecord.HEIGHT_MAX);
                         request = new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
                     } else if (datatype.equalsIgnoreCase("sleep")) {
                         request = SleepFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
@@ -702,6 +690,8 @@ public class HealthPlugin extends CordovaPlugin {
                         request = StepsFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
                     } else if (datatype.equalsIgnoreCase("weight")) {
                         request = WeightFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
+                    } else if (datatype.equalsIgnoreCase("height")) {
+                        request = HeightFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
                     } else if (datatype.equalsIgnoreCase("activity")) {
                         Set<AggregateMetric<Duration>> metrics = new HashSet<>();
                         metrics.add(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
@@ -721,12 +711,6 @@ public class HealthPlugin extends CordovaPlugin {
                     } else if (datatype.equalsIgnoreCase("distance")) {
                         Set<AggregateMetric<Length>> metrics = new HashSet<>();
                         metrics.add(DistanceRecord.DISTANCE_TOTAL);
-                        request = new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
-                    } else if (datatype.equalsIgnoreCase("height")) {
-                        Set<AggregateMetric<Length>> metrics = new HashSet<>();
-                        metrics.add(HeightRecord.HEIGHT_AVG);
-                        metrics.add(HeightRecord.HEIGHT_MIN);
-                        metrics.add(HeightRecord.HEIGHT_MAX);
                         request = new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
                     } else if (datatype.equalsIgnoreCase("sleep")) {
                         request = SleepFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
@@ -765,6 +749,8 @@ public class HealthPlugin extends CordovaPlugin {
                     request = StepsFunctions.prepareAggregateRequest(timeRange, dor);
                 } else if (datatype.equalsIgnoreCase("weight")) {
                     request = WeightFunctions.prepareAggregateRequest(timeRange, dor);
+                } else if (datatype.equalsIgnoreCase("height")) {
+                    request = HeightFunctions.prepareAggregateRequest(timeRange, dor);
                 } else if (datatype.equalsIgnoreCase("activity")) {
                     Set<AggregateMetric<Duration>> metrics = new HashSet<>();
                     metrics.add(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
@@ -784,12 +770,6 @@ public class HealthPlugin extends CordovaPlugin {
                 } else if (datatype.equalsIgnoreCase("distance")) {
                     Set<AggregateMetric<Length>> metrics = new HashSet<>();
                     metrics.add(DistanceRecord.DISTANCE_TOTAL);
-                    request = new AggregateRequest(metrics, timeRange, dor);
-                } else if (datatype.equalsIgnoreCase("height")) {
-                    Set<AggregateMetric<Length>> metrics = new HashSet<>();
-                    metrics.add(HeightRecord.HEIGHT_AVG);
-                    metrics.add(HeightRecord.HEIGHT_MIN);
-                    metrics.add(HeightRecord.HEIGHT_MAX);
                     request = new AggregateRequest(metrics, timeRange, dor);
                 } else if (datatype.equalsIgnoreCase("sleep")) {
                     request = SleepFunctions.prepareAggregateRequest(timeRange, dor);
@@ -827,6 +807,8 @@ public class HealthPlugin extends CordovaPlugin {
             StepsFunctions.populateFromAggregatedQuery(response, retObj);
         } else if (datatype.equalsIgnoreCase("weight")) {
             WeightFunctions.populateFromAggregatedQuery(response, retObj);
+        } else if (datatype.equalsIgnoreCase("height")) {
+            HeightFunctions.populateFromAggregatedQuery(response, retObj);
         } else if (datatype.equalsIgnoreCase("activity")) {
             Duration val = response.get(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
             if (val != null) {
@@ -872,21 +854,6 @@ public class HealthPlugin extends CordovaPlugin {
             } else {
                 retObj.put("value", 0);
                 retObj.put("unit", "kcal");
-            }
-        } else if (datatype.equalsIgnoreCase("height")) {
-            if (response.get(HeightRecord.HEIGHT_AVG) != null) {
-                JSONObject heightStats = new JSONObject();
-                double metersAvg = response.get(HeightRecord.HEIGHT_AVG).getMeters();
-                heightStats.put("average", metersAvg);
-                double metersMin = response.get(HeightRecord.HEIGHT_MIN).getMeters();
-                heightStats.put("min", metersMin);
-                double metersMax = response.get(HeightRecord.HEIGHT_MAX).getMeters();
-                heightStats.put("max", metersMax);
-                retObj.put("value", heightStats);
-                retObj.put("unit", "m");
-            } else {
-                retObj.put("value", null);
-                retObj.put("unit", "m");
             }
         } else if (datatype.equalsIgnoreCase("sleep")) {
             SleepFunctions.populateFromAggregatedQuery(response, retObj);
@@ -940,6 +907,8 @@ public class HealthPlugin extends CordovaPlugin {
                 StepsFunctions.prepareStoreRecords(args.getJSONObject(0), st, et, data);
             } else if (datatype.equalsIgnoreCase("weight")) {
                 WeightFunctions.prepareStoreRecords(args.getJSONObject(0), st, data);
+            } else if (datatype.equalsIgnoreCase("height")) {
+                HeightFunctions.prepareStoreRecords(args.getJSONObject(0), st, data);
             } else if (datatype.equalsIgnoreCase("fat_percentage")) {
                 double perc = args.getJSONObject(0).getDouble("value");
 
@@ -1009,16 +978,6 @@ public class HealthPlugin extends CordovaPlugin {
                 DistanceRecord record = new DistanceRecord(
                         Instant.ofEpochMilli(st), null,
                         Instant.ofEpochMilli(et), null,
-                        len,
-                        Metadata.EMPTY);
-
-                data.add(record);
-            } else if (datatype.equalsIgnoreCase("height")) {
-                double meters = args.getJSONObject(0).getDouble("value");
-                Length len = Length.meters(meters);
-
-                HeightRecord record = new HeightRecord(
-                        Instant.ofEpochMilli(st), null,
                         len,
                         Metadata.EMPTY);
 
