@@ -2,10 +2,11 @@ Log of changes
 ==============
 
 
-### v3.0.5
+### v3.1.0
 
 * added support for sleep in Android
 * refactoring of Android plugin: data types support split into separate files
+* [Breaking change] the blood glucose meal should be now fasting_MEAL, where MEAL can be lunch, dinner, etc. By default fasting_ should go with unknown: fasting_unknown.
 
 
 ### v3.0.4
