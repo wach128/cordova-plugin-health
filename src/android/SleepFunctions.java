@@ -188,7 +188,7 @@ public class SleepFunctions {
                 long stageET = storeObj.getLong("endDate");
                 if (stageET > sessionEnd) sessionEnd = stageET;
 
-                String sleepType = storeObj.getString("stage");
+                String sleepType = stageObj.getString("stage");
                 SleepSessionRecord.Stage stage = new SleepSessionRecord.Stage(
                         Instant.ofEpochMilli(stageST),
                         Instant.ofEpochMilli(stageET),

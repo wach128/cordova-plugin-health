@@ -44,6 +44,14 @@ module.exports = {
           if (data[i].startDate) data[i].startDate = new Date(data[i].startDate)
           if (data[i].endDate) data[i].endDate = new Date(data[i].endDate)
 
+          if (opts.dataType == 'sleep' && opts.sleepSession) {
+            // convert start and end dates for single stages
+            for (let stageI = 0; stageI < data[i].value.length; stageI++) {
+              data[i].value[stageI].startDate = new Date(data[i].value[stageI].startDate)
+              data[i].value[stageI].endDate = new Date(data[i].value[stageI].endDate)
+            }
+          }
+
           if (opts.dataType == 'activity' && (opts.includeCalories || opts.includeDistance)) {
             // we need to also fetch calories and/or distance
 
@@ -123,6 +131,17 @@ module.exports = {
       data.startDate = data.startDate.getTime()
     if (data.endDate && (typeof data.endDate == 'object'))
       data.endDate = data.endDate.getTime()
+
+    if (data.dataType == 'sleep' && data.sleepSession) {
+      // convert start and end dates for single stages
+      for (let stageI = 0; stageI < data.value.length; stageI++) {
+        if (data.value[stageI].startDate && (typeof data.value[stageI].startDate == 'object'))
+          data.value[stageI].startDate = data.value[stageI].startDate.getTime()
+
+        if (data.value[stageI].endDate && (typeof data.value[stageI].endDate == 'object'))
+          data.value[stageI].endDate = data.value[stageI].endDate.getTime()
+      }
+    }
 
     exec(onSuccess, onError, "health", "store", [data])
   },
