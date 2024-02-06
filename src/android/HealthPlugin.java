@@ -251,7 +251,7 @@ public class HealthPlugin extends CordovaPlugin {
             return StepsFunctions.dataTypeToClass();
         }
         if (name.equalsIgnoreCase("weight")) {
-            return kotlin.jvm.JvmClassMappingKt.getKotlinClass(WeightRecord.class);
+            return WeightFunctions.dataTypeToClass();
         }
         if (name.equalsIgnoreCase("fat_percentage")) {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(BodyFatRecord.class);
@@ -466,13 +466,7 @@ public class HealthPlugin extends CordovaPlugin {
                     if (datapoint instanceof StepsRecord) {
                         StepsFunctions.populateFromQuery(datapoint, obj);
                     } else if (datapoint instanceof WeightRecord) {
-                        WeightRecord weightDP = (WeightRecord) datapoint;
-                        obj.put("startDate", weightDP.getTime().toEpochMilli());
-                        obj.put("endDate", weightDP.getTime().toEpochMilli());
-
-                        double kgs = weightDP.getWeight().getKilograms();
-                        obj.put("value", kgs);
-                        obj.put("unit", "kg");
+                        WeightFunctions.populateFromQuery(datapoint, obj);
                     } else if (datapoint instanceof BodyFatRecord) {
                         BodyFatRecord bodyFatDP = (BodyFatRecord) datapoint;
                         obj.put("startDate", bodyFatDP.getTime().toEpochMilli());
@@ -646,6 +640,8 @@ public class HealthPlugin extends CordovaPlugin {
                     // DATA_TYPE: add here support for new data types
                     if (datatype.equalsIgnoreCase("steps")) {
                         request = StepsFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
+                    } else if (datatype.equalsIgnoreCase("weight")) {
+                        request = WeightFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
                     } else if (datatype.equalsIgnoreCase("activity")) {
                         Set<AggregateMetric<Duration>> metrics = new HashSet<>();
                         metrics.add(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
@@ -704,6 +700,8 @@ public class HealthPlugin extends CordovaPlugin {
                     // DATA_TYPE: add here support for new data types
                     if (datatype.equalsIgnoreCase("steps")) {
                         request = StepsFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
+                    } else if (datatype.equalsIgnoreCase("weight")) {
+                        request = WeightFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
                     } else if (datatype.equalsIgnoreCase("activity")) {
                         Set<AggregateMetric<Duration>> metrics = new HashSet<>();
                         metrics.add(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
@@ -765,6 +763,8 @@ public class HealthPlugin extends CordovaPlugin {
                 // DATA_TYPE add here support for new data types
                 if (datatype.equalsIgnoreCase("steps")) {
                     request = StepsFunctions.prepareAggregateRequest(timeRange, dor);
+                } else if (datatype.equalsIgnoreCase("weight")) {
+                    request = WeightFunctions.prepareAggregateRequest(timeRange, dor);
                 } else if (datatype.equalsIgnoreCase("activity")) {
                     Set<AggregateMetric<Duration>> metrics = new HashSet<>();
                     metrics.add(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
@@ -825,6 +825,8 @@ public class HealthPlugin extends CordovaPlugin {
         // DATA_TYPE add here new data types when extending
         if (datatype.equalsIgnoreCase("steps")) {
             StepsFunctions.populateFromAggregatedQuery(response, retObj);
+        } else if (datatype.equalsIgnoreCase("weight")) {
+            WeightFunctions.populateFromAggregatedQuery(response, retObj);
         } else if (datatype.equalsIgnoreCase("activity")) {
             Duration val = response.get(ExerciseSessionRecord.EXERCISE_DURATION_TOTAL);
             if (val != null) {
@@ -872,7 +874,7 @@ public class HealthPlugin extends CordovaPlugin {
                 retObj.put("unit", "kcal");
             }
         } else if (datatype.equalsIgnoreCase("height")) {
-            if (response.get(DistanceRecord.DISTANCE_TOTAL) != null) {
+            if (response.get(HeightRecord.HEIGHT_AVG) != null) {
                 JSONObject heightStats = new JSONObject();
                 double metersAvg = response.get(HeightRecord.HEIGHT_AVG).getMeters();
                 heightStats.put("average", metersAvg);
@@ -932,19 +934,12 @@ public class HealthPlugin extends CordovaPlugin {
             List<Record> data = new LinkedList<>();
 
             // DATA_TYPE here we need to add support for each different data type
+            // TODO: we could add meta data when storing, including entry method, client ID and device
+
             if (datatype.equalsIgnoreCase("steps")) {
                 StepsFunctions.prepareStoreRecords(args.getJSONObject(0), st, et, data);
             } else if (datatype.equalsIgnoreCase("weight")) {
-                double kgs = args.getJSONObject(0).getDouble("value");
-
-                // TODO: we could add meta data when storing, including entry method, client ID and device
-                WeightRecord record = new WeightRecord(
-                        Instant.ofEpochMilli(st), null,
-                        Mass.kilograms(kgs),
-                        Metadata.EMPTY
-                );
-                data.add(record);
-
+                WeightFunctions.prepareStoreRecords(args.getJSONObject(0), st, data);
             } else if (datatype.equalsIgnoreCase("fat_percentage")) {
                 double perc = args.getJSONObject(0).getDouble("value");
 

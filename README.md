@@ -338,8 +338,9 @@ The following table shows what types are supported and examples of the returned 
 
 | Data type       | Example of returned object |
 |-----------------|----------------------------|
-| height          | { startDate: Date, endDate: Date, value: { average: 1.8, min:1.7, max: 1.8 }, unit: 'count' } <br />**Note:** Android only |
 | steps           | { startDate: Date, endDate: Date, value: 5780, unit: 'count' } |
+| height          | { startDate: Date, endDate: Date, value: { average: 1.8, min:1.7, max: 1.8 }, unit: 'count' } <br />**Note:** Android only |
+| weight          | { startDate: Date, endDate: Date, value: { average: 73, min:72.5, max: 74 }, unit: 'kg' } <br />**Note:** Android only |
 | distance        | { startDate: Date, endDate: Date, value: 12500.0, unit: 'm' } |
 | calories.active | { startDate: Date, endDate: Date, value: 25698.4, unit: 'kcal' } |
 | calories.basal  | { startDate: Date, endDate: Date, value: 3547.3, unit: 'kcal' } |
