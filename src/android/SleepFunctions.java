@@ -35,56 +35,77 @@ public class SleepFunctions {
         JSONArray sleepStages = new JSONArray();
 
         SleepSessionRecord sleepSessR = (SleepSessionRecord) datapoint;
-        for (SleepSessionRecord.Stage stage : sleepSessR.getStages()) {
-            JSONObject sleepObj = new JSONObject();
-            sleepObj.put("startDate", stage.getStartTime().toEpochMilli());
-            sleepObj.put("endDate",  stage.getEndTime().toEpochMilli());
-            int stageType = stage.getStage();
-            String sleepSegmentType = "sleep";
-            switch (stageType) {
-                case SleepSessionRecord.STAGE_TYPE_AWAKE:
-                    sleepSegmentType = "sleep.awake";
-                    break;
-                case SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED:
-                    sleepSegmentType = "sleep.inBed";
-                    break;
-                case SleepSessionRecord.STAGE_TYPE_DEEP:
-                    sleepSegmentType = "sleep.deep";
-                    break;
-                case SleepSessionRecord.STAGE_TYPE_SLEEPING:
-                    sleepSegmentType = "sleep";
-                    break;
-                case SleepSessionRecord.STAGE_TYPE_LIGHT:
-                    sleepSegmentType = "sleep.light";
-                    break;
-                case SleepSessionRecord.STAGE_TYPE_OUT_OF_BED:
-                    sleepSegmentType = "sleep.outOfBed";
-                    break;
-                case SleepSessionRecord.STAGE_TYPE_REM:
-                    sleepSegmentType = "sleep.rem";
-                    break;
-                case SleepSessionRecord.STAGE_TYPE_UNKNOWN:
-                    sleepSegmentType = "sleep";
-                    break;
-            }
+        obj.put("startDate", sleepSessR.getStartTime().toEpochMilli());
+        obj.put("endDate", sleepSessR.getEndTime().toEpochMilli());
+
+        if (! sleepSessR.getStages().isEmpty()) {
+            for (SleepSessionRecord.Stage stage : sleepSessR.getStages()) {
+                JSONObject sleepObj = new JSONObject();
+                sleepObj.put("startDate", stage.getStartTime().toEpochMilli());
+                sleepObj.put("endDate",  stage.getEndTime().toEpochMilli());
+                int stageType = stage.getStage();
+                String sleepSegmentType = "sleep";
+                switch (stageType) {
+                    case SleepSessionRecord.STAGE_TYPE_AWAKE:
+                        sleepSegmentType = "sleep.awake";
+                        break;
+                    case SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED:
+                        sleepSegmentType = "sleep.inBed";
+                        break;
+                    case SleepSessionRecord.STAGE_TYPE_DEEP:
+                        sleepSegmentType = "sleep.deep";
+                        break;
+                    case SleepSessionRecord.STAGE_TYPE_SLEEPING:
+                        sleepSegmentType = "sleep";
+                        break;
+                    case SleepSessionRecord.STAGE_TYPE_LIGHT:
+                        sleepSegmentType = "sleep.light";
+                        break;
+                    case SleepSessionRecord.STAGE_TYPE_OUT_OF_BED:
+                        sleepSegmentType = "sleep.outOfBed";
+                        break;
+                    case SleepSessionRecord.STAGE_TYPE_REM:
+                        sleepSegmentType = "sleep.rem";
+                        break;
+                    case SleepSessionRecord.STAGE_TYPE_UNKNOWN:
+                        sleepSegmentType = "sleep";
+                        break;
+                }
+
+                if (keepSession) {
+                    sleepObj.put("stage", sleepSegmentType);
+                    sleepStages.put(sleepObj);
+                } else {
+                    // this is a bit of a special case where each stage becomes
+                    // a separate returned value, to be compatible with HealthKit
+                    // the 1 record - 1 element does not hold true here
+                    HealthPlugin.populateFromMeta(sleepObj, datapoint.getMetadata());
+                    sleepObj.put("value", sleepSegmentType);
+                    sleepObj.put("unit", "sleep");
+                    resultset.put(sleepObj);
+                }
+            } // end of for loop
 
             if (keepSession) {
-                sleepObj.put("stage", sleepSegmentType);
-                sleepStages.put(sleepObj);
-            } else {
-                // this is a bit of a special case where each stage here should become
-                // a separate return value, to be compatible with HealthKit
-                // the 1 record - 1 element does not hold true here
-                HealthPlugin.populateMetaFromQueryObj(sleepObj, datapoint);
-                sleepObj.put("value", sleepSegmentType);
-                sleepObj.put("unit", "sleepType");
-                resultset.put(sleepObj);
+                // we have the sleep stages populated in the array, return that
+                obj.put("value", sleepStages);
+                obj.put("unit", "sleepSession");
             }
-        }
-
-        if (keepSession) {
-            obj.put("value", sleepStages);
-            obj.put("unit", "sleepSession");
+        } else {
+            // no stages! we can only assume that it's generic sleep
+            if (keepSession) {
+                // create a single stage object
+                JSONObject sleepObj = new JSONObject();
+                sleepObj.put("startDate", sleepSessR.getStartTime().toEpochMilli());
+                sleepObj.put("endDate",  sleepSessR.getEndTime().toEpochMilli());
+                sleepObj.put("stage", "sleep");
+                sleepStages.put(sleepObj);
+                obj.put("value", sleepStages);
+                obj.put("unit", "sleepSession");
+            } else {
+                obj.put("value", "sleep");
+                obj.put("unit", "sleep");
+            }
         }
     }
 

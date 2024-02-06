@@ -5,6 +5,7 @@ Log of changes
 ### v3.0.5
 
 * added support for sleep in Android
+* refactoring of Android plugin: data types support split into separate files
 
 
 ### v3.0.4

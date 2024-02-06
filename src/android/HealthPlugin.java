@@ -359,13 +359,13 @@ public class HealthPlugin extends CordovaPlugin {
     }
 
 
-    protected static void populateMetaFromQueryObj(JSONObject obj, Record datapoint) throws JSONException {
-        String id = datapoint.getMetadata().getId();
+    protected static void populateFromMeta(JSONObject obj, Metadata meta) throws JSONException {
+        String id = meta.getId();
         if (id != null) {
             obj.put("id", id);
         }
 
-        Device dev = datapoint.getMetadata().getDevice();
+        Device dev = meta.getDevice();
         if (dev != null) {
             String device = "";
             String manufacturer = dev.getManufacturer();
@@ -375,12 +375,12 @@ public class HealthPlugin extends CordovaPlugin {
             }
         }
 
-        DataOrigin origin = datapoint.getMetadata().getDataOrigin();
+        DataOrigin origin = meta.getDataOrigin();
         if (origin != null) {
             obj.put("sourceBundleId", origin.getPackageName());
         }
 
-        int methodInt = datapoint.getMetadata().getRecordingMethod();
+        int methodInt = meta.getRecordingMethod();
         String method = "unknown";
         switch (methodInt) {
             case 1:
@@ -460,7 +460,7 @@ public class HealthPlugin extends CordovaPlugin {
                     androidx.health.connect.client.records.Record datapoint = (androidx.health.connect.client.records.Record) datapointObj;
                     JSONObject obj = new JSONObject();
 
-                    populateMetaFromQueryObj(obj, datapoint);
+                    populateFromMeta(obj, datapoint.getMetadata());
 
                     // DATA_TYPES here we need to add support for each different data type
                     if (datapoint instanceof StepsRecord) {
