@@ -1,6 +1,10 @@
 Log of changes
 ==============
 
+### v3.1.1
+
+* removed permissions for AndroidManifest.xml from plugin.xml, now permissions must be set in config.xml
+
 
 ### v3.1.0
 

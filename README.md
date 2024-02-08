@@ -49,7 +49,8 @@ The workaround consists in fixing gradle version (to 8.4), gradle plugin (to 8.1
 
 ### Permissions in AndroidManifest.xml
 
-Health Connect requires that each data type accessed is listed as permission in the AndroidManifest.xml file. This plugin will add permissions for *ALL SUPPORTED* data types, both read and write. However, this is a LONG LIST and it may be problematic when submitting to the Play Store. **It is strongly suggested to review the list and remove those that are actually not needed**. See [this](https://developer.android.com/health-and-fitness/guides/health-connect/plan/data-types) to understand which permissions you can remove and which ones you should keep, depending on the data that you actually need.
+Health Connect requires that each data type accessed is listed as permission in the AndroidManifest.xml file. This plugin will *NOT ADD PERMISSIONS* for the data types that you need, the list is too long to add them all and having all permissions listed may be problematic when submitting to the Play Store. **You need to modify the AndroidManifest.xml file and add the needed permissions manually**. See [this](https://developer.android.com/health-and-fitness/guides/health-connect/plan/data-types) to understand which permissions you will need and which ones you should keep, depending on the data that you actually need.
+The best way to add permissions is to include them in the [config.xml](https://cordova.apache.org/docs/en/latest/plugin_ref/spec.html#edit-config) file of your cordova project so that the build process is reproducible and the permissions are not lost when removing and re-adding the Android platform.
 
 ### Mandatory Privacy Policy on Android
 
