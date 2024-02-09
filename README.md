@@ -39,8 +39,18 @@ cordova plugin add cordova-plugin-health --variable HEALTH_READ_PERMISSION='App 
 
 * HealthConnect is made standard on (Google versions of) Android [from version 14 (API level 34)](https://developer.android.com/health-and-fitness/guides/health-connect/develop/get-started#step-1). On older versions of Android, the user has to install the Health Connect app from the Play Store.
 * Health Connect SDK supports Android 8 (API level 26) or higher, while the Health Connect app is only compatible with Android 9 (API level 28) or higher see [this](https://developer.android.com/health-and-fitness/guides/health-connect/develop/get-started#step-2).
-* Health Connect SDK requires targeting Android API level 34. The current cordova-android package (12.0.1) targets version 33 and uses a version of Gradle that is incompatible with API level 34, so this plugin implements a temporary workaround.
-The workaround consists in fixing gradle version (to 8.4), gradle plugin (to 8.1.1), target SDK version (to 34) and minimum SDK version (to 26), see plugin.xml. Additionally, there are issues with some kotlin depenendencies which are fixed in `src/android/build-extras.gradle`. All these hacks will hopefully be removed with future versions of the cordova-android platform.
+* Health Connect SDK requires targeting Android API level 34. The current cordova-android package (12.0.1) targets version 33 and uses a version of Gradle that is incompatible with API level 34, so you need to fix the versions of gradle (to 8.4), gradle plugin (to 8.1.1), target SDK version (to 34) and minimum SDK version (to 26). Add the following to the config.xml of your cordova app project:
+```xml
+<platform name="android">
+  ...
+  <preference name="GradleVersion" value="8.4" />
+  <preference name="AndroidGradlePluginVersion" value="8.1.1" />
+  <preference name="android-minSdkVersion" value="26" />
+  <preference name="android-targetSdkVersion" value="34" />
+  ...
+<platform>
+```
+Additionally, there are issues with some kotlin depenendencies which are fixed automatically by the plugin in `src/android/build-extras.gradle`. All these hacks will hopefully be removed with future versions of the cordova-android platform.
 * Download a recent version of gradle (8.4 or later).
 * If you use Android Studio, download at least version Hedgehog.
 * Be aware that Health Connect requires the user to have screen lock enabled with a PIN, pattern, or password.
@@ -55,7 +65,7 @@ The best way to add permissions is to include them in the [config.xml](https://c
 ```xml
 <platform name="android">
     ...
-    <config-file target="AndroidManifest.xml" parent="/*">
+    <config-file target="AndroidManifest.xml" parent="/*" xmlns:android="http://schemas.android.com/apk/res/android">
         <uses-permission android:name="android.permission.health.READ_STEPS" />
 			  <uses-permission android:name="android.permission.health.WRITE_STEPS" />
 			  <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
