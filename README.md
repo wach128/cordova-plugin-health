@@ -55,12 +55,12 @@ The best way to add permissions is to include them in the [config.xml](https://c
 ```xml
 <platform name="android">
     ...
-    <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/uses-permission" xmlns:android="http://schemas.android.com/apk/res/android">
+    <config-file target="AndroidManifest.xml" parent="/*">
         <uses-permission android:name="android.permission.health.READ_STEPS" />
 			  <uses-permission android:name="android.permission.health.WRITE_STEPS" />
 			  <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
         ...
-    </edit-config>
+    </config-file>
     ...
 </platform>
 ```
