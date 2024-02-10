@@ -4,7 +4,8 @@ Log of changes
 ### v3.1.1
 
 * removed permissions for AndroidManifest.xml from plugin.xml, now permissions must be set in config.xml
-
+* better explained how to setup Android project, particularly gradle
+* added heart_rate in Android
 
 ### v3.1.0
 

@@ -82,7 +82,7 @@ A Privacy Policy must be present on Android in order for the app to be approved 
 
 ### Manual setup in Capacitor (Ionic)
 
-Capacitor does not automatically include all changes to AndroidManifest.xml or gradle files from plugin.xml. This is a short guide to do this manually. Based on plugin v3.0.0 and @capacitor/android v5.5.1. Future versions may be different.
+Capacitor does not automatically include all changes to AndroidManifest.xml or gradle files from plugin.xml. This is a short guide to do it manually. Based on plugin v3.1.0 and @capacitor/android v5.5.1, future versions may be different.
 
 1. install the plugin, DO NOT USE awesome-codova-plugin, it hasn't been updated yet
 `npm install cordova-plugin-health`. Build the app as you would normally do `npm run build`, sync it with the android code `npx cap sync` and get the Android project in Android Studio (suggested) `npx cap open android` or another editor.
@@ -156,6 +156,7 @@ These are currently supported in both Android and iOS. Please notice that older 
 | calories.active | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned    | ActiveCaloriesBurnedRecord               |
 | calories.basal  | kcal  | HKQuantityTypeIdentifierBasalEnergyBurned     | BasalMetabolicRateRecord * time window   |
 | calories        | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned + HKQuantityTypeIdentifierBasalEnergyBurned | TotalCaloriesBurnedRecord |
+| heart_rate      | bpm   | HKQuantityTypeIdentifierHeartRate             | HeartRateRecord                          |
 | blood_glucose   | mmol/L | HKQuantityTypeIdentifierBloodGlucose         | BloodGlucoseRecord                       |
 | mindfulness     | sec   | HKCategoryTypeIdentifierMindfulSession        | NA                                       |
 | UVexposure      | count | HKQuantityTypeIdentifierUVExposure            | NA        |
@@ -194,6 +195,7 @@ Example values:
 | appleExerciseTime | 24 <br/>**Notes**: only available on iOS|
 | sleep       | 'sleep.light' <br />**Notes**: recognized sleep stages and their mappings in HealthConnect / HealthKit can be found [here](sleep_map.md) <br> in Android it is also possible to retrieve an entire session, in which case the value is an array of sleep stages [ { startDate: Date, endDate: Date, stage: 'sleep.light' }, ...] |
 | calories.X     | 245.3                             |
+| heart_rate     | 66                                |
 | blood_glucose  | { glucose: 5.5, meal: 'breakfast', sleep: 'fully_awake', source: 'capillary_blood' }<br />**Notes**: to convert to mg/dL, multiply by `18.01559` ([The molar mass of glucose is 180.1559](http://www.convertunits.com/molarmass/Glucose)). `meal` can be: 'before_' / 'after_' / 'fasting_' (Android only) + 'meal' (iOS only) / 'breakfast' / 'dinner' / 'lunch' / 'snack' / 'unknown'. `sleep` can be (iOS only): 'fully_awake', 'before_sleep', 'on_waking', 'during_sleep'. `source` can be: 'capillary_blood' ,'interstitial_fluid', 'plasma', 'serum', 'tears', whole_blood', 'unknown'|
 | mindfulness    | 1800 <br/>**Notes**: only available on iOS |
 | UVexposure     | 12 <br/>**Notes**: only available on iOS |
@@ -334,6 +336,7 @@ cordova.plugins.health.query({
 - calories.basal is returned as an average per day (kcal/day), and is usually stored quite sparsely (it rarely change, but chnages in weight and height trigger a ricalculation).
 - Calories and distance for activities are actually queried indipendently, using the timestamps for each returned activity. This may considerably slow down the query if the returned activities are many. Use with care.
 - sleep in HealthConnect is stored in sessions composed of stages. If you want to retrieve sessions instead of single stages, add the following flag to the query object: `sleepSession: true`. The returned value will be an array of objects like: `[ { startDate: Date, endDate: Date, stage: 'sleep.light' }, ... ]`
+- heart_rate is in reality stored as an array of values within a given window of time, however, each value is returned separately here to make the API compatible with iOS.
 
 ### queryAggregated()
 
@@ -363,17 +366,17 @@ The following table shows what types are supported and examples of the returned 
 
 | Data type       | Example of returned object |
 |-----------------|----------------------------|
-| steps           | { startDate: Date, endDate: Date, value: 5780, unit: 'count' } |
 | height          | { startDate: Date, endDate: Date, value: { average: 1.8, min:1.7, max: 1.8 }, unit: 'count' } <br />**Note:** Android only |
 | weight          | { startDate: Date, endDate: Date, value: { average: 73, min:72.5, max: 74 }, unit: 'kg' } <br />**Note:** Android only |
+| steps           | { startDate: Date, endDate: Date, value: 5780, unit: 'count' } |
 | distance        | { startDate: Date, endDate: Date, value: 12500.0, unit: 'm' } |
+| calories        | { startDate: Date, endDate: Date, value: 2892.4, unit: 'kcal' } |
 | calories.active | { startDate: Date, endDate: Date, value: 25698.4, unit: 'kcal' } |
 | calories.basal  | { startDate: Date, endDate: Date, value: 3547.3, unit: 'kcal' } |
-| calories        | { startDate: Date, endDate: Date, value: 2892.4, unit: 'kcal' } |
-| distance        | { startDate: Date, endDate: Date, value: 12500.0, unit: 'm' } |
 | activity        | Android: { startDate: Date, endDate: Date, value: 567000, unit: 'ms' } <br /> iOS: { startDate: Date, endDate: Date, value: { still: { duration: 520000 }, walking: { duration: 223000 }}, unit: 'activitySummary' }<br />**Note:** durations are expressed in milliseconds |
 | sleep           | { startDate: Date, endDate: Date, value: 493, unit: 's' }  <br/>**Notes**: Android iOS |
 | appleExerciseTime | { startDate: Date, endDate: Date, value: 500, unit: 'min' }  <br/>**Notes**: iOS only |
+| heart_rate        | { startDate: Date, endDate: Date, value: 72, unit: 'bpm' } |
 
 
 #### Quirks
@@ -388,7 +391,7 @@ The following table shows what types are supported and examples of the returned 
 #### Android quirks
 
 - Currently, it is not possible to group by activity type in aggregated queries, only the total time for all activities can be returned. See discussion [here](https://stackoverflow.com/questions/77512832/how-to-aggregate-by-exercise-type-in-the-android-health-connect-api/77512845#77512845).
-
+- When storing heart_rate, you can also provide the value as an array of [ {bpm: 81, timestamp: Date }, ... ]. This is how the heart rate is actually stored internally.
 
 ### store()
 
