@@ -25,6 +25,7 @@ import androidx.health.connect.client.records.DistanceRecord;
 import androidx.health.connect.client.records.ExerciseLap;
 import androidx.health.connect.client.records.ExerciseSegment;
 import androidx.health.connect.client.records.ExerciseSessionRecord;
+import androidx.health.connect.client.records.HeartRateRecord;
 import androidx.health.connect.client.records.HeightRecord;
 import androidx.health.connect.client.records.Record;
 import androidx.health.connect.client.records.SleepSessionRecord;
@@ -531,7 +532,7 @@ public class HealthPlugin extends CordovaPlugin {
                     } else if (datapoint instanceof SleepSessionRecord) {
                         oneElementPerRecord = keepSession; // flag it, so we don't add empty objs later
                         SleepFunctions.populateFromQuery(datapoint, obj, resultset, keepSession);
-                    } else if (datapoint instanceof SleepSessionRecord) {
+                    } else if (datapoint instanceof HeartRateRecord) {
                         oneElementPerRecord = false; // bpms are sent individually
                         HeartRateFunctions.populateFromQuery(datapoint, resultset);
                     } else {
@@ -869,7 +870,7 @@ public class HealthPlugin extends CordovaPlugin {
             }
         } else if (datatype.equalsIgnoreCase("sleep")) {
             SleepFunctions.populateFromAggregatedQuery(response, retObj);
-        } else if (datatype.equalsIgnoreCase("sleep")) {
+        } else if (datatype.equalsIgnoreCase("heart_rate")) {
             HeartRateFunctions.populateFromAggregatedQuery(response, retObj);
         } else {
             LOG.e(TAG, "Data type not recognized " + datatype);
