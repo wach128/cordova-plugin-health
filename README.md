@@ -391,7 +391,7 @@ The following table shows what types are supported and examples of the returned 
 #### Android quirks
 
 - Currently, it is not possible to group by activity type in aggregated queries, only the total time for all activities can be returned. See discussion [here](https://stackoverflow.com/questions/77512832/how-to-aggregate-by-exercise-type-in-the-android-health-connect-api/77512845#77512845).
-- When storing heart_rate, you can also provide the value as an array of [ {bpm: 81, timestamp: Date }, ... ]. This is how the heart rate is actually stored internally.
+- When storing heart_rate, you can also provide the value as an array of [ {bpm: 81, timestamp: Date }, ... ]. This is how the heart rate is actually stored internally and is probably and more efficient.
 
 ### store()
 
