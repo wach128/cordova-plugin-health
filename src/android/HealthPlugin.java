@@ -349,7 +349,6 @@ public class HealthPlugin extends CordovaPlugin {
 
             if (request && !permissionsToRequest.isEmpty()) {
                 Log.d(TAG, "requesting authorization");
-
                 permissionsLauncher.launch(permissionsToRequest);
             } else {
                 callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, true));

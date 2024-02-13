@@ -55,6 +55,7 @@ public class HeartRateFunctions {
             hrStats.put("min", min);
             long max = response.get(HeartRateRecord.BPM_MAX);
             hrStats.put("max", max);
+            retObj.put("value", hrStats);
             retObj.put("unit", "bpm");
         } else {
             retObj.put("value", null);
