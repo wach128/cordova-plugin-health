@@ -1340,15 +1340,20 @@ static NSString *const HKPluginKeyUUID = @"UUID";
     NSString *sampleTypeString = args[HKPluginKeySampleType];
     NSString *unitString = args[HKPluginKeyUnit];
     HKQuantityType *type = [HKObjectType quantityTypeForIdentifier:sampleTypeString];
+    HKStatisticsOptions sumOptions = HKStatisticsOptionCumulativeSum;
 
 
     if (type == nil) {
-        [HealthKit triggerErrorCallbackWithMessage:@"sampleType was invalid" command:command delegate:self.commandDelegate];
+        [HealthKit triggerErrorCallbackWithMessage:@"sampleType is invalid" command:command delegate:self.commandDelegate];
         return;
+    } else if ([sampleTypeString isEqualToString:@"HKQuantityTypeIdentifierHeartRate"]) {
+        sumOptions = HKStatisticsOptionDiscreteAverage | HKStatisticsOptionDiscreteMin | HKStatisticsOptionDiscreteMax;
+
+    } else { //HKQuantityTypeIdentifierStepCount, etc...
+        sumOptions = HKStatisticsOptionCumulativeSum;
     }
 
     NSPredicate *predicate = [HKQuery predicateForSamplesWithStartDate:startDate endDate:endDate options:HKQueryOptionStrictStartDate];
-    HKStatisticsOptions sumOptions = HKStatisticsOptionCumulativeSum;
     HKStatisticsQuery *query;
     HKUnit *unit = ((unitString != nil) ? [HKUnit unitFromString:unitString] : [HKUnit countUnit]);
     query = [[HKStatisticsQuery alloc] initWithQuantityType:type
@@ -1357,9 +1362,22 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                                           completionHandler:^(HKStatisticsQuery *statisticsQuery,
                                                   HKStatistics *result,
                                                   NSError *error) {
-                                              HKQuantity *sum = [result sumQuantity];
-                                              CDVPluginResult *response = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDouble:[sum doubleValueForUnit:unit]];
-                                              [self.commandDelegate sendPluginResult:response callbackId:command.callbackId];
+        if ([sampleTypeString isEqualToString:@"HKQuantityTypeIdentifierHeartRate"]) {
+            HKQuantity *avg = [result averageQuantity];
+            HKQuantity *min = [result minimumQuantity];
+            HKQuantity *max = [result maximumQuantity];
+            NSMutableDictionary *stats = [NSMutableDictionary dictionary];
+            stats[@"average"] = @([avg doubleValueForUnit:unit]);
+            stats[@"min"] = @([min doubleValueForUnit:unit]);
+            stats[@"max"] = @([max doubleValueForUnit:unit]);
+            
+            CDVPluginResult *response = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:stats];
+            [self.commandDelegate sendPluginResult:response callbackId:command.callbackId];
+        } else { //HKQuantityTypeIdentifierStepCount, etc...
+            HKQuantity *sum = [result sumQuantity];
+            CDVPluginResult *response = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDouble:[sum doubleValueForUnit:unit]];
+            [self.commandDelegate sendPluginResult:response callbackId:command.callbackId];
+        }
                                           }];
 
     [[HealthKit sharedHealthStore] executeQuery:query];
@@ -1541,11 +1559,12 @@ static NSString *const HKPluginKeyUUID = @"UUID";
         [HealthKit triggerErrorCallbackWithMessage:@"sampleType is invalid" command:command delegate:self.commandDelegate];
         return;
     } else if ([sampleTypeString isEqualToString:@"HKQuantityTypeIdentifierHeartRate"]) {
-        statOpt = HKStatisticsOptionDiscreteAverage;
+        statOpt = HKStatisticsOptionDiscreteAverage | HKStatisticsOptionDiscreteMin | HKStatisticsOptionDiscreteMax;
 
     } else { //HKQuantityTypeIdentifierStepCount, etc...
         statOpt = HKStatisticsOptionCumulativeSum;
     }
+    
 
     HKUnit *unit = nil;
     if (unitString != nil) {
@@ -1611,29 +1630,30 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                                                    entry[HKPluginKeyEndDate] = [HealthKit stringFromDate:valueEndDate];
 
                                                    HKQuantity *quantity = nil;
-                                                   switch (statOpt) {
-                                                       case HKStatisticsOptionDiscreteAverage:
-                                                           quantity = result.averageQuantity;
-                                                           break;
-                                                       case HKStatisticsOptionCumulativeSum:
-                                                           quantity = result.sumQuantity;
-                                                           break;
-                                                       case HKStatisticsOptionDiscreteMin:
-                                                           quantity = result.minimumQuantity;
-                                                           break;
-                                                       case HKStatisticsOptionDiscreteMax:
-                                                           quantity = result.maximumQuantity;
-                                                           break;
+                        if (statOpt == HKStatisticsOptionDiscreteAverage) {
+                            quantity = result.averageQuantity;
+                            entry[@"quantity"] = @([quantity doubleValueForUnit:unit]);
+                        } else if (statOpt == HKStatisticsOptionCumulativeSum) {
+                            quantity = result.sumQuantity;
+                            entry[@"quantity"] = @([quantity doubleValueForUnit:unit]);
+                        } else if (statOpt == HKStatisticsOptionDiscreteMin) {
+                            quantity = result.minimumQuantity;
+                            entry[@"quantity"] = @([quantity doubleValueForUnit:unit]);
+                        } else if (statOpt == HKStatisticsOptionDiscreteMax) {
+                            quantity = result.maximumQuantity;
+                            entry[@"quantity"] = @([quantity doubleValueForUnit:unit]);
+                        } else if (statOpt == (HKStatisticsOptionDiscreteAverage | HKStatisticsOptionDiscreteMin | HKStatisticsOptionDiscreteMax)) {
+                            HKQuantity *avg = [result averageQuantity];
+                            HKQuantity *min = [result minimumQuantity];
+                            HKQuantity *max = [result maximumQuantity];
+                            NSMutableDictionary *stats = [NSMutableDictionary dictionary];
+                            stats[@"average"] = @([avg doubleValueForUnit:unit]);
+                            stats[@"min"] = @([min doubleValueForUnit:unit]);
+                            stats[@"max"] = @([max doubleValueForUnit:unit]);
+                            
+                            entry[@"quantity"] = stats;
+                        }
 
-                                                           // @TODO return appropriate values here
-                                                       case HKStatisticsOptionSeparateBySource:
-                                                       case HKStatisticsOptionNone:
-                                                       default:
-                                                           break;
-                                                   }
-
-                                                   double value = [quantity doubleValueForUnit:unit];
-                                                   entry[@"quantity"] = @(value);
                                                    [finalResults addObject:entry];
                                                }];
 

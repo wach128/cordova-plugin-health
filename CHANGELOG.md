@@ -1,6 +1,11 @@
 Log of changes
 ==============
 
+### v3.1.2
+
+* added support for aggregate heart rate in iOS
+
+
 ### v3.1.1
 
 * removed permissions for AndroidManifest.xml from plugin.xml, now permissions must be set in config.xml

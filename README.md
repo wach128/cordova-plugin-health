@@ -67,8 +67,8 @@ The best way to add permissions is to include them in the [config.xml](https://c
     ...
     <config-file target="AndroidManifest.xml" parent="/*" xmlns:android="http://schemas.android.com/apk/res/android">
         <uses-permission android:name="android.permission.health.READ_STEPS" />
-			  <uses-permission android:name="android.permission.health.WRITE_STEPS" />
-			  <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
+        <uses-permission android:name="android.permission.health.WRITE_STEPS" />
+        <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
         ...
     </config-file>
     ...
@@ -376,7 +376,7 @@ The following table shows what types are supported and examples of the returned 
 | activity        | Android: { startDate: Date, endDate: Date, value: 567000, unit: 'ms' } <br /> iOS: { startDate: Date, endDate: Date, value: { still: { duration: 520000 }, walking: { duration: 223000 }}, unit: 'activitySummary' }<br />**Note:** durations are expressed in milliseconds |
 | sleep           | { startDate: Date, endDate: Date, value: 493, unit: 's' }  <br/>**Notes**: Android iOS |
 | appleExerciseTime | { startDate: Date, endDate: Date, value: 500, unit: 'min' }  <br/>**Notes**: iOS only |
-| heart_rate        | { startDate: Date, endDate: Date, value: 72, unit: 'bpm' } |
+| heart_rate        | { startDate: Date, endDate: Date, value: { average: 72, min: 68, max: 82 }, unit: 'bpm' } |
 
 
 #### Quirks
