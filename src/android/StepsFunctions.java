@@ -42,10 +42,10 @@ public class StepsFunctions {
         if (response.get(StepsRecord.COUNT_TOTAL) != null) {
             long val = response.get(StepsRecord.COUNT_TOTAL);
             retObj.put("value", val);
-            retObj.put("unit", "'count'");
+            retObj.put("unit", "count");
         } else {
             retObj.put("value", 0);
-            retObj.put("unit", "'count'");
+            retObj.put("unit", "count");
         }
     }
 
