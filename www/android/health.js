@@ -3,7 +3,7 @@ var exec = require("cordova/exec");
 
 module.exports = {
 
-  name: "Tester",
+  name: "Health",
 
   isAvailable (onSuccess, onError) {
     exec(onSuccess, onError, "health", "isAvailable", []);
@@ -11,10 +11,6 @@ module.exports = {
 
   launchPrivacyPolicy (onSuccess, onError) {
     exec(onSuccess, onError, "health", "launchPrivacyPolicy", [])
-  },
-
-  setPrivacyPolicyURL (url, onSuccess, onError) {
-    exec(onSuccess, onError, "health", "setPrivacyPolicyURL", [url])
   },
 
   openHealthSettings (onSuccess, onError) {

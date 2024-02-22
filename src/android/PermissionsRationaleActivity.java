@@ -10,27 +10,16 @@ public class PermissionsRationaleActivity extends Activity {
     /**
      * URL that will be opened when the activity starts
      */
-    static private String url ="file:///android_asset/www/privacypolicy.html";
-
-    /**
-     * Used to set the URL to be opened by the activity
-     * @param newUrl URL to be opened
-     * @return true if URL is valid
-     */
-    static public boolean setUrl(String newUrl) {
-        if (newUrl != null && Patterns.WEB_URL.matcher(newUrl).matches()) {
-            PermissionsRationaleActivity.url = newUrl;
-            return true;
-        } else return false;
-    }
+    private String url ="file:///android_asset/www/privacypolicy.html";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         WebView myWebView = new WebView(getApplicationContext());
+        setContentView(myWebView);
 
         url = getString(getResources().getIdentifier( "privacy_policy_url", "string", getPackageName()));
 
-        myWebView.loadUrl(PermissionsRationaleActivity.url);
+        myWebView.loadUrl(url);
     }
 }

@@ -78,7 +78,7 @@ The best way to add permissions is to include them in the [config.xml](https://c
 
 ### Mandatory Privacy Policy on Android
 
-A Privacy Policy must be present on Android in order for the app to be approved for distribution. The plugin includes a simple webview, with no JS activated, to show the Privacy Policy when requested. The Privacy Policy must be formatted as an HTML page (no JS) and placed as a file with name: `privacypolicy.html` under the `www` folder of the project (in other words, the webview loads the following URL: `file:///android_asset/www/privacypolicy.html`). It is possible to change that URL using the function setPrivacyPolicyURL(). To test the Privacy Policy view, you can call launchPrivacyPolicy().
+A Privacy Policy must be present on Android in order for the app to be approved for distribution. The plugin includes a simple webview, with no JS activated, to show the Privacy Policy when requested. The Privacy Policy must be formatted as an HTML page (no JS) and placed as a file with name: `privacypolicy.html` under the `www` folder of the project (in other words, the webview loads the following URL: `file:///android_asset/www/privacypolicy.html`). It is possible to change that URL by changing the value inside the file `platforms/android/app/src/main/res/values/CordovaPluginHealthStrings.xml`. WARNING: I suspect that this file may get reset sometimes to its original value. There should be a way to modify it from config.xml using [edit-config](https://cordova.apache.org/docs/en/12.x/plugin_ref/spec.html#edit-config) but I was not able to make it work. Help is welcome.
 
 ### Manual setup in Capacitor (Ionic)
 
@@ -213,18 +213,6 @@ cordova.plugins.health.isAvailable(successCallback, errorCallback)
 
 - successCallback: if available a true is passed as argument, false otherwise
 - errorCallback: called if something went wrong, err contains a textual description of the problem
-
-### setPrivacyPolicyURL() Android only
-
-Sets an alternative privacy policy URL to load. By default it loads `file:///android_asset/www/privacypolicy.html`.
-
-```js
-cordova.plugins.health.setPrivacyPolicyURL(url, successCallback, errorCallback)
-```
-
-- url: URL of the privacy policy
-- successCallback: called if screen has been launched
-- errorCallback: called if something went wrong
 
 
 ### launchPrivacyPolicy() Android only

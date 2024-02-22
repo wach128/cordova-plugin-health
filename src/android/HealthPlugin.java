@@ -150,19 +150,6 @@ public class HealthPlugin extends CordovaPlugin {
                 return true;
             }
             callbackContext.success();
-        } else if (action.equals("setPrivacyPolicyURL")) {
-            try {
-                String url = args.getString(0);
-                if (PermissionsRationaleActivity.setUrl(url)) {
-                    callbackContext.success();
-                } else {
-                    callbackContext.error("Not a valid URL");
-                    return false;
-                }
-            } catch (JSONException ex) {
-                callbackContext.error("Cannot parse the URL");
-                return false;
-            }
         } else if (action.equals("launchPrivacyPolicy")) {
             Activity currentActivity = this.cordova.getActivity();
             Intent activityIntent = new Intent(currentActivity, PermissionsRationaleActivity.class);
