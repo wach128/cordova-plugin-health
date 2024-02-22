@@ -241,14 +241,11 @@ cordova.plugins.health.launchPrivacyPolicy(successCallback, errorCallback)
 
 ### openHealthSettings()
 
-Opens the health app (HealthConnect on Android) so that the user can review permissions and settings.
+Opens the health app (HealthConnect on Android, Health app on iOS) so that the user can review permissions and settings.
 
 ```js
 cordova.plugins.health.openHealthSettings(successCallback, errorCallback)
 ```
-
-Currently only working on Android.
-
 
 ### requestAuthorization()
 
@@ -272,6 +269,7 @@ cordova.plugins.requestAuthorization(datatypes, successCallback, errorCallback)
 
 #### Android quirks
 
+- Currently, *permissions can be requested no more than 3 times in an app*! This is regardless of if the permissions were granted, denied or the dialog was canceled. This is how it is implemented in HealthConnect, not an issue with the plugin. See discussion [here](https://issuetracker.google.com/issues/233239418?pli=1). A workaround in your app can be to check if permissions have been granted upon request and, in the negative case, launch the HealthConnect app instead and ask users to grant permissions manually, which is a horrible user experience.
 - Be aware that if you want to fetch activities you also have to request permission for 'calories' and 'distance'.
 
 
