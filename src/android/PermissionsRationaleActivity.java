@@ -3,9 +3,7 @@ package org.apache.cordova.health;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Patterns;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 
 public class PermissionsRationaleActivity extends Activity {
 
@@ -30,15 +28,6 @@ public class PermissionsRationaleActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         WebView myWebView = new WebView(getApplicationContext());
-        myWebView.setWebViewClient(new WebViewClient() {
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                return false;                
-            }
-        });
-        setContentView(myWebView);
-        WebSettings webSettings = myWebView.getSettings();
-        webSettings.setJavaScriptEnabled(true);
 
         url = getString(getResources().getIdentifier( "privacy_policy_url", "string", getPackageName()));
 
