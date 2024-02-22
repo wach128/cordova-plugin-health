@@ -4,7 +4,8 @@ Log of changes
 ### v3.1.2
 
 * added support for aggregate heart rate in iOS
-
+* added function to open the Health app in both Android and iOS
+* added possibility to load JS in Privacy Policy html page in Android
 
 ### v3.1.1
 

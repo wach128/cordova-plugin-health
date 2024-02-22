@@ -553,6 +553,28 @@ static NSString *const HKPluginKeyUUID = @"UUID";
 }
 
 /**
+ * Opens the Health app
+ *
+ * @param command *CDVInvokedUrlCommand
+ */
+- (void)openHealthSettings:(CDVInvokedUrlCommand *)command {
+    CDVPluginResult* pluginResult = nil;
+        
+        NSString* scheme = @"x-apple-health://";
+        
+        if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:scheme]]) {
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:scheme]];
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:(true)];
+        }
+        else {
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsBool:(false)];
+        }
+        
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+
+/**
  * Request authorization for read and/or write permissions
  *
  * @param command *CDVInvokedUrlCommand

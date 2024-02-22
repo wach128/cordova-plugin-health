@@ -104,6 +104,11 @@ Health.prototype.isAvailable = function (success, error) {
   window.plugins.healthkit.available(success, error);
 };
 
+
+Health.prototype.openHealthSettings = function (success, error) {
+  window.plugins.healthkit.openHealthSettings(success, error);
+};
+
 // returns the equivalent native HealthKit data type from the custom one
 var getHKDataTypes = function (dtArr) {
   var HKDataTypes = [];
