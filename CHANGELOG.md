@@ -1,15 +1,15 @@
 Log of changes
 ==============
 
-### v3.1.2
+### v3.2.0
 
 * added support for aggregate heart rate in iOS
 * added function to open the Health app in both Android and iOS
-* added possibility to load JS in Privacy Policy html page in Android
+* [Breaking change] removed setPrivacyPolicyURL in Android. Now the URL is placed in a resource xml file.
 
 ### v3.1.1
 
-* removed permissions for AndroidManifest.xml from plugin.xml, now permissions must be set in config.xml
+* [Breaking change] removed permissions for AndroidManifest.xml from plugin.xml, now permissions must be set in config.xml
 * better explained how to setup Android project, particularly gradle
 * added heart_rate in Android
 
