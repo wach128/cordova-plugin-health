@@ -17,6 +17,10 @@ module.exports = {
     exec(onSuccess, onError, "health", "setPrivacyPolicyURL", [url])
   },
 
+  openHealthSettings (onSuccess, onError) {
+    exec(onSuccess, onError, "health", "openHealthSettings", [])
+  },
+
   isAuthorized (authObj, onSuccess, onError) {
     exec(onSuccess, onError, "health", "isAuthorized", [authObj])
   },

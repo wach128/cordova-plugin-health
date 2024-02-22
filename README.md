@@ -207,7 +207,7 @@ Example values:
 
 Tells if either HealthKit of Health Connect are available.
 
-```
+```js
 cordova.plugins.health.isAvailable(successCallback, errorCallback)
 ```
 
@@ -218,7 +218,7 @@ cordova.plugins.health.isAvailable(successCallback, errorCallback)
 
 Sets an alternative privacy policy URL to load. By default it loads `file:///android_asset/www/privacypolicy.html`.
 
-```
+```js
 cordova.plugins.health.setPrivacyPolicyURL(url, successCallback, errorCallback)
 ```
 
@@ -231,12 +231,24 @@ cordova.plugins.health.setPrivacyPolicyURL(url, successCallback, errorCallback)
 
 Launches the Privacy Policy screen needed by Health Connect. Use it for testing how it appears.
 
-```
+```js
 cordova.plugins.health.launchPrivacyPolicy(successCallback, errorCallback)
 ```
 
 - successCallback: screen has been launched
 - errorCallback: called if something went wrong
+
+
+### openHealthSettings()
+
+Opens the health app (HealthConnect on Android) so that the user can review permissions and settings.
+
+```js
+cordova.plugins.health.openHealthSettings(successCallback, errorCallback)
+```
+
+Currently only working on Android.
+
 
 ### requestAuthorization()
 
