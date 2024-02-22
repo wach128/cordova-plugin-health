@@ -39,6 +39,9 @@ public class PermissionsRationaleActivity extends Activity {
         setContentView(myWebView);
         WebSettings webSettings = myWebView.getSettings();
         webSettings.setJavaScriptEnabled(true);
+
+        url = getString(getResources().getIdentifier( "privacy_policy_url", "string", getPackageName()));
+
         myWebView.loadUrl(PermissionsRationaleActivity.url);
     }
 }
