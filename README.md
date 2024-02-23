@@ -84,10 +84,8 @@ A Privacy Policy must be present on Android in order for the app to be approved 
 
 Capacitor does not automatically include all changes to AndroidManifest.xml or gradle files from plugin.xml. This is a short guide to do it manually. Based on plugin v3.1.0 and @capacitor/android v5.5.1, future versions may be different.
 
-1. install the plugin, DO NOT USE awesome-codova-plugin, it hasn't been updated yet
-`npm install cordova-plugin-health`. Build the app as you would normally do `npm run build`, sync it with the android code `npx cap sync` and get the Android project in Android Studio (suggested) `npx cap open android` or another editor.
-
-2. add the Privacy Policy activity to AndroidManifest.xml, inside <application></application>:
+1. install the plugin from npm (`npm install cordova-plugin-health`), DO NOT USE awesome-codova-plugin, it hasn't been updated yet. Build the app as you would normally do (`npm run build`), sync it with the android code (`npx cap sync`) and get the Android project in Android Studio (`npx cap open android`) or another editor.
+2. add the Privacy Policy activity to AndroidManifest.xml, inside `<application></application>`:
 ```xml
       <!-- For supported versions through Android 13, create an activity to show the rationale
        of Health Connect permissions once users click the privacy policy link. -->
@@ -245,7 +243,7 @@ It is recommendable to always explain why the app needs access to the data befor
 cordova.plugins.requestAuthorization(datatypes, successCallback, errorCallback)
 ```
 
-- authObj: an object containing data types you want to be granted access to. Example:
+- datatypes: an object containing data types you want to be granted access to. Example:
 ```javascript
 {
   read : ['steps'],            // Read permission
