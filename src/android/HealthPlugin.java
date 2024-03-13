@@ -5,6 +5,7 @@ package org.apache.cordova.health;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.util.Log;
 
 import androidx.activity.result.ActivityResultCallback;
@@ -149,6 +150,18 @@ public class HealthPlugin extends CordovaPlugin {
                 callbackContext.error("Health Connect is not installed");
                 return true;
             }
+
+            callbackContext.success();
+        } else if (action.equals("getHealthConnectFromStore")) {
+            String uriString =
+                    "market://details?id=$providerPackageName&url=healthconnect%3A%2F%2Fonboarding";
+            Intent launchAppStore = new Intent(Intent.ACTION_VIEW);
+            launchAppStore.setPackage("com.android.vending");
+            launchAppStore.setData(Uri.parse(uriString));
+            launchAppStore.putExtra("overlay", true);
+            launchAppStore.putExtra("callerId", this.cordova.getContext().getPackageName());
+            this.cordova.getContext().startActivity(launchAppStore);
+
             callbackContext.success();
         } else if (action.equals("launchPrivacyPolicy")) {
             Activity currentActivity = this.cordova.getActivity();

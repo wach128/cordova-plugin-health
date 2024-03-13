@@ -9,6 +9,10 @@ module.exports = {
     exec(onSuccess, onError, "health", "isAvailable", []);
   },
 
+  getHealthConnectFromStore (onSuccess, onError) {
+    exec(onSuccess, onError, "health", "getHealthConnectFromStore", []);
+  },
+
   launchPrivacyPolicy (onSuccess, onError) {
     exec(onSuccess, onError, "health", "launchPrivacyPolicy", [])
   },
