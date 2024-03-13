@@ -213,6 +213,18 @@ cordova.plugins.health.isAvailable(successCallback, errorCallback)
 - errorCallback: called if something went wrong, err contains a textual description of the problem
 
 
+### getHealthConnectFromStore()
+
+Android only. Launches the PlayStore to retrieve HealthConnect. From Android 14 and up this is not needed, becuase HealthConnect becomes part of the operating system.
+
+```javascript
+cordova.plugins.health.getHealthConnectFromStore(successCallback, errorCallback)
+```
+
+- successCallback: if available a true is passed as argument, false otherwise
+- errorCallback: called if something went wrong, err contains a textual description of the problem
+
+
 ### launchPrivacyPolicy() Android only
 
 Launches the Privacy Policy screen needed by Health Connect. Use it for testing how it appears.
