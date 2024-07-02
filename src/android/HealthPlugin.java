@@ -170,9 +170,14 @@ public class HealthPlugin extends CordovaPlugin {
             callbackContext.success();
         } else if (action.equals("openHealthSettings")) {
             Activity currentActivity = this.cordova.getActivity();
-            Intent activityIntent =  new Intent("androidx.health.ACTION_HEALTH_CONNECT_SETTINGS");
-            currentActivity.startActivity(activityIntent);
-            callbackContext.success();
+            try {
+                Intent activityIntent =  new Intent("androidx.health.ACTION_HEALTH_CONNECT_SETTINGS");
+                currentActivity.startActivity(activityIntent);
+                callbackContext.success();
+            }
+            catch (Exception ex) {
+                callbackContext.error(ex.getMessage());
+            }
         } else if ("isAuthorized".equals(action)) {
             cordova.getThreadPool().execute(() -> {
                 try {
