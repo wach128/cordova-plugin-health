@@ -213,7 +213,7 @@ cordova.plugins.health.isAvailable(successCallback, errorCallback)
 - errorCallback: called if something went wrong, err contains a textual description of the problem
 
 
-### getHealthConnectFromStore()
+### getHealthConnectFromStore() Android only
 
 Android only. Launches the PlayStore to retrieve HealthConnect. From Android 14 and up this is not needed, becuase HealthConnect becomes part of the operating system.
 
