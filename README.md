@@ -155,6 +155,7 @@ These are currently supported in both Android and iOS. Please notice that older 
 | calories.basal  | kcal  | HKQuantityTypeIdentifierBasalEnergyBurned     | BasalMetabolicRateRecord * time window   |
 | calories        | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned + HKQuantityTypeIdentifierBasalEnergyBurned | TotalCaloriesBurnedRecord |
 | heart_rate      | bpm   | HKQuantityTypeIdentifierHeartRate             | HeartRateRecord                          |
+| workout_route     | bpm   | HKWorkoutRouteType            | NA                                     |
 | blood_glucose   | mmol/L | HKQuantityTypeIdentifierBloodGlucose         | BloodGlucoseRecord                       |
 | mindfulness     | sec   | HKCategoryTypeIdentifierMindfulSession        | NA                                       |
 | UVexposure      | count | HKQuantityTypeIdentifierUVExposure            | NA        |
@@ -325,6 +326,11 @@ cordova.plugins.health.query({
 - filterOutUserInput: optional, if true, filters out user-entered activities (iOS only)
 - includeCalories: optional, used only for dataType "activity". When querying, for each activity, also the active calories (in kcal) will be added. ***Warning*** the app requires access to calories.active to be granted
 - includeDistance: optional, used only for dataType "activity". When querying, for each activity, also the distance, run or cycled, (in m) will be added. ***Warning*** the app requires access to distance to be granted
+- includeRoute: iOS only, optional, use only for dataType "activity". When querying, for each activity, also the route will be added. ***Warning*** the app requires access to workout_route to be granted. 
+   - if true, the activity contains a field `route`, the route is an array of `{ lat: number, lng: number, alt: number, timestamp: Date }` objects. 
+   - If the activity contains multiple routes (e.g. the workout was paused), these are concatenated in the same array. Therefore do not try to calculate the distance from the route, but use the distance field instead.
+- includeHeartRate: iOS only, optional, use only for dataType "activity". When querying, for each activity, also the heart rate will be added. ***Warning*** the app requires access to heart_rate to be granted
+   - if true, the activity contains a field `heartRate` with an array of `{ bpm: number, timestamp: Date }` objects.
 - successCallback: called if all OK, argument contains the result of the query in the form of an array of: { startDate: Date, endDate: Date, value: xxx, unit: 'xxx', sourceName: 'aaaa', sourceBundleId: 'bbbb' }
 - errorCallback: called if something went wrong, argument contains a textual description of the problem
 
