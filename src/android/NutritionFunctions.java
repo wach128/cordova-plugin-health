@@ -44,7 +44,7 @@ public class NutritionFunctions {
         nutritionStats.put("name", name);
 
         Double kcal = nutritionR.getEnergy().inKilocalories();
-        nutritionStats.put("kcal", kcal);
+        nutritionStats.put("calories", kcal);
 
         int mealType = nutritionR.getMealType();
         if(mealType === MealType.MEAL_TYPE_BREAKFAST) {
@@ -63,10 +63,10 @@ public class NutritionFunctions {
         nutritionStats.put("protein", protein);
 
         Double fat = nutritionR.totalFat().inGrams();
-        nutritionStats.put("fat", fat);
+        nutritionStats.put("fat.total", fat);
 
         Double carbs = nutritionR.totalCarbohydrate().inGrams();
-        nutritionStats.put("carbs", carbs);
+        nutritionStats.put("carbs.total", carbs);
 
         nutritionStats.put("value", nutritionStats);
         nutritionStats.put("unit", "meal");
@@ -77,16 +77,16 @@ public class NutritionFunctions {
             JSONObject nutritionStats = new JSONObject();
 
             double totalEnergy = response.get(NutritionRecord.ENERGY_TOTAL).inKilocalories();
-            nutritionStats.put("kcal", totalEnergy);
+            nutritionStats.put("calories", totalEnergy);
 
             double totalProtein = response.get(NutritionRecord.PROTEIN_TOTAL).inGrams();
             nutritionStats.put("protein", totalProtein);
 
             double totalFat = response.get(NutritionRecord.TOTAL_FAT_TOTAL).inGrams();
-            nutritionStats.put("fat", totalFat);
+            nutritionStats.put("fat.total", totalFat);
 
             double totalCarbs = response.get(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL).inGrams();
-            nutritionStats.put("carbs", totalCarbs);
+            nutritionStats.put("carbs.total", totalCarbs);
 
             retObj.put("value", nutritionStats);
             retObj.put("unit", "meal");
@@ -143,10 +143,10 @@ public class NutritionFunctions {
             }
         }
 
-        double kcal = nutritionObj.getDouble("kcal");
+        double kcal = nutritionObj.getDouble("calories");
         double protein = nutritionObj.getDouble("protein");
-        double fat = nutritionObj.getDouble("fat");
-        double carbs = nutritionObj.getDouble("carbs");
+        double fat = nutritionObj.getDouble("fat.total");
+        double carbs = nutritionObj.getDouble("carbs.total");
         String name = nutritionObj.getString("name");
 
         NutritionRecord record = new NutritionRecord(
