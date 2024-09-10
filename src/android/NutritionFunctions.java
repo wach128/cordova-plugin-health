@@ -41,22 +41,22 @@ public class NutritionFunctions {
         nutritionStats.put("endDate", nutritionR.getTime().toEpochMilli());
 
         String name = nutritionR.getName();
-        nutritionStats.put("name", name);
+        nutritionStats.put("item", name);
 
         Double kcal = nutritionR.getEnergy().inKilocalories();
         nutritionStats.put("calories", kcal);
 
         int mealType = nutritionR.getMealType();
         if(mealType === MealType.MEAL_TYPE_BREAKFAST) {
-            nutritionStats.put("mealType", "breakfast");
+            nutritionStats.put("meal_type", "breakfast");
         } else if(mealType === MealType.MEAL_TYPE_LUNCH) {
-            nutritionStats.put("mealType", "lunch");
+            nutritionStats.put("meal_type", "lunch");
         } else if(mealType === MealType.MEAL_TYPE_DINNER) {
-            nutritionStats.put("mealType", "dinner");
+            nutritionStats.put("meal_type", "dinner");
         } else if(mealType === MealType.MEAL_TYPE_SNACK) {
-            nutritionStats.put("mealType", "snack");
+            nutritionStats.put("meal_type", "snack");
         } else {
-            nutritionStats.put("mealType", "unknown");
+            nutritionStats.put("meal_type", "unknown");
         }
 
         Double protein = nutritionR.getProtein().inGrams();
@@ -130,7 +130,7 @@ public class NutritionFunctions {
         int mealType = MealType.MEAL_TYPE_UNKNOWN;
       
         if (nutritionObj.has("meal")) {
-            String meal = nutritionObj.getString("mealType");
+            String meal = nutritionObj.getString("meal_type");
   
             if (meal.equalsIgnoreCase("dinner")) {
                 mealType = MealType.MEAL_TYPE_DINNER;
@@ -147,7 +147,7 @@ public class NutritionFunctions {
         double protein = nutritionObj.getDouble("protein");
         double fat = nutritionObj.getDouble("fat.total");
         double carbs = nutritionObj.getDouble("carbs.total");
-        String name = nutritionObj.getString("name");
+        String name = nutritionObj.getString("item");
 
         NutritionRecord record = new NutritionRecord(
                 Instant.ofEpochMilli(st),
