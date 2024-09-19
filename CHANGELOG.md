@@ -1,6 +1,15 @@
 Log of changes
 ==============
 
+### v3.2.2
+
+* include route and heart rate in workouts, on iOS only
+* partial support for nutrition on iOS and Android
+
+### v3.2.1
+
+* bugfixes
+
 ### v3.2.0
 
 * added support for aggregate heart rate in iOS
