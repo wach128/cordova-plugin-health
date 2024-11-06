@@ -75,11 +75,11 @@ public class NutritionFunctions {
     }
 
     public static void populateFromAggregatedQuery(AggregationResult response, JSONObject retObj) throws JSONException {
-        if (response.get(NutritionRecord.ENERGY_TOTAL) != null) {
+        if (response.get(NutritionRecord.SUGAR_TOTAL) != null) {
             JSONObject nutritionStats = new JSONObject();
 
-            double totalEnergy = Objects.requireNonNull(response.get(NutritionRecord.ENERGY_TOTAL)).getKilocalories();
-            nutritionStats.put("calories", totalEnergy);
+            double sugar = Objects.requireNonNull(response.get(NutritionRecord.SUGAR_TOTAL)).getGrams();
+            nutritionStats.put("sugar.total", sugar);
 
             double totalProtein = Objects.requireNonNull(response.get(NutritionRecord.PROTEIN_TOTAL)).getGrams();
             nutritionStats.put("protein", totalProtein);
@@ -89,9 +89,6 @@ public class NutritionFunctions {
 
             double totalCarbs = Objects.requireNonNull(response.get(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL)).getGrams();
             nutritionStats.put("carbs.total", totalCarbs);
-
-            double sugar = Objects.requireNonNull(response.get(NutritionRecord.SUGAR_TOTAL)).getGrams();
-            nutritionStats.put("sugar.total", sugar);
 
             retObj.put("value", nutritionStats);
             retObj.put("unit", "meal");
@@ -103,6 +100,7 @@ public class NutritionFunctions {
 
     public static AggregateGroupByPeriodRequest prepareAggregateGroupByPeriodRequest (TimeRangeFilter timeRange, Period period, HashSet<DataOrigin> dor) {
         Set<AggregateMetric<Mass>> metrics = new HashSet<>();
+        metrics.add(NutritionRecord.SUGAR_TOTAL);
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
         metrics.add(NutritionRecord.TOTAL_FAT_TOTAL);
         metrics.add(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL);
@@ -112,6 +110,7 @@ public class NutritionFunctions {
 
     public static AggregateGroupByDurationRequest prepareAggregateGroupByDurationRequest (TimeRangeFilter timeRange, Duration duration, HashSet<DataOrigin> dor) {
         Set<AggregateMetric<Mass>> metrics = new HashSet<>();
+        metrics.add(NutritionRecord.SUGAR_TOTAL);
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
         metrics.add(NutritionRecord.TOTAL_FAT_TOTAL);
         metrics.add(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL);
@@ -120,6 +119,7 @@ public class NutritionFunctions {
 
     public static AggregateRequest prepareAggregateRequest(TimeRangeFilter timeRange, HashSet<DataOrigin> dor) {
         Set<AggregateMetric<Mass>> metrics = new HashSet<>();
+        metrics.add(NutritionRecord.SUGAR_TOTAL);
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
         metrics.add(NutritionRecord.TOTAL_FAT_TOTAL);
         metrics.add(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL);
@@ -127,8 +127,8 @@ public class NutritionFunctions {
     }
 
     public static void prepareStoreRecords(JSONObject storeObj, List<Record> data) throws JSONException {
-        double nutritionObj = storeObj.getDouble("value");
         long st = storeObj.getLong("startDate");
+        long et = storeObj.getLong("endDate");
 
         int mealType = MealType.MEAL_TYPE_UNKNOWN;
       
@@ -146,6 +146,7 @@ public class NutritionFunctions {
             }
         }
 
+        double sugar = storeObj.getDouble("sugar");
         double kcal = storeObj.getDouble("calories");
         double protein = storeObj.getDouble("protein");
         double fat = storeObj.getDouble("fat.total");
@@ -155,7 +156,7 @@ public class NutritionFunctions {
         NutritionRecord record = new NutritionRecord(
                 Instant.ofEpochMilli(st),
                 null,
-                Instant.ofEpochMilli(st),
+                Instant.ofEpochMilli(et),
                 null,
                 null,
                 null,
@@ -185,7 +186,7 @@ public class NutritionFunctions {
                 null,
                 null,
                 null,
-                null,
+                Mass.grams(sugar),
                 null,
                 Mass.grams(carbs),
                 Mass.grams(fat),

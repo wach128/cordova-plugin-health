@@ -28,6 +28,7 @@ import androidx.health.connect.client.records.ExerciseSegment;
 import androidx.health.connect.client.records.ExerciseSessionRecord;
 import androidx.health.connect.client.records.HeartRateRecord;
 import androidx.health.connect.client.records.HeightRecord;
+import androidx.health.connect.client.records.HydrationRecord;
 import androidx.health.connect.client.records.NutritionRecord;
 import androidx.health.connect.client.records.Record;
 import androidx.health.connect.client.records.SleepSessionRecord;
@@ -48,6 +49,7 @@ import androidx.health.connect.client.units.Energy;
 import androidx.health.connect.client.units.Length;
 import androidx.health.connect.client.units.Percentage;
 import androidx.health.connect.client.units.Power;
+import androidx.health.connect.client.units.Volume;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
@@ -70,6 +72,7 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import kotlin.coroutines.EmptyCoroutineContext;
@@ -291,6 +294,9 @@ public class HealthPlugin extends CordovaPlugin {
         if (name.equalsIgnoreCase("nutrition")) {
             return NutritionFunctions.dataTypeToClass();
         }
+        if (name.equalsIgnoreCase("nutrition.water")) {
+            return kotlin.jvm.JvmClassMappingKt.getKotlinClass(HydrationRecord.class);
+        }
         if (name.equalsIgnoreCase("sleep")) {
             return SleepFunctions.dataTypeToClass();
         }
@@ -503,6 +509,14 @@ public class HealthPlugin extends CordovaPlugin {
 
                         obj.put("value", activityStr);
                         obj.put("unit", "activityType");
+                    } else if (datapoint instanceof HydrationRecord) {
+                        HydrationRecord hydrationDP = (HydrationRecord) datapoint;
+                        obj.put("startDate", hydrationDP.getStartTime().toEpochMilli());
+                        obj.put("endDate", hydrationDP.getEndTime().toEpochMilli());
+                      
+                        double volume = hydrationDP.getVolume().getLiters();
+                        obj.put("value", volume);
+                        obj.put("unit", "l");
                     } else if (datapoint instanceof TotalCaloriesBurnedRecord) {
                         TotalCaloriesBurnedRecord caloriesDP = (TotalCaloriesBurnedRecord) datapoint;
                         obj.put("startDate", caloriesDP.getStartTime().toEpochMilli());
@@ -656,6 +670,10 @@ public class HealthPlugin extends CordovaPlugin {
                         request = StepsFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
                     } else if (datatype.equalsIgnoreCase("nutrition")) {
                         request = NutritionFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
+                    } else if (datatype.equalsIgnoreCase("nutrition.water")) {
+                        Set<AggregateMetric<Volume>> metrics = new HashSet<>();
+                        metrics.add(HydrationRecord.VOLUME_TOTAL);
+                        request = new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
                     }  else if (datatype.equalsIgnoreCase("weight")) {
                         request = WeightFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
                     } else if (datatype.equalsIgnoreCase("height")) {
@@ -716,6 +734,10 @@ public class HealthPlugin extends CordovaPlugin {
                         request = StepsFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
                     } else if (datatype.equalsIgnoreCase("nutrition")) {
                         request = NutritionFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
+                    } else if (datatype.equalsIgnoreCase("nutrition.water")) {
+                        Set<AggregateMetric<Volume>> metrics = new HashSet<>();
+                        metrics.add(HydrationRecord.VOLUME_TOTAL);
+                        request = new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
                     } else if (datatype.equalsIgnoreCase("weight")) {
                         request = WeightFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
                     } else if (datatype.equalsIgnoreCase("height")) {
@@ -779,6 +801,10 @@ public class HealthPlugin extends CordovaPlugin {
                     request = StepsFunctions.prepareAggregateRequest(timeRange, dor);
                 } else if (datatype.equalsIgnoreCase("nutrition")) {
                     request = NutritionFunctions.prepareAggregateRequest(timeRange, dor);
+                } else if (datatype.equalsIgnoreCase("nutrition.water")) {
+                    Set<AggregateMetric<Volume>> metrics = new HashSet<>();
+                    metrics.add(HydrationRecord.VOLUME_TOTAL);
+                    request = new AggregateRequest(metrics, timeRange, dor);
                 }  else if (datatype.equalsIgnoreCase("weight")) {
                     request = WeightFunctions.prepareAggregateRequest(timeRange, dor);
                 } else if (datatype.equalsIgnoreCase("height")) {
@@ -841,6 +867,15 @@ public class HealthPlugin extends CordovaPlugin {
             StepsFunctions.populateFromAggregatedQuery(response, retObj);
         } else if (datatype.equalsIgnoreCase("nutrition")) {
             NutritionFunctions.populateFromAggregatedQuery(response, retObj);
+        } else if (datatype.equalsIgnoreCase("nutrition.water")) {
+            if (response.get(HydrationRecord.VOLUME_TOTAL) != null) {
+                double liters = Objects.requireNonNull(response.get(HydrationRecord.VOLUME_TOTAL)).getLiters();
+                retObj.put("value", liters);
+                retObj.put("unit", "l");
+            } else {
+                retObj.put("value", 0);
+                retObj.put("unit", "l");
+            }
         } else if (datatype.equalsIgnoreCase("weight")) {
             WeightFunctions.populateFromAggregatedQuery(response, retObj);
         } else if (datatype.equalsIgnoreCase("height")) {
@@ -1026,6 +1061,17 @@ public class HealthPlugin extends CordovaPlugin {
                 HeartRateFunctions.prepareStoreRecords(args.getJSONObject(0), st, et, data);
             } else if (datatype.equalsIgnoreCase("nutrition")) {
                 NutritionFunctions.prepareStoreRecords(args.getJSONObject(0), data);
+            } else if (datatype.equalsIgnoreCase("nutrition.water")) {
+                double liters = args.getJSONObject(0).getDouble("value");
+                Volume vol = Volume.liters(liters);
+
+                HydrationRecord record = new HydrationRecord(
+                        Instant.ofEpochMilli(st), null,
+                        Instant.ofEpochMilli(et), null,
+                        vol,
+                        Metadata.EMPTY
+                );
+                data.add(record);
             } else {
                 callbackContext.error("Datatype not supported " + datatype);
                 return;
