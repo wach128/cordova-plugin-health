@@ -126,7 +126,7 @@ public class NutritionFunctions {
     }
 
     public static void prepareStoreRecords(JSONObject storeObj, List<Record> data) throws JSONException {
-        JSONArray nutritionObj = storeObj.getJSONArray("value");
+        JSONObject nutritionObj = storeObj.getJSONObject("value");
 
         int mealType = MealType.MEAL_TYPE_UNKNOWN;
       
