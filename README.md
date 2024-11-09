@@ -260,7 +260,7 @@ If the user has already granted permissions to the app, this function will not p
 
 
 ```javascript
-cordova.plugins.requestAuthorization(datatypes, successCallback, errorCallback)
+cordova.plugins.health.requestAuthorization(datatypes, successCallback, errorCallback)
 ```
 
 - datatypes: an object containing data types you want to be granted access to. Example:
