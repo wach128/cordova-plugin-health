@@ -22,6 +22,7 @@ import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord;
 import androidx.health.connect.client.records.BasalMetabolicRateRecord;
 import androidx.health.connect.client.records.BloodGlucoseRecord;
 import androidx.health.connect.client.records.BloodPressureRecord;
+import androidx.health.connect.client.records.NutritionRecord;
 import androidx.health.connect.client.records.BodyFatRecord;
 import androidx.health.connect.client.records.DistanceRecord;
 import androidx.health.connect.client.records.ExerciseLap;
@@ -1033,7 +1034,7 @@ public class HealthPlugin extends CordovaPlugin {
             } else if (datatype.equalsIgnoreCase("heart_rate")) {
                 HeartRateFunctions.prepareStoreRecords(args.getJSONObject(0), st, et, data);
             } else if (datatype.equalsIgnoreCase("nutrition")) {
-                NutritionFunctions.prepareStoreRecords(args.getJSONObject(0), data);
+                NutritionFunctions.prepareStoreRecords(args.getJSONObject(0), st, data);
             } else {
                 callbackContext.error("Datatype not supported " + datatype);
                 return;
