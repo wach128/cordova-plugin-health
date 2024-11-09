@@ -32,7 +32,7 @@ public class NutritionFunctions {
         return kotlin.jvm.JvmClassMappingKt.getKotlinClass(NutritionRecord.class);
     }
 
-    public static void populateFromQuery(Record datapoint, JSONObject obj, JSONArray resultset, boolean keepSession) throws JSONException {
+    public static void populateFromQuery(Record datapoint, JSONObject obj) throws JSONException {
         
         JSONObject nutritionStats = new JSONObject();
 
