@@ -154,7 +154,7 @@ public class NutritionFunctions {
         NutritionRecord record = new NutritionRecord(
                 Instant.ofEpochMilli(st),
                 null,
-                Instant.ofEpochMilli(st),
+                Instant.ofEpochMilli(et),
                 null,
                 null,
                 null,
