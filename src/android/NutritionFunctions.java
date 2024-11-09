@@ -44,7 +44,7 @@ public class NutritionFunctions {
         String name = nutritionDP.getName();
         nutritionStats.put("item", name);
 
-        Double kcal = nutritionDP.getEnergy().inKilocalories();
+        double kcal = nutritionDP.getEnergy().inKilocalories();
         nutritionStats.put("calories", kcal);
 
         int mealType = nutritionDP.getMealType();
@@ -60,13 +60,13 @@ public class NutritionFunctions {
             nutritionStats.put("meal_type", "unknown");
         }
 
-        Double protein = nutritionDP.getProtein().inGrams();
+        double protein = nutritionDP.getProtein().inGrams();
         nutritionStats.put("protein", protein);
 
-        Double fat = nutritionDP.totalFat().inGrams();
+        double fat = nutritionDP.totalFat().inGrams();
         nutritionStats.put("fat.total", fat);
 
-        Double carbs = nutritionDP.totalCarbohydrate().inGrams();
+        double carbs = nutritionDP.totalCarbohydrate().inGrams();
         nutritionStats.put("carbs.total", carbs);
 
         obj.put("value", nutritionStats);
@@ -98,8 +98,8 @@ public class NutritionFunctions {
     }
 
     public static AggregateGroupByPeriodRequest prepareAggregateGroupByPeriodRequest (TimeRangeFilter timeRange, Period period, HashSet<DataOrigin> dor) {
-        Set<AggregateMetric<Any>> metrics = new HashSet<>();
-        metrics.add(NutritionRecord.ENERGY_TOTAL);
+        Set<AggregateMetric<Mass>> metrics = new HashSet<>();
+        // I removed Calories here as Energy doesnt work in a type Mass. Perhaps needs re-adding somehow
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
         metrics.add(NutritionRecord.TOTAL_FAT_TOTAL);
         metrics.add(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL);
@@ -108,8 +108,8 @@ public class NutritionFunctions {
     }
 
     public static AggregateGroupByDurationRequest prepareAggregateGroupByDurationRequest (TimeRangeFilter timeRange, Duration duration, HashSet<DataOrigin> dor) {
-        Set<AggregateMetric<Any>> metrics = new HashSet<>();
-        metrics.add(NutritionRecord.ENERGY_TOTAL);
+        Set<AggregateMetric<Mass>> metrics = new HashSet<>();
+        // I removed Calories here as Energy doesnt work in a type Mass. Perhaps needs re-adding somehow
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
         metrics.add(NutritionRecord.TOTAL_FAT_TOTAL);
         metrics.add(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL);
@@ -117,8 +117,8 @@ public class NutritionFunctions {
     }
 
     public static AggregateRequest prepareAggregateRequest(TimeRangeFilter timeRange, HashSet<DataOrigin> dor) {
-        Set<AggregateMetric<Any>> metrics = new HashSet<>();
-        metrics.add(NutritionRecord.ENERGY_TOTAL);
+        Set<AggregateMetric<Mass>> metrics = new HashSet<>();
+        // I removed Calories here as Energy doesnt work in a type Mass. Perhaps needs re-adding somehow
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
         metrics.add(NutritionRecord.TOTAL_FAT_TOTAL);
         metrics.add(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL);
