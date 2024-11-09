@@ -3,9 +3,9 @@ package org.apache.cordova.health;
 import androidx.health.connect.client.aggregate.AggregateMetric;
 import androidx.health.connect.client.aggregate.AggregationResult;
 import androidx.health.connect.client.records.Record;
+import androidx.health.connect.client.records.NutritionRecord;
 import androidx.health.connect.client.records.metadata.DataOrigin;
 import androidx.health.connect.client.records.metadata.Metadata;
-import androidx.health.connect.client.records.NutritionRecord;
 import androidx.health.connect.client.request.AggregateGroupByDurationRequest;
 import androidx.health.connect.client.request.AggregateGroupByPeriodRequest;
 import androidx.health.connect.client.request.AggregateRequest;
@@ -29,6 +29,7 @@ import java.util.Set;
 import kotlin.reflect.KClass;
 
 public class NutritionFunctions {
+
     public static KClass<? extends Record> dataTypeToClass() {
         return kotlin.jvm.JvmClassMappingKt.getKotlinClass(NutritionRecord.class);
     }
@@ -44,7 +45,7 @@ public class NutritionFunctions {
         String name = nutritionDP.getName();
         nutritionStats.put("item", name);
 
-        double kcal = nutritionDP.getEnergy().inKilocalories();
+        double kcal = nutritionDP.getEnergy().getInKilocalories();
         nutritionStats.put("calories", kcal);
 
         int mealType = nutritionDP.getMealType();
@@ -60,13 +61,13 @@ public class NutritionFunctions {
             nutritionStats.put("meal_type", "unknown");
         }
 
-        double protein = nutritionDP.getProtein().inGrams();
+        double protein = nutritionDP.getProtein().getInGrams();
         nutritionStats.put("protein", protein);
 
-        double fat = nutritionDP.totalFat().inGrams();
+        double fat = nutritionDP.getTotalFat().getInGrams();
         nutritionStats.put("fat.total", fat);
 
-        double carbs = nutritionDP.totalCarbohydrate().inGrams();
+        double carbs = nutritionDP.getTotalCarbohydrate().getInGrams();
         nutritionStats.put("carbs.total", carbs);
 
         obj.put("value", nutritionStats);
@@ -77,16 +78,16 @@ public class NutritionFunctions {
         if (response.get(NutritionRecord.ENERGY_TOTAL) != null) {
             JSONObject nutritionStats = new JSONObject();
 
-            double totalEnergy = response.get(NutritionRecord.ENERGY_TOTAL).inKilocalories();
+            double totalEnergy = response.get(NutritionRecord.ENERGY_TOTAL).getInKilocalories();
             nutritionStats.put("calories", totalEnergy);
 
-            double totalProtein = response.get(NutritionRecord.PROTEIN_TOTAL).inGrams();
+            double totalProtein = response.get(NutritionRecord.PROTEIN_TOTAL).getInGrams();
             nutritionStats.put("protein", totalProtein);
 
-            double totalFat = response.get(NutritionRecord.TOTAL_FAT_TOTAL).inGrams();
+            double totalFat = response.get(NutritionRecord.TOTAL_FAT_TOTAL).getInGrams();
             nutritionStats.put("fat.total", totalFat);
 
-            double totalCarbs = response.get(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL).inGrams();
+            double totalCarbs = response.get(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL).getInGrams();
             nutritionStats.put("carbs.total", totalCarbs);
 
             retObj.put("value", nutritionStats);
