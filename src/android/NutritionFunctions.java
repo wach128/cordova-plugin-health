@@ -125,7 +125,7 @@ public class NutritionFunctions {
         return new AggregateRequest(metrics, timeRange, dor);
     }
 
-    public static void prepareStoreRecords(JSONObject storeObj, List<Record> data) throws JSONException {
+    public static void prepareStoreRecords(JSONObject storeObj, long st, long et, List<Record> data) throws JSONException {
         JSONObject nutritionObj = storeObj.getJSONObject("value");
 
         int mealType = MealType.MEAL_TYPE_UNKNOWN;
