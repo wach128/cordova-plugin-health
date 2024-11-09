@@ -131,7 +131,7 @@ public class NutritionFunctions {
 
         int mealType = MealType.MEAL_TYPE_UNKNOWN;
       
-        if (nutritionObj.has("meal")) {
+        if (nutritionObj.has("meal_type")) {
             String meal = nutritionObj.getString("meal_type");
   
             if (meal.equalsIgnoreCase("dinner")) {
