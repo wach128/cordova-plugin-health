@@ -27,10 +27,12 @@ import androidx.health.connect.client.records.ExerciseLap;
 import androidx.health.connect.client.records.ExerciseSegment;
 import androidx.health.connect.client.records.ExerciseSessionRecord;
 import androidx.health.connect.client.records.HeartRateRecord;
+import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord;
 import androidx.health.connect.client.records.HeightRecord;
 import androidx.health.connect.client.records.HydrationRecord;
 import androidx.health.connect.client.records.NutritionRecord;
 import androidx.health.connect.client.records.Record;
+import androidx.health.connect.client.records.RestingHeartRateRecord;
 import androidx.health.connect.client.records.SleepSessionRecord;
 import androidx.health.connect.client.records.StepsRecord;
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord;
@@ -68,6 +70,7 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.TemporalAdjusters;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -287,6 +290,12 @@ public class HealthPlugin extends CordovaPlugin {
         }
         if (name.equalsIgnoreCase("distance")) {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(DistanceRecord.class);
+        }
+        if (name.equalsIgnoreCase("heart_rate.resting")) {
+            return kotlin.jvm.JvmClassMappingKt.getKotlinClass(RestingHeartRateRecord.class);
+        }
+        if (name.equalsIgnoreCase("heart_rate.variability")) {
+            return kotlin.jvm.JvmClassMappingKt.getKotlinClass(HeartRateVariabilityRmssdRecord.class);
         }
         if (name.equalsIgnoreCase("height")) {
             return HeightFunctions.dataTypeToClass();
@@ -564,6 +573,22 @@ public class HealthPlugin extends CordovaPlugin {
                     } else if (datapoint instanceof HeartRateRecord) {
                         oneElementPerRecord = false; // bpms are sent individually
                         HeartRateFunctions.populateFromQuery(datapoint, resultset);
+                    } else if (datapoint instanceof RestingHeartRateRecord) {
+                        RestingHeartRateRecord restingHR = (RestingHeartRateRecord) datapoint;
+                        obj.put("startDate", restingHR.getTime().toEpochMilli());
+                        obj.put("endDate", restingHR.getTime().toEpochMilli());
+
+                        int bpm = (int) restingHR.getBeatsPerMinute();
+                        obj.put("value", bpm);
+                        obj.put("unit", "bpm");
+                    } else if (datapoint instanceof HeartRateVariabilityRmssdRecord) {
+                        HeartRateVariabilityRmssdRecord hrVariability = (HeartRateVariabilityRmssdRecord) datapoint;
+                        obj.put("startDate", hrVariability.getTime().toEpochMilli());
+                        obj.put("endDate", hrVariability.getTime().toEpochMilli());
+
+                        double rmssd = hrVariability.getHeartRateVariabilityMillis();
+                        obj.put("value", rmssd);
+                        obj.put("unit", "ms");
                     } else {
                         callbackContext.error("Sample received of unknown type " + datatype.toString());
                         return;
@@ -702,6 +727,10 @@ public class HealthPlugin extends CordovaPlugin {
                         request = SleepFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
                     } else if (datatype.equalsIgnoreCase("heart_rate")) {
                         request = HeartRateFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
+                    } else if (datatype.equalsIgnoreCase("heart_rate.resting")) {
+                        Set<AggregateMetric<Long>> metrics = new HashSet<>();
+                        metrics.add(RestingHeartRateRecord.BPM_AVG);
+                        request = new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
                     } else {
                         callbackContext.error("Datatype not recognized " + datatype);
                         return;
@@ -766,6 +795,10 @@ public class HealthPlugin extends CordovaPlugin {
                         request = SleepFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
                     } else if (datatype.equalsIgnoreCase("heart_rate")) {
                         request = HeartRateFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
+                    } else if (datatype.equalsIgnoreCase("heart_rate.resting")) {
+                        Set<AggregateMetric<Long>> metrics = new HashSet<>();
+                        metrics.add(RestingHeartRateRecord.BPM_AVG);
+                        request = new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
                     } else {
                         callbackContext.error("Datatype not recognized " + datatype);
                         return;
@@ -833,6 +866,10 @@ public class HealthPlugin extends CordovaPlugin {
                     request = SleepFunctions.prepareAggregateRequest(timeRange, dor);
                 } else if (datatype.equalsIgnoreCase("heart_rate")) {
                     request = HeartRateFunctions.prepareAggregateRequest(timeRange, dor);
+                } else if (datatype.equalsIgnoreCase("heart_rate.resting")) {
+                    Set<AggregateMetric<Long>> metrics = new HashSet<>();
+                    metrics.add(RestingHeartRateRecord.BPM_AVG);
+                    request = new AggregateRequest(metrics, timeRange, dor);
                 } else {
                     callbackContext.error("Datatype not recognized " + datatype);
                     return;
@@ -930,6 +967,15 @@ public class HealthPlugin extends CordovaPlugin {
             SleepFunctions.populateFromAggregatedQuery(response, retObj);
         } else if (datatype.equalsIgnoreCase("heart_rate")) {
             HeartRateFunctions.populateFromAggregatedQuery(response, retObj);
+        } else if (datatype.equalsIgnoreCase("heart_rate.resting")) {
+            Long val = response.get(RestingHeartRateRecord.BPM_AVG);
+            if (val != null) {
+                retObj.put("value", val);
+                retObj.put("unit", "bpm");
+            } else {
+                retObj.put("value", 0);
+                retObj.put("unit", "bpm");
+            }
         } else {
             LOG.e(TAG, "Data type not recognized " + datatype);
         }
@@ -1059,6 +1105,24 @@ public class HealthPlugin extends CordovaPlugin {
                 SleepFunctions.prepareStoreRecords(args.getJSONObject(0), data);
             } else if (datatype.equalsIgnoreCase("heart_rate")) {
                 HeartRateFunctions.prepareStoreRecords(args.getJSONObject(0), st, et, data);
+            } else if (datatype.equalsIgnoreCase("heart_rate.resting")) {
+                long bpm = args.getJSONObject(0).getLong("value");
+                RestingHeartRateRecord record = new RestingHeartRateRecord(
+                        Instant.ofEpochMilli(st),
+                        ZoneOffset.from(ZonedDateTime.now()),
+                        bpm,
+                        Metadata.EMPTY
+                );
+                data.add(record);
+            } else if (datatype.equalsIgnoreCase("heart_rate.variability")) {
+                double ms = args.getJSONObject(0).getDouble("value");
+                HeartRateVariabilityRmssdRecord record = new HeartRateVariabilityRmssdRecord(
+                        Instant.ofEpochMilli(st),
+                        ZoneOffset.from(ZonedDateTime.now()),
+                        ms,
+                        Metadata.EMPTY
+                );
+                data.add(record);
             } else if (datatype.equalsIgnoreCase("nutrition")) {
                 NutritionFunctions.prepareStoreRecords(args.getJSONObject(0), data);
             } else if (datatype.equalsIgnoreCase("nutrition.water")) {
