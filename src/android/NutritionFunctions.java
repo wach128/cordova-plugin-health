@@ -5,6 +5,7 @@ import androidx.health.connect.client.aggregate.AggregationResult;
 import androidx.health.connect.client.records.Record;
 import androidx.health.connect.client.records.metadata.DataOrigin;
 import androidx.health.connect.client.records.metadata.Metadata;
+import androidx.health.connect.client.records.HydrationRecord;
 import androidx.health.connect.client.records.NutritionRecord;
 import androidx.health.connect.client.request.AggregateGroupByDurationRequest;
 import androidx.health.connect.client.request.AggregateGroupByPeriodRequest;
@@ -13,6 +14,7 @@ import androidx.health.connect.client.time.TimeRangeFilter;
 import androidx.health.connect.client.records.MealType;
 import androidx.health.connect.client.units.Energy;
 import androidx.health.connect.client.units.Mass;
+import androidx.health.connect.client.units.Volume;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,6 +32,10 @@ import kotlin.reflect.KClass;
 public class NutritionFunctions {
     public static KClass<? extends Record> dataTypeToClass() {
         return kotlin.jvm.JvmClassMappingKt.getKotlinClass(NutritionRecord.class);
+    }
+
+    public static KClass<? extends Record> hydrationDataTypeToClass() {
+        return kotlin.jvm.JvmClassMappingKt.getKotlinClass(HydrationRecord.class);
     }
 
     public static void populateFromQuery(Record datapoint, JSONObject obj) throws JSONException {
@@ -98,7 +104,7 @@ public class NutritionFunctions {
         }
     }
 
-    public static AggregateGroupByPeriodRequest prepareAggregateGroupByPeriodRequest (TimeRangeFilter timeRange, Period period, HashSet<DataOrigin> dor) {
+    public static AggregateGroupByPeriodRequest prepareAggregateGroupByPeriodRequest(TimeRangeFilter timeRange, Period period, HashSet<DataOrigin> dor) {
         Set<AggregateMetric<Mass>> metrics = new HashSet<>();
         metrics.add(NutritionRecord.SUGAR_TOTAL);
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
@@ -108,7 +114,7 @@ public class NutritionFunctions {
         return new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
     }
 
-    public static AggregateGroupByDurationRequest prepareAggregateGroupByDurationRequest (TimeRangeFilter timeRange, Duration duration, HashSet<DataOrigin> dor) {
+    public static AggregateGroupByDurationRequest prepareAggregateGroupByDurationRequest(TimeRangeFilter timeRange, Duration duration, HashSet<DataOrigin> dor) {
         Set<AggregateMetric<Mass>> metrics = new HashSet<>();
         metrics.add(NutritionRecord.SUGAR_TOTAL);
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
@@ -207,4 +213,63 @@ public class NutritionFunctions {
         data.add(record);
     }
 
+    /* Hydration */
+
+    public static void populateHydrationFromQuery(Record datapoint, JSONObject obj) throws JSONException {
+        HydrationRecord hydrationDP = (HydrationRecord) datapoint;
+        obj.put("startDate", hydrationDP.getStartTime().toEpochMilli());
+        obj.put("endDate", hydrationDP.getEndTime().toEpochMilli());
+        
+        double volume = hydrationDP.getVolume().getLiters();
+        obj.put("value", volume);
+        obj.put("unit", "l");
+    }
+
+    public static void populateHydrationFromAggregatedQuery(AggregationResult response, JSONObject retObj) throws JSONException {
+        if (response.get(HydrationRecord.VOLUME_TOTAL) != null) {
+            double liters = Objects.requireNonNull(response.get(HydrationRecord.VOLUME_TOTAL)).getLiters();
+            retObj.put("value", liters);
+            retObj.put("unit", "l");
+        } else {
+            retObj.put("value", 0);
+            retObj.put("unit", "l");
+        }
+    }
+
+    public static AggregateGroupByPeriodRequest prepareHydrationAggregateGroupByPeriodRequest(TimeRangeFilter timeRange, Period period, HashSet<DataOrigin> dor) {
+        Set<AggregateMetric<Volume>> metrics = new HashSet<>();
+        metrics.add(HydrationRecord.VOLUME_TOTAL);
+
+        return new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
+    }
+
+    public static AggregateGroupByDurationRequest prepareHydrationAggregateGroupByDurationRequest(TimeRangeFilter timeRange, Duration duration, HashSet<DataOrigin> dor) {
+        Set<AggregateMetric<Volume>> metrics = new HashSet<>();
+        metrics.add(HydrationRecord.VOLUME_TOTAL);
+
+        return new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
+    }
+
+    public static AggregateRequest prepareHydrationAggregateRequest(TimeRangeFilter timeRange, HashSet<DataOrigin> dor) {
+        Set<AggregateMetric<Volume>> metrics = new HashSet<>();
+        metrics.add(HydrationRecord.VOLUME_TOTAL);
+
+        return new AggregateRequest(metrics, timeRange, dor);
+    }
+
+    public static void prepareHydrationStoreRecords(JSONObject storeObj, List<Record> data) throws JSONException {
+        long st = storeObj.getLong("startDate");
+        long et = storeObj.getLong("endDate");
+
+        double liters = storeObj.getDouble("value");
+        Volume vol = Volume.liters(liters);
+
+        HydrationRecord record = new HydrationRecord(
+                Instant.ofEpochMilli(st), null,
+                Instant.ofEpochMilli(et), null,
+                vol,
+                Metadata.EMPTY
+        );
+        data.add(record);
+    }
 }
