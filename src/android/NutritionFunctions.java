@@ -2,11 +2,11 @@ package org.apache.cordova.health;
 
 import androidx.health.connect.client.aggregate.AggregateMetric;
 import androidx.health.connect.client.aggregate.AggregationResult;
-import androidx.health.connect.client.records.Record;
 import androidx.health.connect.client.records.metadata.DataOrigin;
 import androidx.health.connect.client.records.metadata.Metadata;
 import androidx.health.connect.client.records.HydrationRecord;
 import androidx.health.connect.client.records.NutritionRecord;
+import androidx.health.connect.client.records.Record;
 import androidx.health.connect.client.request.AggregateGroupByDurationRequest;
 import androidx.health.connect.client.request.AggregateGroupByPeriodRequest;
 import androidx.health.connect.client.request.AggregateRequest;
@@ -30,6 +30,7 @@ import java.util.Set;
 import kotlin.reflect.KClass;
 
 public class NutritionFunctions {
+
     public static KClass<? extends Record> dataTypeToClass() {
         return kotlin.jvm.JvmClassMappingKt.getKotlinClass(NutritionRecord.class);
     }
@@ -48,10 +49,10 @@ public class NutritionFunctions {
         String name = nutritionR.getName();
         nutritionStats.put("item", name);
 
-        Double kcal = Objects.requireNonNull(nutritionR.getEnergy()).getKilocalories();
+        double kcal = nutritionR.getEnergy().getKilocalories();
         nutritionStats.put("calories", kcal);
 
-        Double sugar = Objects.requireNonNull(nutritionR.getSugar()).getGrams();
+        double sugar = nutritionR.getSugar().getGrams();
         nutritionStats.put("sugar", sugar);
 
         int mealType = nutritionR.getMealType();
@@ -67,13 +68,13 @@ public class NutritionFunctions {
             nutritionStats.put("meal_type", "unknown");
         }
 
-        Double protein = Objects.requireNonNull(nutritionR.getProtein()).getGrams();
+        double protein = nutritionR.getProtein().getGrams();
         nutritionStats.put("protein", protein);
 
-        Double fat = Objects.requireNonNull(nutritionR.getTotalFat()).getGrams();
+        double fat = nutritionR.getTotalFat().getGrams();
         nutritionStats.put("fat.total", fat);
 
-        Double carbs = Objects.requireNonNull(nutritionR.getTotalCarbohydrate()).getGrams();
+        double carbs = nutritionR.getTotalCarbohydrate().getGrams();
         nutritionStats.put("carbs.total", carbs);
 
         obj.put("value", nutritionStats);
@@ -84,16 +85,19 @@ public class NutritionFunctions {
         if (response.get(NutritionRecord.SUGAR_TOTAL) != null) {
             JSONObject nutritionStats = new JSONObject();
 
-            double sugar = Objects.requireNonNull(response.get(NutritionRecord.SUGAR_TOTAL)).getGrams();
+            double sugar = response.get(NutritionRecord.SUGAR_TOTAL).getGrams();
             nutritionStats.put("sugar.total", sugar);
 
-            double totalProtein = Objects.requireNonNull(response.get(NutritionRecord.PROTEIN_TOTAL)).getGrams();
+            double totalEnergy = response.get(NutritionRecord.ENERGY_TOTAL).getKilocalories();
+            nutritionStats.put("calories", totalEnergy);
+
+            double totalProtein = response.get(NutritionRecord.PROTEIN_TOTAL).getGrams();
             nutritionStats.put("protein", totalProtein);
 
-            double totalFat = Objects.requireNonNull(response.get(NutritionRecord.TOTAL_FAT_TOTAL)).getGrams();
+            double totalFat = response.get(NutritionRecord.TOTAL_FAT_TOTAL).getGrams();
             nutritionStats.put("fat.total", totalFat);
 
-            double totalCarbs = Objects.requireNonNull(response.get(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL)).getGrams();
+            double totalCarbs = response.get(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL).getGrams();
             nutritionStats.put("carbs.total", totalCarbs);
 
             retObj.put("value", nutritionStats);
@@ -104,9 +108,9 @@ public class NutritionFunctions {
         }
     }
 
-    public static AggregateGroupByPeriodRequest prepareAggregateGroupByPeriodRequest(TimeRangeFilter timeRange, Period period, HashSet<DataOrigin> dor) {
+    public static AggregateGroupByPeriodRequest prepareAggregateGroupByPeriodRequest (TimeRangeFilter timeRange, Period period, HashSet<DataOrigin> dor) {
         Set<AggregateMetric<Mass>> metrics = new HashSet<>();
-        metrics.add(NutritionRecord.SUGAR_TOTAL);
+        // I removed Calories here as Energy doesnt work in a type Mass. Perhaps needs re-adding somehow
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
         metrics.add(NutritionRecord.TOTAL_FAT_TOTAL);
         metrics.add(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL);
@@ -114,9 +118,9 @@ public class NutritionFunctions {
         return new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
     }
 
-    public static AggregateGroupByDurationRequest prepareAggregateGroupByDurationRequest(TimeRangeFilter timeRange, Duration duration, HashSet<DataOrigin> dor) {
+    public static AggregateGroupByDurationRequest prepareAggregateGroupByDurationRequest (TimeRangeFilter timeRange, Duration duration, HashSet<DataOrigin> dor) {
         Set<AggregateMetric<Mass>> metrics = new HashSet<>();
-        metrics.add(NutritionRecord.SUGAR_TOTAL);
+        // I removed Calories here as Energy doesnt work in a type Mass. Perhaps needs re-adding somehow
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
         metrics.add(NutritionRecord.TOTAL_FAT_TOTAL);
         metrics.add(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL);
@@ -125,21 +129,20 @@ public class NutritionFunctions {
 
     public static AggregateRequest prepareAggregateRequest(TimeRangeFilter timeRange, HashSet<DataOrigin> dor) {
         Set<AggregateMetric<Mass>> metrics = new HashSet<>();
-        metrics.add(NutritionRecord.SUGAR_TOTAL);
+        // I removed Calories here as Energy doesnt work in a type Mass. Perhaps needs re-adding somehow
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
         metrics.add(NutritionRecord.TOTAL_FAT_TOTAL);
         metrics.add(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL);
         return new AggregateRequest(metrics, timeRange, dor);
     }
 
-    public static void prepareStoreRecords(JSONObject storeObj, List<Record> data) throws JSONException {
-        long st = storeObj.getLong("startDate");
-        long et = storeObj.getLong("endDate");
+    public static void prepareStoreRecords(JSONObject storeObj, long st, long et, List<Record> data) throws JSONException {
+        JSONObject nutritionObj = storeObj.getJSONObject("value");
 
         int mealType = MealType.MEAL_TYPE_UNKNOWN;
       
-        if (storeObj.has("meal")) {
-            String meal = storeObj.getString("meal_type");
+        if (nutritionObj.has("meal_type")) {
+            String meal = nutritionObj.getString("meal_type");
   
             if (meal.equalsIgnoreCase("dinner")) {
                 mealType = MealType.MEAL_TYPE_DINNER;
