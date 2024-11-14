@@ -86,7 +86,7 @@ public class NutritionFunctions {
         obj.put("startDate", nutritionR.getStartTime().toEpochMilli());
         obj.put("endDate", nutritionR.getEndTime().toEpochMilli());
         obj.put("value", nutritionObj);
-        obj.put("unit", "meal");
+        obj.put("unit", "nutrition");
     }
 
     public static void populateFromAggregatedQuery(AggregationResult response, JSONObject retObj) throws JSONException {
