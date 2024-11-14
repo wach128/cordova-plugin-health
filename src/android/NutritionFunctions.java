@@ -4,6 +4,7 @@ import androidx.health.connect.client.aggregate.AggregateMetric;
 import androidx.health.connect.client.aggregate.AggregationResult;
 import androidx.health.connect.client.records.NutritionRecord;
 import androidx.health.connect.client.records.Record;
+import androidx.health.connect.client.records.NutritionRecord;
 import androidx.health.connect.client.records.metadata.DataOrigin;
 import androidx.health.connect.client.records.metadata.Metadata;
 import androidx.health.connect.client.request.AggregateGroupByDurationRequest;
@@ -29,6 +30,7 @@ import java.util.Set;
 import kotlin.reflect.KClass;
 
 public class NutritionFunctions {
+
     public static KClass<? extends Record> dataTypeToClass() {
         return kotlin.jvm.JvmClassMappingKt.getKotlinClass(NutritionRecord.class);
     }
@@ -70,8 +72,8 @@ public class NutritionFunctions {
         Double carbs = nutritionR.getTotalCarbohydrate().getGrams();
         nutritionStats.put("carbs.total", carbs);
 
-        nutritionStats.put("value", nutritionStats);
-        nutritionStats.put("unit", "meal");
+        obj.put("value", nutritionStats);
+        obj.put("unit", "meal");
     }
 
     public static void populateFromAggregatedQuery(AggregationResult response, JSONObject retObj) throws JSONException {
@@ -93,7 +95,8 @@ public class NutritionFunctions {
             double totalCarbs = response.get(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL).getGrams();
             nutritionStats.put("carbs.total", totalCarbs);
 
-            
+            retObj.put("value", nutritionStats);
+            retObj.put("unit", "meal");
         }
 		
 		retObj.put("value", nutritionStats);
@@ -128,12 +131,12 @@ public class NutritionFunctions {
         return new AggregateRequest(metrics, timeRange, dor);
     }
 
-    public static void prepareStoreRecords(JSONObject nutritionObj, long st, List<Record> data) throws JSONException {
-        //double nutritionObj = storeObj.getDouble("value");
-				
+    public static void prepareStoreRecords(JSONObject storeObj, long st, long et, List<Record> data) throws JSONException {
+        JSONObject nutritionObj = storeObj.getJSONObject("value");
+
         int mealType = MealType.MEAL_TYPE_UNKNOWN;
       
-        if (nutritionObj.has("meal")) {
+        if (nutritionObj.has("meal_type")) {
             String meal = nutritionObj.getString("meal_type");
   
             if (meal.equalsIgnoreCase("dinner")) {
@@ -156,7 +159,7 @@ public class NutritionFunctions {
         NutritionRecord record = new NutritionRecord(
                 Instant.ofEpochMilli(st),
                 null,
-                Instant.ofEpochMilli(st),
+                Instant.ofEpochMilli(et),
                 null,
                 null,
                 null,
