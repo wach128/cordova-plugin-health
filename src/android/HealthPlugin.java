@@ -21,6 +21,8 @@ import androidx.health.connect.client.permission.HealthPermission;
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord;
 import androidx.health.connect.client.records.BasalMetabolicRateRecord;
 import androidx.health.connect.client.records.BloodGlucoseRecord;
+import androidx.health.connect.client.records.BloodPressureRecord;
+import androidx.health.connect.client.records.NutritionRecord;
 import androidx.health.connect.client.records.BodyFatRecord;
 import androidx.health.connect.client.records.DistanceRecord;
 import androidx.health.connect.client.records.ExerciseLap;
@@ -282,6 +284,9 @@ public class HealthPlugin extends CordovaPlugin {
         if (name.equalsIgnoreCase("blood_glucose")) {
             return BloodGlucoseFunctions.dataTypeToClass();
         }
+		if (name.equalsIgnoreCase("blood_pressure")) {
+            return BloodPressureFunctions.dataTypeToClass();
+        }
         if (name.equalsIgnoreCase("distance")) {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(DistanceRecord.class);
         }
@@ -533,7 +538,9 @@ public class HealthPlugin extends CordovaPlugin {
                         }
                     } else if (datapoint instanceof BloodGlucoseRecord) {
                         BloodGlucoseFunctions.populateFromQuery(datapoint, obj);
-                    } else if (datapoint instanceof DistanceRecord) {
+                    } else if (datapoint instanceof BloodPressureRecord) {
+                        BloodPressureFunctions.populateFromQuery(datapoint, obj);
+					} else if (datapoint instanceof DistanceRecord) {
                         DistanceRecord disanceR = (DistanceRecord) datapoint;
                         obj.put("startDate", disanceR.getStartTime().toEpochMilli());
                         obj.put("endDate", disanceR.getEndTime().toEpochMilli());
@@ -1009,6 +1016,9 @@ public class HealthPlugin extends CordovaPlugin {
             } else if (datatype.equalsIgnoreCase("blood_glucose")) {
                 JSONObject glucoseobj = args.getJSONObject(0).getJSONObject("value");
                 BloodGlucoseFunctions.prepareStoreRecords(glucoseobj, st, data);
+            } else if (datatype.equalsIgnoreCase("blood_pressure")) {
+                JSONObject pressureobj = args.getJSONObject(0).getJSONObject("value");
+                BloodPressureFunctions.prepareStoreRecords(pressureobj, st, data);
             } else if (datatype.equalsIgnoreCase("distance")) {
                 double meters = args.getJSONObject(0).getDouble("value");
                 Length len = Length.meters(meters);
