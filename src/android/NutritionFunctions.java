@@ -35,15 +35,16 @@ public class NutritionFunctions {
         return kotlin.jvm.JvmClassMappingKt.getKotlinClass(NutritionRecord.class);
     }
 
-    //public static void populateFromQuery(Record datapoint, JSONObject obj, JSONArray resultset, boolean keepSession) throws JSONException {
+    // public static void populateFromQuery(Record datapoint, JSONObject obj,
+    // JSONArray resultset, boolean keepSession) throws JSONException {
     public static void populateFromQuery(Record datapoint, JSONObject obj) throws JSONException {
-		
+
         JSONObject nutritionStats = new JSONObject();
 
         NutritionRecord nutritionR = (NutritionRecord) datapoint;
         nutritionStats.put("startDate", nutritionR.getStartTime().toEpochMilli());
-		nutritionStats.put("endDate", nutritionR.getEndTime().toEpochMilli());
-		
+        nutritionStats.put("endDate", nutritionR.getEndTime().toEpochMilli());
+
         String name = nutritionR.getName();
         nutritionStats.put("item", name);
 
@@ -51,13 +52,13 @@ public class NutritionFunctions {
         nutritionStats.put("calories", kcal);
 
         int mealType = nutritionR.getMealType();
-        if(mealType == MealType.MEAL_TYPE_BREAKFAST) {
+        if (mealType == MealType.MEAL_TYPE_BREAKFAST) {
             nutritionStats.put("meal_type", "breakfast");
-        } else if(mealType == MealType.MEAL_TYPE_LUNCH) {
+        } else if (mealType == MealType.MEAL_TYPE_LUNCH) {
             nutritionStats.put("meal_type", "lunch");
-        } else if(mealType == MealType.MEAL_TYPE_DINNER) {
+        } else if (mealType == MealType.MEAL_TYPE_DINNER) {
             nutritionStats.put("meal_type", "dinner");
-        } else if(mealType == MealType.MEAL_TYPE_SNACK) {
+        } else if (mealType == MealType.MEAL_TYPE_SNACK) {
             nutritionStats.put("meal_type", "snack");
         } else {
             nutritionStats.put("meal_type", "unknown");
@@ -77,33 +78,35 @@ public class NutritionFunctions {
     }
 
     public static void populateFromAggregatedQuery(AggregationResult response, JSONObject retObj) throws JSONException {
-		
-		JSONObject nutritionStats = new JSONObject();
-		
-        if (response.get(NutritionRecord.ENERGY_TOTAL) != null) {
-            
 
+        JSONObject nutritionStats = new JSONObject();
+
+        if (response.get(NutritionRecord.ENERGY_TOTAL) != null) {
             double totalEnergy = response.get(NutritionRecord.ENERGY_TOTAL).getKilocalories();
             nutritionStats.put("calories", totalEnergy);
+        }
 
+        if (response.get(NutritionRecord.PROTEIN_TOTAL) != null) {
             double totalProtein = response.get(NutritionRecord.PROTEIN_TOTAL).getGrams();
             nutritionStats.put("protein", totalProtein);
+        }
 
+        if (response.get(NutritionRecord.TOTAL_FAT_TOTAL) != null) {
             double totalFat = response.get(NutritionRecord.TOTAL_FAT_TOTAL).getGrams();
             nutritionStats.put("fat.total", totalFat);
+        }
 
+        if (response.get(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL) != null) {
             double totalCarbs = response.get(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL).getGrams();
             nutritionStats.put("carbs.total", totalCarbs);
-
-            retObj.put("value", nutritionStats);
-            retObj.put("unit", "meal");
         }
-		
-		retObj.put("value", nutritionStats);
-        retObj.put("unit", "meal");
+
+        retObj.put("value", nutritionStats);
+        retObj.put("unit", "nutrition");
     }
 
-    public static AggregateGroupByPeriodRequest prepareAggregateGroupByPeriodRequest (TimeRangeFilter timeRange, Period period, HashSet<DataOrigin> dor) {
+    public static AggregateGroupByPeriodRequest prepareAggregateGroupByPeriodRequest(TimeRangeFilter timeRange,
+            Period period, HashSet<DataOrigin> dor) {
         Set<AggregateMetric<?>> metrics = new HashSet<>();
         metrics.add(NutritionRecord.ENERGY_TOTAL);
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
@@ -113,7 +116,8 @@ public class NutritionFunctions {
         return new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
     }
 
-    public static AggregateGroupByDurationRequest prepareAggregateGroupByDurationRequest (TimeRangeFilter timeRange, Duration duration, HashSet<DataOrigin> dor) {
+    public static AggregateGroupByDurationRequest prepareAggregateGroupByDurationRequest(TimeRangeFilter timeRange,
+            Duration duration, HashSet<DataOrigin> dor) {
         Set<AggregateMetric<?>> metrics = new HashSet<>();
         metrics.add(NutritionRecord.ENERGY_TOTAL);
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
@@ -131,14 +135,15 @@ public class NutritionFunctions {
         return new AggregateRequest(metrics, timeRange, dor);
     }
 
-    public static void prepareStoreRecords(JSONObject storeObj, long st, long et, List<Record> data) throws JSONException {
+    public static void prepareStoreRecords(JSONObject storeObj, long st, long et, List<Record> data)
+            throws JSONException {
         JSONObject nutritionObj = storeObj.getJSONObject("value");
 
         int mealType = MealType.MEAL_TYPE_UNKNOWN;
-      
+
         if (nutritionObj.has("meal_type")) {
             String meal = nutritionObj.getString("meal_type");
-  
+
             if (meal.equalsIgnoreCase("dinner")) {
                 mealType = MealType.MEAL_TYPE_DINNER;
             } else if (meal.equalsIgnoreCase("lunch")) {
@@ -205,8 +210,7 @@ public class NutritionFunctions {
                 null,
                 name,
                 mealType,
-                Metadata.EMPTY
-        );
+                Metadata.EMPTY);
         data.add(record);
     }
 
