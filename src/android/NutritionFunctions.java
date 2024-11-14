@@ -36,7 +36,6 @@ public class NutritionFunctions {
         return kotlin.jvm.JvmClassMappingKt.getKotlinClass(NutritionRecord.class);
     }
 
-
     public static void populateFromQuery(Record datapoint, JSONObject obj) throws JSONException {
 
         JSONObject nutritionStats = new JSONObject();
@@ -81,12 +80,6 @@ public class NutritionFunctions {
     }
 
     public static void populateFromAggregatedQuery(AggregationResult response, JSONObject retObj) throws JSONException {
-		
-		JSONObject nutritionStats = new JSONObject();
-		
-        if (response.get(NutritionRecord.ENERGY_TOTAL) != null) {
-            double sugar = response.get(NutritionRecord.SUGAR_TOTAL).getGrams();
-            nutritionStats.put("sugar.total", sugar);
 
         JSONObject nutritionStats = new JSONObject();
 
@@ -109,9 +102,9 @@ public class NutritionFunctions {
             double totalCarbs = response.get(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL).getGrams();
             nutritionStats.put("carbs.total", totalCarbs);
         }
-		
-		    retObj.put("value", nutritionStats);
-        retObj.put("unit", "meal");
+
+        retObj.put("value", nutritionStats);
+        retObj.put("unit", "nutrition");
     }
 
     public static AggregateGroupByPeriodRequest prepareAggregateGroupByPeriodRequest(TimeRangeFilter timeRange,
@@ -230,13 +223,14 @@ public class NutritionFunctions {
         HydrationRecord hydrationDP = (HydrationRecord) datapoint;
         obj.put("startDate", hydrationDP.getStartTime().toEpochMilli());
         obj.put("endDate", hydrationDP.getEndTime().toEpochMilli());
-        
+
         double volume = hydrationDP.getVolume().getLiters();
         obj.put("value", volume);
         obj.put("unit", "l");
     }
 
-    public static void populateHydrationFromAggregatedQuery(AggregationResult response, JSONObject retObj) throws JSONException {
+    public static void populateHydrationFromAggregatedQuery(AggregationResult response, JSONObject retObj)
+            throws JSONException {
         if (response.get(HydrationRecord.VOLUME_TOTAL) != null) {
             double liters = Objects.requireNonNull(response.get(HydrationRecord.VOLUME_TOTAL)).getLiters();
             retObj.put("value", liters);
@@ -247,21 +241,24 @@ public class NutritionFunctions {
         }
     }
 
-    public static AggregateGroupByPeriodRequest prepareHydrationAggregateGroupByPeriodRequest(TimeRangeFilter timeRange, Period period, HashSet<DataOrigin> dor) {
+    public static AggregateGroupByPeriodRequest prepareHydrationAggregateGroupByPeriodRequest(TimeRangeFilter timeRange,
+            Period period, HashSet<DataOrigin> dor) {
         Set<AggregateMetric<Volume>> metrics = new HashSet<>();
         metrics.add(HydrationRecord.VOLUME_TOTAL);
 
         return new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
     }
 
-    public static AggregateGroupByDurationRequest prepareHydrationAggregateGroupByDurationRequest(TimeRangeFilter timeRange, Duration duration, HashSet<DataOrigin> dor) {
+    public static AggregateGroupByDurationRequest prepareHydrationAggregateGroupByDurationRequest(
+            TimeRangeFilter timeRange, Duration duration, HashSet<DataOrigin> dor) {
         Set<AggregateMetric<Volume>> metrics = new HashSet<>();
         metrics.add(HydrationRecord.VOLUME_TOTAL);
 
         return new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
     }
 
-    public static AggregateRequest prepareHydrationAggregateRequest(TimeRangeFilter timeRange, HashSet<DataOrigin> dor) {
+    public static AggregateRequest prepareHydrationAggregateRequest(TimeRangeFilter timeRange,
+            HashSet<DataOrigin> dor) {
         Set<AggregateMetric<Volume>> metrics = new HashSet<>();
         metrics.add(HydrationRecord.VOLUME_TOTAL);
 
@@ -279,8 +276,7 @@ public class NutritionFunctions {
                 Instant.ofEpochMilli(st), null,
                 Instant.ofEpochMilli(et), null,
                 vol,
-                Metadata.EMPTY
-        );
+                Metadata.EMPTY);
         data.add(record);
     }
 }

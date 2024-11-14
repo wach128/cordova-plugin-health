@@ -155,16 +155,17 @@ These are currently supported in both Android and iOS. Please notice that older 
 | calories.basal  | kcal  | HKQuantityTypeIdentifierBasalEnergyBurned     | BasalMetabolicRateRecord * time window   |
 | calories        | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned + HKQuantityTypeIdentifierBasalEnergyBurned | TotalCaloriesBurnedRecord |
 | heart_rate      | bpm   | HKQuantityTypeIdentifierHeartRate             | HeartRateRecord                          |
-| workout_route     | bpm   | HKWorkoutRouteType            | NA                                     |
+| workout_route   | bpm   | HKWorkoutRouteType                            | NA                                       |
 | blood_glucose   | mmol/L | HKQuantityTypeIdentifierBloodGlucose         | BloodGlucoseRecord                       |
 | blood_pressure  | mmHg  | HKCorrelationTypeIdentifierBloodPressure      | BloodPressureRecord                      |
 | mindfulness     | sec   | HKCategoryTypeIdentifierMindfulSession        | NA                                       |
-| UVexposure      | count | HKQuantityTypeIdentifierUVExposure            | NA        |
-| nutrition       | nutrition | HKCorrelationTypeIdentifierFood               | NutritionRecord                           |
-| nutrition.carbs.total | g | HKQuantityTypeIdentifierDietaryCarbohydrates | NutritionRecord, TOTAL_CARBOHYDRATE_TOTAL    |
-| nutrition.fat.total | g | HKQuantityTypeIdentifierDietaryFatTotal       | NutritionRecord, TOTAL_FAT_TOTAL       |
-| nutrition.protein | g   | HKQuantityTypeIdentifierDietaryProtein        | NutritionRecord, PROTEIN_TOTAL         |
-| nutrition.calories | kcal | HKQuantityTypeIdentifierDietaryEnergyConsumed | TYPE_NUTRITION, ENERGY_TOTAL      |
+| UVexposure      | count | HKQuantityTypeIdentifierUVExposure            | NA                                       |
+| nutrition       | nutrition | HKCorrelationTypeIdentifierFood           | NutritionRecord                          |
+| nutrition.carbs.total | g | HKQuantityTypeIdentifierDietaryCarbohydrates | NutritionRecord, TOTAL_CARBOHYDRATE_TOTAL |
+| nutrition.fat.total | g | HKQuantityTypeIdentifierDietaryFatTotal       | NutritionRecord, TOTAL_FAT_TOTAL         |
+| nutrition.protein | g   | HKQuantityTypeIdentifierDietaryProtein        | NutritionRecord, PROTEIN_TOTAL           |
+| nutrition.calories | kcal | HKQuantityTypeIdentifierDietaryEnergyConsumed | NutritionRecord, ENERGY_TOTAL          |
+| nutrition.water | ml    | HKQuantityTypeIdentifierDietaryWater          | NutritionRecord, TYPE_HYDRATION         |
 
 
 **Note**: units of measurement are fixed!
