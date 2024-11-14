@@ -2,6 +2,7 @@ package org.apache.cordova.health;
 
 import androidx.health.connect.client.aggregate.AggregateMetric;
 import androidx.health.connect.client.aggregate.AggregationResult;
+import androidx.health.connect.client.records.NutritionRecord;
 import androidx.health.connect.client.records.metadata.DataOrigin;
 import androidx.health.connect.client.records.metadata.Metadata;
 import androidx.health.connect.client.records.HydrationRecord;
@@ -35,11 +36,9 @@ public class NutritionFunctions {
         return kotlin.jvm.JvmClassMappingKt.getKotlinClass(NutritionRecord.class);
     }
 
-    public static KClass<? extends Record> hydrationDataTypeToClass() {
-        return kotlin.jvm.JvmClassMappingKt.getKotlinClass(HydrationRecord.class);
-    }
 
     public static void populateFromQuery(Record datapoint, JSONObject obj) throws JSONException {
+		
         JSONObject nutritionStats = new JSONObject();
 
         NutritionRecord nutritionR = (NutritionRecord) datapoint;
@@ -82,9 +81,10 @@ public class NutritionFunctions {
     }
 
     public static void populateFromAggregatedQuery(AggregationResult response, JSONObject retObj) throws JSONException {
-        if (response.get(NutritionRecord.SUGAR_TOTAL) != null) {
-            JSONObject nutritionStats = new JSONObject();
-
+		
+		JSONObject nutritionStats = new JSONObject();
+		
+        if (response.get(NutritionRecord.ENERGY_TOTAL) != null) {
             double sugar = response.get(NutritionRecord.SUGAR_TOTAL).getGrams();
             nutritionStats.put("sugar.total", sugar);
 
@@ -102,15 +102,15 @@ public class NutritionFunctions {
 
             retObj.put("value", nutritionStats);
             retObj.put("unit", "meal");
-        } else {
-            retObj.put("value", "");
-            retObj.put("unit", "meal");
         }
+		
+		    retObj.put("value", nutritionStats);
+        retObj.put("unit", "meal");
     }
 
     public static AggregateGroupByPeriodRequest prepareAggregateGroupByPeriodRequest (TimeRangeFilter timeRange, Period period, HashSet<DataOrigin> dor) {
-        Set<AggregateMetric<Mass>> metrics = new HashSet<>();
-        // I removed Calories here as Energy doesnt work in a type Mass. Perhaps needs re-adding somehow
+        Set<AggregateMetric<?>> metrics = new HashSet<>();
+        metrics.add(NutritionRecord.ENERGY_TOTAL);
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
         metrics.add(NutritionRecord.TOTAL_FAT_TOTAL);
         metrics.add(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL);
@@ -119,8 +119,8 @@ public class NutritionFunctions {
     }
 
     public static AggregateGroupByDurationRequest prepareAggregateGroupByDurationRequest (TimeRangeFilter timeRange, Duration duration, HashSet<DataOrigin> dor) {
-        Set<AggregateMetric<Mass>> metrics = new HashSet<>();
-        // I removed Calories here as Energy doesnt work in a type Mass. Perhaps needs re-adding somehow
+        Set<AggregateMetric<?>> metrics = new HashSet<>();
+        metrics.add(NutritionRecord.ENERGY_TOTAL);
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
         metrics.add(NutritionRecord.TOTAL_FAT_TOTAL);
         metrics.add(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL);
@@ -128,8 +128,8 @@ public class NutritionFunctions {
     }
 
     public static AggregateRequest prepareAggregateRequest(TimeRangeFilter timeRange, HashSet<DataOrigin> dor) {
-        Set<AggregateMetric<Mass>> metrics = new HashSet<>();
-        // I removed Calories here as Energy doesnt work in a type Mass. Perhaps needs re-adding somehow
+        Set<AggregateMetric<?>> metrics = new HashSet<>();
+        metrics.add(NutritionRecord.ENERGY_TOTAL);
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
         metrics.add(NutritionRecord.TOTAL_FAT_TOTAL);
         metrics.add(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL);

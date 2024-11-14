@@ -141,8 +141,9 @@
     <source-file src="src/android/HeightFunctions.java" target-dir="src/org/apache/cordova/health/" />
     <source-file src="src/android/NutritionFunctions.java" target-dir="src/org/apache/cordova/health/" />
     <source-file src="src/android/SleepFunctions.java" target-dir="src/org/apache/cordova/health/" />
-    <source-file src="src/android/BloodGlucoseFunctions.java"
-      target-dir="src/org/apache/cordova/health/" />
+    <source-file src="src/android/BloodGlucoseFunctions.java" target-dir="src/org/apache/cordova/health/" />
+    <source-file src="src/android/BloodPressureFunctions.java" target-dir="src/org/apache/cordova/health/" />
+    <source-file src="src/android/NutritionFunctions.java" target-dir="src/org/apache/cordova/health/" />
     <source-file src="src/android/HeartRateFunctions.java"
       target-dir="src/org/apache/cordova/health/" />
     <source-file src="src/android/PermissionsRationaleActivity.java"
