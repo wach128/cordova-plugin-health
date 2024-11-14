@@ -32,7 +32,6 @@ import androidx.health.connect.client.records.HeartRateRecord;
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord;
 import androidx.health.connect.client.records.HeightRecord;
 import androidx.health.connect.client.records.HydrationRecord;
-import androidx.health.connect.client.records.NutritionRecord;
 import androidx.health.connect.client.records.Record;
 import androidx.health.connect.client.records.RestingHeartRateRecord;
 import androidx.health.connect.client.records.SleepSessionRecord;
@@ -71,12 +70,10 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.ZoneOffset;
 import java.time.temporal.TemporalAdjusters;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import kotlin.coroutines.EmptyCoroutineContext;
@@ -308,7 +305,7 @@ public class HealthPlugin extends CordovaPlugin {
             return NutritionFunctions.dataTypeToClass();
         }
         if (name.equalsIgnoreCase("nutrition.water")) {
-            return NutritionFunctions.hydrationDataTypeToClass();
+            return HydrationFunctions.dataTypeToClass();
         }
         if (name.equalsIgnoreCase("sleep")) {
             return SleepFunctions.dataTypeToClass();
@@ -566,7 +563,7 @@ public class HealthPlugin extends CordovaPlugin {
                     } else if (datapoint instanceof NutritionRecord) {
                         NutritionFunctions.populateFromQuery(datapoint, obj);
                     } else if (datapoint instanceof HydrationRecord) {
-                        NutritionFunctions.populateHydrationFromQuery(datapoint, obj);
+                        HydrationFunctions.populateFromQuery(datapoint, obj);
                     }  else if (datapoint instanceof SleepSessionRecord) {
                         oneElementPerRecord = keepSession; // flag it, so we don't add empty objs later
                         SleepFunctions.populateFromQuery(datapoint, obj, resultset, keepSession);
@@ -684,7 +681,7 @@ public class HealthPlugin extends CordovaPlugin {
                     } else if (datatype.equalsIgnoreCase("nutrition")) {
                         request = NutritionFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
                     } else if (datatype.equalsIgnoreCase("nutrition.water")) {
-                        request = NutritionFunctions.prepareHydrationAggregateGroupByPeriodRequest(timeRange, period, dor);
+                        request = HydrationFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
                     }  else if (datatype.equalsIgnoreCase("weight")) {
                         request = WeightFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
                     } else if (datatype.equalsIgnoreCase("height")) {
@@ -748,7 +745,7 @@ public class HealthPlugin extends CordovaPlugin {
                     } else if (datatype.equalsIgnoreCase("nutrition")) {
                         request = NutritionFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
                     } else if (datatype.equalsIgnoreCase("nutrition.water")) {
-                        request = NutritionFunctions.prepareHydrationAggregateGroupByDurationRequest(timeRange, duration, dor);
+                        request = HydrationFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
                     } else if (datatype.equalsIgnoreCase("weight")) {
                         request = WeightFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
                     } else if (datatype.equalsIgnoreCase("height")) {
@@ -815,7 +812,7 @@ public class HealthPlugin extends CordovaPlugin {
                 } else if (datatype.equalsIgnoreCase("nutrition")) {
                     request = NutritionFunctions.prepareAggregateRequest(timeRange, dor);
                 } else if (datatype.equalsIgnoreCase("nutrition.water")) {
-                    request = NutritionFunctions.prepareHydrationAggregateRequest(timeRange, dor);
+                    request = NutritionFunctions.prepareAggregateRequest(timeRange, dor);
                 }  else if (datatype.equalsIgnoreCase("weight")) {
                     request = WeightFunctions.prepareAggregateRequest(timeRange, dor);
                 } else if (datatype.equalsIgnoreCase("height")) {
@@ -881,7 +878,7 @@ public class HealthPlugin extends CordovaPlugin {
         } else if (datatype.equalsIgnoreCase("nutrition")) {
             NutritionFunctions.populateFromAggregatedQuery(response, retObj);
         } else if (datatype.equalsIgnoreCase("nutrition.water")) {
-            NutritionFunctions.populateHydrationFromAggregatedQuery(response, retObj);
+            NutritionFunctions.populateFromAggregatedQuery(response, retObj);
         } else if (datatype.equalsIgnoreCase("weight")) {
             WeightFunctions.populateFromAggregatedQuery(response, retObj);
         } else if (datatype.equalsIgnoreCase("height")) {
@@ -1077,7 +1074,7 @@ public class HealthPlugin extends CordovaPlugin {
             } else if (datatype.equalsIgnoreCase("nutrition")) {
                 NutritionFunctions.prepareStoreRecords(args.getJSONObject(0), st, et, data);
             } else if (datatype.equalsIgnoreCase("nutrition.water")) {
-                NutritionFunctions.prepareHydrationStoreRecords(args.getJSONObject(0), data);
+                NutritionFunctions.prepareStoreRecords(args.getJSONObject(0), st, et, data);
             } else {
                 callbackContext.error("Datatype not supported " + datatype);
                 return;

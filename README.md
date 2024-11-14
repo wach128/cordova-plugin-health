@@ -165,7 +165,8 @@ These are currently supported in both Android and iOS. Please notice that older 
 | nutrition.fat.total | g | HKQuantityTypeIdentifierDietaryFatTotal       | NutritionRecord, TOTAL_FAT_TOTAL         |
 | nutrition.protein | g   | HKQuantityTypeIdentifierDietaryProtein        | NutritionRecord, PROTEIN_TOTAL           |
 | nutrition.calories | kcal | HKQuantityTypeIdentifierDietaryEnergyConsumed | NutritionRecord, ENERGY_TOTAL          |
-| nutrition.water | ml    | HKQuantityTypeIdentifierDietaryWater          | NutritionRecord, TYPE_HYDRATION         |
+| nutrition.water | ml    | HKQuantityTypeIdentifierDietaryWater          | HydrationRecord, TYPE_HYDRATION         |
+| nutrition.sugar | g     | HKQuantityTypeIdentifierDietarySugar          | NutritionRecord, NUTRIENT_SUGAR           |
 
 
 **Note**: units of measurement are fixed!
@@ -205,7 +206,8 @@ Example values:
 | blood_pressure | { systolic: 110, diastolic: 70 }  |
 | mindfulness    | 1800 <br/>**Notes**: only available on iOS |
 | UVexposure     | 12 <br/>**Notes**: only available on iOS |
-| nutrition      | { item: "cheese", meal_type: "lunch", brand_name: "McDonald's", nutrients: { nutrition.fat.saturated: 11.5, nutrition.calories: 233.1 } } <br/>**Note**: the `brand_name` property is only available on iOS |
+| nutrition.X | 234.9 <br/>**Notes**: for the unit, see the coresponding type in the table above |
+| nutrition      | { item: "cheese", meal_type: "lunch", brand_name: "Cheddar", nutrients: { 'fat.total': 11.5, 'calories': 233.1 } } <br/>**Note**: the `brand_name` property is only available on iOS <br> For the units of each nutrient, see the coresponding type in the table above  |
 
 
 ## Methods

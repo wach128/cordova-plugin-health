@@ -5,8 +5,6 @@ import androidx.health.connect.client.aggregate.AggregationResult;
 import androidx.health.connect.client.records.NutritionRecord;
 import androidx.health.connect.client.records.metadata.DataOrigin;
 import androidx.health.connect.client.records.metadata.Metadata;
-import androidx.health.connect.client.records.HydrationRecord;
-import androidx.health.connect.client.records.NutritionRecord;
 import androidx.health.connect.client.records.Record;
 import androidx.health.connect.client.request.AggregateGroupByDurationRequest;
 import androidx.health.connect.client.request.AggregateGroupByPeriodRequest;
@@ -15,7 +13,6 @@ import androidx.health.connect.client.time.TimeRangeFilter;
 import androidx.health.connect.client.records.MealType;
 import androidx.health.connect.client.units.Energy;
 import androidx.health.connect.client.units.Mass;
-import androidx.health.connect.client.units.Volume;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -25,7 +22,6 @@ import java.time.Instant;
 import java.time.Period;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import kotlin.reflect.KClass;
@@ -38,44 +34,58 @@ public class NutritionFunctions {
 
     public static void populateFromQuery(Record datapoint, JSONObject obj) throws JSONException {
 
-        JSONObject nutritionStats = new JSONObject();
+        JSONObject nutritionObj = new JSONObject();
+        // { item: "cheese", meal_type: "lunch", brand_name: "Cheddar", nutrients: { 'fat.saturated': 11.5, 'calories': 233.1 } }
 
         NutritionRecord nutritionR = (NutritionRecord) datapoint;
-        nutritionStats.put("startDate", nutritionR.getStartTime().toEpochMilli());
-        nutritionStats.put("endDate", nutritionR.getEndTime().toEpochMilli());
 
         String name = nutritionR.getName();
-        nutritionStats.put("item", name);
-
-        double kcal = nutritionR.getEnergy().getKilocalories();
-        nutritionStats.put("calories", kcal);
-
-        double sugar = nutritionR.getSugar().getGrams();
-        nutritionStats.put("sugar", sugar);
+        nutritionObj.put("item", name);
 
         int mealType = nutritionR.getMealType();
         if (mealType == MealType.MEAL_TYPE_BREAKFAST) {
-            nutritionStats.put("meal_type", "breakfast");
+            nutritionObj.put("meal_type", "breakfast");
         } else if (mealType == MealType.MEAL_TYPE_LUNCH) {
-            nutritionStats.put("meal_type", "lunch");
+            nutritionObj.put("meal_type", "lunch");
         } else if (mealType == MealType.MEAL_TYPE_DINNER) {
-            nutritionStats.put("meal_type", "dinner");
+            nutritionObj.put("meal_type", "dinner");
         } else if (mealType == MealType.MEAL_TYPE_SNACK) {
-            nutritionStats.put("meal_type", "snack");
+            nutritionObj.put("meal_type", "snack");
         } else {
-            nutritionStats.put("meal_type", "unknown");
+            nutritionObj.put("meal_type", "unknown");
         }
 
-        double protein = nutritionR.getProtein().getGrams();
-        nutritionStats.put("protein", protein);
+        JSONObject nutrientsObj = new JSONObject();
+        nutritionObj.put("nutrients", nutrientsObj);
 
-        double fat = nutritionR.getTotalFat().getGrams();
-        nutritionStats.put("fat.total", fat);
+        if (nutritionR.getEnergy() != null) {
+            double kcal = nutritionR.getEnergy().getKilocalories();
+            nutrientsObj.put("calories", kcal);
+        }
 
-        double carbs = nutritionR.getTotalCarbohydrate().getGrams();
-        nutritionStats.put("carbs.total", carbs);
+        if (nutritionR.getProtein() != null) {
+            double protein = nutritionR.getProtein().getGrams();
+            nutrientsObj.put("protein", protein);
+        }
 
-        obj.put("value", nutritionStats);
+        if (nutritionR.getTotalFat() != null) {
+            double fat = nutritionR.getTotalFat().getGrams();
+            nutrientsObj.put("fat.total", fat);
+        }
+
+        if (nutritionR.getTotalCarbohydrate() != null) {
+            double carbs = nutritionR.getTotalCarbohydrate().getGrams();
+            nutrientsObj.put("carbs.total", carbs);
+        }
+
+        if (nutritionR.getSugar() != null) {
+            double sugar = nutritionR.getSugar().getGrams();
+            nutrientsObj.put("sugar", sugar);
+        }
+
+        obj.put("startDate", nutritionR.getStartTime().toEpochMilli());
+        obj.put("endDate", nutritionR.getEndTime().toEpochMilli());
+        obj.put("value", nutritionObj);
         obj.put("unit", "meal");
     }
 
@@ -108,23 +118,25 @@ public class NutritionFunctions {
     }
 
     public static AggregateGroupByPeriodRequest prepareAggregateGroupByPeriodRequest(TimeRangeFilter timeRange,
-            Period period, HashSet<DataOrigin> dor) {
+                                                                                     Period period, HashSet<DataOrigin> dor) {
         Set<AggregateMetric<?>> metrics = new HashSet<>();
         metrics.add(NutritionRecord.ENERGY_TOTAL);
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
         metrics.add(NutritionRecord.TOTAL_FAT_TOTAL);
         metrics.add(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL);
+        metrics.add(NutritionRecord.SUGAR_TOTAL);
 
         return new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
     }
 
     public static AggregateGroupByDurationRequest prepareAggregateGroupByDurationRequest(TimeRangeFilter timeRange,
-            Duration duration, HashSet<DataOrigin> dor) {
+                                                                                         Duration duration, HashSet<DataOrigin> dor) {
         Set<AggregateMetric<?>> metrics = new HashSet<>();
         metrics.add(NutritionRecord.ENERGY_TOTAL);
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
         metrics.add(NutritionRecord.TOTAL_FAT_TOTAL);
         metrics.add(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL);
+        metrics.add(NutritionRecord.SUGAR_TOTAL);
         return new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
     }
 
@@ -134,6 +146,7 @@ public class NutritionFunctions {
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
         metrics.add(NutritionRecord.TOTAL_FAT_TOTAL);
         metrics.add(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL);
+        metrics.add(NutritionRecord.SUGAR_TOTAL);
         return new AggregateRequest(metrics, timeRange, dor);
     }
 
@@ -157,12 +170,31 @@ public class NutritionFunctions {
             }
         }
 
-        double sugar = storeObj.getDouble("sugar");
-        double kcal = storeObj.getDouble("calories");
-        double protein = storeObj.getDouble("protein");
-        double fat = storeObj.getDouble("fat.total");
-        double carbs = storeObj.getDouble("carbs.total");
-        String name = storeObj.getString("item");
+        String name = nutritionObj.getString("item");
+
+        JSONObject nutrientsObj = nutritionObj.getJSONObject("nutrients");
+
+
+        Double sugar = null;
+        if (nutrientsObj.has("sugar")) {
+            sugar = nutrientsObj.getDouble("sugar");
+        }
+        Double kcal = null;
+        if (nutrientsObj.has("calories")) {
+            kcal = nutrientsObj.getDouble("calories");
+        }
+        Double protein = null;
+        if (nutrientsObj.has("protein")) {
+            protein = nutrientsObj.getDouble("protein");
+        }
+        Double fat = null;
+        if (nutrientsObj.has("fat.total")) {
+            fat = nutrientsObj.getDouble("fat.total");
+        }
+        Double carbs = null;
+        if (nutrientsObj.has("carbs.total")) {
+            carbs = nutrientsObj.getDouble("carbs.total");
+        }
 
         NutritionRecord record = new NutritionRecord(
                 Instant.ofEpochMilli(st),
@@ -172,7 +204,7 @@ public class NutritionFunctions {
                 null,
                 null,
                 null,
-                Energy.kilocalories(kcal),
+                kcal == null ? null : Energy.kilocalories(kcal),
                 null,
                 null,
                 null,
@@ -192,15 +224,15 @@ public class NutritionFunctions {
                 null,
                 null,
                 null,
-                Mass.grams(protein),
+                protein == null ? null : Mass.grams(protein),
                 null,
                 null,
                 null,
                 null,
-                Mass.grams(sugar),
+                sugar == null ? null : Mass.grams(sugar),
                 null,
-                Mass.grams(carbs),
-                Mass.grams(fat),
+                carbs == null ? null : Mass.grams(carbs),
+                fat == null ? null : Mass.grams(fat),
                 null,
                 null,
                 null,
@@ -217,66 +249,4 @@ public class NutritionFunctions {
         data.add(record);
     }
 
-    /* Hydration */
-
-    public static void populateHydrationFromQuery(Record datapoint, JSONObject obj) throws JSONException {
-        HydrationRecord hydrationDP = (HydrationRecord) datapoint;
-        obj.put("startDate", hydrationDP.getStartTime().toEpochMilli());
-        obj.put("endDate", hydrationDP.getEndTime().toEpochMilli());
-
-        double volume = hydrationDP.getVolume().getLiters();
-        obj.put("value", volume);
-        obj.put("unit", "l");
-    }
-
-    public static void populateHydrationFromAggregatedQuery(AggregationResult response, JSONObject retObj)
-            throws JSONException {
-        if (response.get(HydrationRecord.VOLUME_TOTAL) != null) {
-            double liters = Objects.requireNonNull(response.get(HydrationRecord.VOLUME_TOTAL)).getLiters();
-            retObj.put("value", liters);
-            retObj.put("unit", "l");
-        } else {
-            retObj.put("value", 0);
-            retObj.put("unit", "l");
-        }
-    }
-
-    public static AggregateGroupByPeriodRequest prepareHydrationAggregateGroupByPeriodRequest(TimeRangeFilter timeRange,
-            Period period, HashSet<DataOrigin> dor) {
-        Set<AggregateMetric<Volume>> metrics = new HashSet<>();
-        metrics.add(HydrationRecord.VOLUME_TOTAL);
-
-        return new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
-    }
-
-    public static AggregateGroupByDurationRequest prepareHydrationAggregateGroupByDurationRequest(
-            TimeRangeFilter timeRange, Duration duration, HashSet<DataOrigin> dor) {
-        Set<AggregateMetric<Volume>> metrics = new HashSet<>();
-        metrics.add(HydrationRecord.VOLUME_TOTAL);
-
-        return new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
-    }
-
-    public static AggregateRequest prepareHydrationAggregateRequest(TimeRangeFilter timeRange,
-            HashSet<DataOrigin> dor) {
-        Set<AggregateMetric<Volume>> metrics = new HashSet<>();
-        metrics.add(HydrationRecord.VOLUME_TOTAL);
-
-        return new AggregateRequest(metrics, timeRange, dor);
-    }
-
-    public static void prepareHydrationStoreRecords(JSONObject storeObj, List<Record> data) throws JSONException {
-        long st = storeObj.getLong("startDate");
-        long et = storeObj.getLong("endDate");
-
-        double liters = storeObj.getDouble("value");
-        Volume vol = Volume.liters(liters);
-
-        HydrationRecord record = new HydrationRecord(
-                Instant.ofEpochMilli(st), null,
-                Instant.ofEpochMilli(et), null,
-                vol,
-                Metadata.EMPTY);
-        data.add(record);
-    }
 }
