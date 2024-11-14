@@ -29,9 +29,12 @@ import androidx.health.connect.client.records.ExerciseLap;
 import androidx.health.connect.client.records.ExerciseSegment;
 import androidx.health.connect.client.records.ExerciseSessionRecord;
 import androidx.health.connect.client.records.HeartRateRecord;
+import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord;
 import androidx.health.connect.client.records.HeightRecord;
+import androidx.health.connect.client.records.HydrationRecord;
 import androidx.health.connect.client.records.NutritionRecord;
 import androidx.health.connect.client.records.Record;
+import androidx.health.connect.client.records.RestingHeartRateRecord;
 import androidx.health.connect.client.records.SleepSessionRecord;
 import androidx.health.connect.client.records.StepsRecord;
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord;
@@ -68,10 +71,12 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.TemporalAdjusters;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import kotlin.coroutines.EmptyCoroutineContext;
@@ -290,11 +295,20 @@ public class HealthPlugin extends CordovaPlugin {
         if (name.equalsIgnoreCase("distance")) {
             return kotlin.jvm.JvmClassMappingKt.getKotlinClass(DistanceRecord.class);
         }
+        if (name.equalsIgnoreCase("heart_rate.resting")) {
+            return HeartRateFunctions.restingDataTypeToClass();
+        }
+        if (name.equalsIgnoreCase("heart_rate.variability")) {
+            return HeartRateFunctions.variabilityDataTypeToClass();
+        }
         if (name.equalsIgnoreCase("height")) {
             return HeightFunctions.dataTypeToClass();
         }
         if (name.equalsIgnoreCase("nutrition")) {
             return NutritionFunctions.dataTypeToClass();
+        }
+        if (name.equalsIgnoreCase("nutrition.water")) {
+            return NutritionFunctions.hydrationDataTypeToClass();
         }
         if (name.equalsIgnoreCase("sleep")) {
             return SleepFunctions.dataTypeToClass();
@@ -551,12 +565,18 @@ public class HealthPlugin extends CordovaPlugin {
                         obj.put("unit", "m");
                     } else if (datapoint instanceof NutritionRecord) {
                         NutritionFunctions.populateFromQuery(datapoint, obj);
+                    } else if (datapoint instanceof HydrationRecord) {
+                        NutritionFunctions.populateHydrationFromQuery(datapoint, obj);
                     }  else if (datapoint instanceof SleepSessionRecord) {
                         oneElementPerRecord = keepSession; // flag it, so we don't add empty objs later
                         SleepFunctions.populateFromQuery(datapoint, obj, resultset, keepSession);
                     } else if (datapoint instanceof HeartRateRecord) {
                         oneElementPerRecord = false; // bpms are sent individually
                         HeartRateFunctions.populateFromQuery(datapoint, resultset);
+                    } else if (datapoint instanceof RestingHeartRateRecord) {
+                        HeartRateFunctions.populateRestingFromQuery(datapoint, obj);
+                    } else if (datapoint instanceof HeartRateVariabilityRmssdRecord) {
+                        HeartRateFunctions.populateVariabilityFromQuery(datapoint, obj);
                     } else {
                         callbackContext.error("Sample received of unknown type " + datatype.toString());
                         return;
@@ -663,6 +683,8 @@ public class HealthPlugin extends CordovaPlugin {
                         request = StepsFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
                     } else if (datatype.equalsIgnoreCase("nutrition")) {
                         request = NutritionFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
+                    } else if (datatype.equalsIgnoreCase("nutrition.water")) {
+                        request = NutritionFunctions.prepareHydrationAggregateGroupByPeriodRequest(timeRange, period, dor);
                     }  else if (datatype.equalsIgnoreCase("weight")) {
                         request = WeightFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
                     } else if (datatype.equalsIgnoreCase("height")) {
@@ -691,6 +713,8 @@ public class HealthPlugin extends CordovaPlugin {
                         request = SleepFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
                     } else if (datatype.equalsIgnoreCase("heart_rate")) {
                         request = HeartRateFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
+                    } else if (datatype.equalsIgnoreCase("heart_rate.resting")) {
+                        request = HeartRateFunctions.prepareRestingAggregateGroupByPeriodRequest(timeRange, period, dor);
                     } else {
                         callbackContext.error("Datatype not recognized " + datatype);
                         return;
@@ -723,6 +747,8 @@ public class HealthPlugin extends CordovaPlugin {
                         request = StepsFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
                     } else if (datatype.equalsIgnoreCase("nutrition")) {
                         request = NutritionFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
+                    } else if (datatype.equalsIgnoreCase("nutrition.water")) {
+                        request = NutritionFunctions.prepareHydrationAggregateGroupByDurationRequest(timeRange, duration, dor);
                     } else if (datatype.equalsIgnoreCase("weight")) {
                         request = WeightFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
                     } else if (datatype.equalsIgnoreCase("height")) {
@@ -751,6 +777,8 @@ public class HealthPlugin extends CordovaPlugin {
                         request = SleepFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
                     } else if (datatype.equalsIgnoreCase("heart_rate")) {
                         request = HeartRateFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
+                    } else if (datatype.equalsIgnoreCase("heart_rate.resting")) {
+                        request = HeartRateFunctions.prepareRestingAggregateGroupByDurationRequest(timeRange, duration, dor);
                     } else {
                         callbackContext.error("Datatype not recognized " + datatype);
                         return;
@@ -786,6 +814,8 @@ public class HealthPlugin extends CordovaPlugin {
                     request = StepsFunctions.prepareAggregateRequest(timeRange, dor);
                 } else if (datatype.equalsIgnoreCase("nutrition")) {
                     request = NutritionFunctions.prepareAggregateRequest(timeRange, dor);
+                } else if (datatype.equalsIgnoreCase("nutrition.water")) {
+                    request = NutritionFunctions.prepareHydrationAggregateRequest(timeRange, dor);
                 }  else if (datatype.equalsIgnoreCase("weight")) {
                     request = WeightFunctions.prepareAggregateRequest(timeRange, dor);
                 } else if (datatype.equalsIgnoreCase("height")) {
@@ -814,6 +844,8 @@ public class HealthPlugin extends CordovaPlugin {
                     request = SleepFunctions.prepareAggregateRequest(timeRange, dor);
                 } else if (datatype.equalsIgnoreCase("heart_rate")) {
                     request = HeartRateFunctions.prepareAggregateRequest(timeRange, dor);
+                } else if (datatype.equalsIgnoreCase("heart_rate.resting")) {
+                    request = HeartRateFunctions.prepareRestingAggregateRequest(timeRange, dor);
                 } else {
                     callbackContext.error("Datatype not recognized " + datatype);
                     return;
@@ -848,6 +880,8 @@ public class HealthPlugin extends CordovaPlugin {
             StepsFunctions.populateFromAggregatedQuery(response, retObj);
         } else if (datatype.equalsIgnoreCase("nutrition")) {
             NutritionFunctions.populateFromAggregatedQuery(response, retObj);
+        } else if (datatype.equalsIgnoreCase("nutrition.water")) {
+            NutritionFunctions.populateHydrationFromAggregatedQuery(response, retObj);
         } else if (datatype.equalsIgnoreCase("weight")) {
             WeightFunctions.populateFromAggregatedQuery(response, retObj);
         } else if (datatype.equalsIgnoreCase("height")) {
@@ -902,6 +936,8 @@ public class HealthPlugin extends CordovaPlugin {
             SleepFunctions.populateFromAggregatedQuery(response, retObj);
         } else if (datatype.equalsIgnoreCase("heart_rate")) {
             HeartRateFunctions.populateFromAggregatedQuery(response, retObj);
+        } else if (datatype.equalsIgnoreCase("heart_rate.resting")) {
+            HeartRateFunctions.populateRestingFromAggregatedQuery(response, retObj);
         } else {
             LOG.e(TAG, "Data type not recognized " + datatype);
         }
@@ -1034,8 +1070,14 @@ public class HealthPlugin extends CordovaPlugin {
                 SleepFunctions.prepareStoreRecords(args.getJSONObject(0), data);
             } else if (datatype.equalsIgnoreCase("heart_rate")) {
                 HeartRateFunctions.prepareStoreRecords(args.getJSONObject(0), st, et, data);
+            } else if (datatype.equalsIgnoreCase("heart_rate.resting")) {
+                HeartRateFunctions.prepareRestingStoreRecords(args.getJSONObject(0), st, data);
+            } else if (datatype.equalsIgnoreCase("heart_rate.variability")) {
+                HeartRateFunctions.prepareVariabilityStoreRecords(args.getJSONObject(0), st, data);
             } else if (datatype.equalsIgnoreCase("nutrition")) {
                 NutritionFunctions.prepareStoreRecords(args.getJSONObject(0), st, et, data);
+            } else if (datatype.equalsIgnoreCase("nutrition.water")) {
+                NutritionFunctions.prepareHydrationStoreRecords(args.getJSONObject(0), data);
             } else {
                 callbackContext.error("Datatype not supported " + datatype);
                 return;
