@@ -1,6 +1,13 @@
 Log of changes
 ==============
 
+### v3.2.3
+
+* included blood_pressure
+* added body_position and location to blood_glucose on Android
+* more complete support for nutrition on Android (not 100% of nutrients covered yet)
+* updated version of HealthConnect SDK
+
 ### v3.2.2
 
 * include route and heart rate in workouts, on iOS only
@@ -32,7 +39,6 @@ Log of changes
 ### v3.0.4
 
 * added support for total calories
-
 
 ### v3.0.3
 
