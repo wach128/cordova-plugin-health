@@ -43,7 +43,7 @@ As the lateste version of cordova Android usually use older versions, it is nece
 ```xml
 <platform name="android">
   ...
-  <preference name="android-minSdkVersion" value="28" />
+  <preference name="android-minSdkVersion" value="26" />
   <preference name="android-targetSdkVersion" value="35" />
   <preference name="GradleVersion" value="8.7" />
   <preference name="AndroidGradlePluginVersion" value="8.6.0" />
@@ -51,7 +51,7 @@ As the lateste version of cordova Android usually use older versions, it is nece
 <platform>
 ```
 Additionally, there are issues with some kotlin depenendencies which are fixed automatically by the plugin in `src/android/build-extras.gradle`. All these hacks will hopefully be removed with future versions of the cordova-android platform.
-* Download a recent version of gradle (8.4 or later).
+* Download a recent version of gradle (8.7 or later).
 * If you use Android Studio, download at least version Hedgehog.
 * Be aware that Health Connect requires the user to have screen lock enabled with a PIN, pattern, or password.
 * When publishing the app, you need to comply to [these requests from Google](https://developer.android.com/health-and-fitness/guides/health-connect/publish/request-access).
@@ -124,14 +124,14 @@ Capacitor does not automatically include all changes to AndroidManifest.xml or g
 ```
 5. modify the main build.gradle file and update:
 ```gradle
-classpath 'com.android.tools.build:gradle:8.1.1'
+classpath 'com.android.tools.build:gradle:8.6.0'
 ```
 
 6. modify the variables.gradle file, particularly:
 ```gradle
 minSdkVersion = 26
-targetSdkVersion = 34
-compileSdkVersion = 34
+targetSdkVersion = 35
+compileSdkVersion = 35
 ```
 
 ## Supported data types
