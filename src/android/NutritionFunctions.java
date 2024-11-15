@@ -35,7 +35,8 @@ public class NutritionFunctions {
     public static void populateFromQuery(Record datapoint, JSONObject obj) throws JSONException {
 
         JSONObject nutritionObj = new JSONObject();
-        // { item: "cheese", meal_type: "lunch", brand_name: "Cheddar", nutrients: { 'fat.saturated': 11.5, 'calories': 233.1 } }
+        // { item: "cheese", meal_type: "lunch", brand_name: "Cheddar", nutrients: {
+        // 'fat.saturated': 11.5, 'calories': 233.1 } }
 
         NutritionRecord nutritionR = (NutritionRecord) datapoint;
 
@@ -113,12 +114,17 @@ public class NutritionFunctions {
             nutritionStats.put("carbs.total", totalCarbs);
         }
 
+        if (response.get(NutritionRecord.SUGAR_TOTAL) != null) {
+            double totalSugar = response.get(NutritionRecord.SUGAR_TOTAL).getGrams();
+            nutritionStats.put("sugar", totalSugar);
+        }
+
         retObj.put("value", nutritionStats);
         retObj.put("unit", "nutrition");
     }
 
     public static AggregateGroupByPeriodRequest prepareAggregateGroupByPeriodRequest(TimeRangeFilter timeRange,
-                                                                                     Period period, HashSet<DataOrigin> dor) {
+            Period period, HashSet<DataOrigin> dor) {
         Set<AggregateMetric<?>> metrics = new HashSet<>();
         metrics.add(NutritionRecord.ENERGY_TOTAL);
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
@@ -130,7 +136,7 @@ public class NutritionFunctions {
     }
 
     public static AggregateGroupByDurationRequest prepareAggregateGroupByDurationRequest(TimeRangeFilter timeRange,
-                                                                                         Duration duration, HashSet<DataOrigin> dor) {
+            Duration duration, HashSet<DataOrigin> dor) {
         Set<AggregateMetric<?>> metrics = new HashSet<>();
         metrics.add(NutritionRecord.ENERGY_TOTAL);
         metrics.add(NutritionRecord.PROTEIN_TOTAL);
@@ -173,7 +179,6 @@ public class NutritionFunctions {
         String name = nutritionObj.getString("item");
 
         JSONObject nutrientsObj = nutritionObj.getJSONObject("nutrients");
-
 
         Double sugar = null;
         if (nutrientsObj.has("sugar")) {

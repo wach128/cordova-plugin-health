@@ -453,7 +453,8 @@ cordova.plugins.health.store({
 - Not all datatypes support start and end timestamps, some, such as weight, only have one timestamp. The plugin will use the start timestamp to set the actual one.
 - In Android you can only store basal rate, that is a power. This is estimated from the kcals provided as an argument, divided by the time between the start and end time. When you query the individual sample, you get the kcal/day back, not the kcal, unless you do an aggregated query.
 - sleep in HealthConnect is stored in sessions composed of stages. By default, this function will store each stage as an indipendent session, but if you want to aggregate the stages into a single session, use the flag: `sleepSession: true` and use an array of objects like `[ { startDate: Date, endDate: Date, stage: 'sleep.light' }, ... ]` as value.
-
+- nutrition in Android is always associated to a specific food item. When storing a single nutrient, like nutrition.sugar, the plugin creates an empty food item with that nutrient. Use food items when possible.
+- nutrition.water is treated separately in Android than the other nutrients, and cannot be associated to a specific food item.
 
 ### delete()
 

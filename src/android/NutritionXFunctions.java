@@ -32,29 +32,31 @@ public class NutritionXFunctions {
         return kotlin.jvm.JvmClassMappingKt.getKotlinClass(NutritionRecord.class);
     }
 
-    public static void populateFromQuery(String datatype, androidx.health.connect.client.records.Record datapoint, JSONObject obj) throws JSONException {
-        // | nutrition.X | 234.9 <br/>**Notes**: for the unit, see the corresponding type in the table above |
+    public static void populateFromQuery(String datatype, androidx.health.connect.client.records.Record datapoint,
+            JSONObject obj) throws JSONException {
+        // | nutrition.X | 234.9 <br/>**Notes**: for the unit, see the corresponding
+        // type in the table above |
 
         NutritionRecord nutritionR = (NutritionRecord) datapoint;
 
         double value = 0;
 
         if (datatype.equalsIgnoreCase("carbs.total") && nutritionR.getTotalCarbohydrate() != null) {
-            value =  nutritionR.getTotalCarbohydrate().getGrams();
+            value = nutritionR.getTotalCarbohydrate().getGrams();
             obj.put("unit", "g");
         }
         if (datatype.equalsIgnoreCase("nutrition.fat.total") && nutritionR.getTotalFat() != null) {
-            value =  nutritionR.getTotalFat().getGrams();
+            value = nutritionR.getTotalFat().getGrams();
             obj.put("unit", "g");
         }
 
-        if (datatype.equalsIgnoreCase("nutrition.protein")  && nutritionR.getProtein() != null) {
-            value =  nutritionR.getProtein().getGrams();
+        if (datatype.equalsIgnoreCase("nutrition.protein") && nutritionR.getProtein() != null) {
+            value = nutritionR.getProtein().getGrams();
             obj.put("unit", "g");
         }
 
         if (datatype.equalsIgnoreCase("nutrition.calories") && nutritionR.getEnergy() != null) {
-            value =  nutritionR.getEnergy().getKilocalories();
+            value = nutritionR.getEnergy().getKilocalories();
             obj.put("unit", "kcal");
         }
 
@@ -96,8 +98,9 @@ public class NutritionXFunctions {
         retObj.put("value", value);
     }
 
-    public static AggregateGroupByPeriodRequest prepareAggregateGroupByPeriodRequest(String datatype, TimeRangeFilter timeRange,
-                                                                                     Period period, HashSet<DataOrigin> dor) {
+    public static AggregateGroupByPeriodRequest prepareAggregateGroupByPeriodRequest(String datatype,
+            TimeRangeFilter timeRange,
+            Period period, HashSet<DataOrigin> dor) {
         Set<AggregateMetric<?>> metrics = new HashSet<>();
         if (datatype.equalsIgnoreCase("carbs.total")) {
             metrics.add(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL);
@@ -111,15 +114,16 @@ public class NutritionXFunctions {
         if (datatype.equalsIgnoreCase("nutrition.calories")) {
             metrics.add(NutritionRecord.ENERGY_TOTAL);
         }
-        if (datatype.equalsIgnoreCase("nutrition.sugar") ) {
+        if (datatype.equalsIgnoreCase("nutrition.sugar")) {
             metrics.add(NutritionRecord.SUGAR_TOTAL);
         }
 
         return new AggregateGroupByPeriodRequest(metrics, timeRange, period, dor);
     }
 
-    public static AggregateGroupByDurationRequest prepareAggregateGroupByDurationRequest(String datatype, TimeRangeFilter timeRange,
-                                                                                         Duration duration, HashSet<DataOrigin> dor) {
+    public static AggregateGroupByDurationRequest prepareAggregateGroupByDurationRequest(String datatype,
+            TimeRangeFilter timeRange,
+            Duration duration, HashSet<DataOrigin> dor) {
         Set<AggregateMetric<?>> metrics = new HashSet<>();
         if (datatype.equalsIgnoreCase("carbs.total")) {
             metrics.add(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL);
@@ -133,13 +137,14 @@ public class NutritionXFunctions {
         if (datatype.equalsIgnoreCase("nutrition.calories")) {
             metrics.add(NutritionRecord.ENERGY_TOTAL);
         }
-        if (datatype.equalsIgnoreCase("nutrition.sugar") ) {
+        if (datatype.equalsIgnoreCase("nutrition.sugar")) {
             metrics.add(NutritionRecord.SUGAR_TOTAL);
         }
         return new AggregateGroupByDurationRequest(metrics, timeRange, duration, dor);
     }
 
-    public static AggregateRequest prepareAggregateRequest(String datatype, TimeRangeFilter timeRange, HashSet<DataOrigin> dor) {
+    public static AggregateRequest prepareAggregateRequest(String datatype, TimeRangeFilter timeRange,
+            HashSet<DataOrigin> dor) {
         Set<AggregateMetric<?>> metrics = new HashSet<>();
         if (datatype.equalsIgnoreCase("carbs.total")) {
             metrics.add(NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL);
@@ -153,7 +158,7 @@ public class NutritionXFunctions {
         if (datatype.equalsIgnoreCase("nutrition.calories")) {
             metrics.add(NutritionRecord.ENERGY_TOTAL);
         }
-        if (datatype.equalsIgnoreCase("nutrition.sugar") ) {
+        if (datatype.equalsIgnoreCase("nutrition.sugar")) {
             metrics.add(NutritionRecord.SUGAR_TOTAL);
         }
         return new AggregateRequest(metrics, timeRange, dor);
@@ -161,7 +166,6 @@ public class NutritionXFunctions {
 
     public static void prepareStoreRecords(String datatype, JSONObject storeObj, long st, long et, List<Record> data)
             throws JSONException {
-        JSONObject nutritionObj = storeObj.getJSONObject("value");
 
         int mealType = MealType.MEAL_TYPE_UNKNOWN;
 
@@ -182,7 +186,7 @@ public class NutritionXFunctions {
             kcal = storeObj.getDouble("value");
         }
         Double carbs = null;
-        if (datatype.equalsIgnoreCase("nutrition.sugar") ) {
+        if (datatype.equalsIgnoreCase("nutrition.carbs.total")) {
             carbs = storeObj.getDouble("value");
         }
 
