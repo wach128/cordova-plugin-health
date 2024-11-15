@@ -723,6 +723,8 @@ public class HealthPlugin extends CordovaPlugin {
                     } else if (datatype.equalsIgnoreCase("heart_rate.resting")) {
                         request = HeartRateFunctions.prepareRestingAggregateGroupByPeriodRequest(timeRange, period,
                                 dor);
+                    } else if (datatype.equalsIgnoreCase("blood_pressure")) {
+                        request = BloodPressureFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
                     } else {
                         callbackContext.error("Datatype not recognized " + datatype);
                         return;
@@ -789,6 +791,9 @@ public class HealthPlugin extends CordovaPlugin {
                         request = HeartRateFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
                     } else if (datatype.equalsIgnoreCase("heart_rate.resting")) {
                         request = HeartRateFunctions.prepareRestingAggregateGroupByDurationRequest(timeRange, duration,
+                                dor);
+                    } else if (datatype.equalsIgnoreCase("blood_pressure")) {
+                        request = BloodPressureFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration,
                                 dor);
                     } else {
                         callbackContext.error("Datatype not recognized " + datatype);
@@ -858,6 +863,8 @@ public class HealthPlugin extends CordovaPlugin {
                     request = HeartRateFunctions.prepareAggregateRequest(timeRange, dor);
                 } else if (datatype.equalsIgnoreCase("heart_rate.resting")) {
                     request = HeartRateFunctions.prepareRestingAggregateRequest(timeRange, dor);
+                } else if (datatype.equalsIgnoreCase("blood_pressure")) {
+                    request = BloodPressureFunctions.prepareAggregateRequest(timeRange, dor);
                 } else {
                     callbackContext.error("Datatype not recognized " + datatype);
                     return;
@@ -950,6 +957,8 @@ public class HealthPlugin extends CordovaPlugin {
             HeartRateFunctions.populateFromAggregatedQuery(response, retObj);
         } else if (datatype.equalsIgnoreCase("heart_rate.resting")) {
             HeartRateFunctions.populateRestingFromAggregatedQuery(response, retObj);
+        } else if (datatype.equalsIgnoreCase("blood_pressure")) {
+            BloodPressureFunctions.populateFromAggregatedQuery(response, retObj);
         } else {
             LOG.e(TAG, "Data type not recognized " + datatype);
         }
