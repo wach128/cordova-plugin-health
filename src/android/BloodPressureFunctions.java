@@ -33,7 +33,7 @@ public class BloodPressureFunctions {
         bpressjson.put("systolic", systo);
 
         int temp_body_pos = bloodPressure.getBodyPosition();
-        String body_position = "";
+        String body_position = "unknown";
         if (temp_body_pos == BloodPressureRecord.BODY_POSITION_STANDING_UP) {
             body_position = "standing_up";
         } else if (temp_body_pos == BloodPressureRecord.BODY_POSITION_SITTING_DOWN) {
@@ -43,12 +43,12 @@ public class BloodPressureFunctions {
         } else if (temp_body_pos == BloodPressureRecord.BODY_POSITION_RECLINING) {
             body_position = "reclining";
         } else {
-            body_position = "";
+            body_position = "unknown";
         }
 
         bpressjson.put("body_position", body_position);
 
-        String location = "";
+        String location = "unknown";
         int sourceInt = bloodPressure.getMeasurementLocation();
         if (sourceInt == BloodPressureRecord.MEASUREMENT_LOCATION_LEFT_WRIST) {
             location = "left_wrist";
