@@ -161,7 +161,7 @@ public class HealthPlugin extends CordovaPlugin {
 
             callbackContext.success();
         } else if (action.equals("getHealthConnectFromStore")) {
-            String uriString = "market://details?id=$providerPackageName&url=healthconnect%3A%2F%2Fonboarding";
+            String uriString = "market://details?id=com.google.android.apps.healthdata";
             Intent launchAppStore = new Intent(Intent.ACTION_VIEW);
             launchAppStore.setPackage("com.android.vending");
             launchAppStore.setData(Uri.parse(uriString));
@@ -407,7 +407,6 @@ public class HealthPlugin extends CordovaPlugin {
 
         Device dev = meta.getDevice();
         if (dev != null) {
-            String device = "";
             String manufacturer = dev.getManufacturer();
             String model = dev.getModel();
             if (manufacturer != null || model != null) {
