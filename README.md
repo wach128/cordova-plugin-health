@@ -207,7 +207,7 @@ Example values:
 | mindfulness    | 1800 <br/>**Notes**: only available on iOS |
 | UVexposure     | 12 <br/>**Notes**: only available on iOS |
 | nutrition.X | 234.9 <br/>**Notes**: for the unit, see the coresponding type in the table above |
-| nutrition      | { item: "cheese", meal_type: "lunch", brand_name: "Cheddar", nutrients: { 'fat.total': 11.5, 'calories': 233.1 } } <br/>**Note**: the `brand_name` property is only available on iOS <br> For the units of each nutrient, see the coresponding type in the table above  |
+| nutrition      | { item: "cheese", meal_type: "lunch", brand_name: "Cheddar", nutrients: { 'fat.total': 11.5, 'calories': 233.1 } } <br/>**Note**: the `brand_name` property is only available on iOS <br> For the units of each nutrient, see the coresponding type in the table above <br/> Water is treated separately in Android, you will never be able to associate water with the general `nutrition`, use `nutrition.water` instead |
 
 
 ## Methods
@@ -398,10 +398,11 @@ The following table shows what types are supported and examples of the returned 
 | calories.active | { startDate: Date, endDate: Date, value: 25698.4, unit: 'kcal' } |
 | calories.basal  | { startDate: Date, endDate: Date, value: 3547.3, unit: 'kcal' } |
 | activity        | Android: { startDate: Date, endDate: Date, value: 567000, unit: 'ms' } <br /> iOS: { startDate: Date, endDate: Date, value: { still: { duration: 520000 }, walking: { duration: 223000 }}, unit: 'activitySummary' }<br />**Note:** durations are expressed in milliseconds |
-| sleep           | { startDate: Date, endDate: Date, value: 493, unit: 's' }  <br/>**Notes**: Android iOS |
+| sleep           | { startDate: Date, endDate: Date, value: 493, unit: 's' }  <br/>**Notes**: Android only |
 | appleExerciseTime | { startDate: Date, endDate: Date, value: 500, unit: 'min' }  <br/>**Notes**: iOS only |
 | heart_rate        | { startDate: Date, endDate: Date, value: { average: 72, min: 68, max: 82 }, unit: 'bpm' } |
 | nutrition       | { startDate: Date, endDate: Date, value: { fat.total: 11.5, calories: 233.1 }, unit: 'nutrition' }<br />**Note:** units of measurement for nutrients are fixed according to the table at the beginning of this README |
+| blood_pressure  | { startDate: Date, endDate: Date, value: {diastolic_average: 80, systolic_average: 120, diastolic_max: 85, systolic_max: 132, diastolic_min: 74, systolic_min: 112 }, unit: 'mmHg' }  <br/>**Notes**: Android only |
 
 
 #### Quirks
@@ -416,7 +417,7 @@ The following table shows what types are supported and examples of the returned 
 #### Android quirks
 
 - Currently, it is not possible to group by activity type in aggregated queries, only the total time for all activities can be returned. See discussion [here](https://stackoverflow.com/questions/77512832/how-to-aggregate-by-exercise-type-in-the-android-health-connect-api/77512845#77512845).
-- When storing heart_rate, you can also provide the value as an array of [ {bpm: 81, timestamp: Date }, ... ]. This is how the heart rate is actually stored internally and is probably and more efficient.
+
 
 ### store()
 
@@ -450,11 +451,12 @@ cordova.plugins.health.store({
 #### Android quirks
 
 - This operation correponds to an insert, not an update. If you want to update the data point you need to delete it first.
-- Not all datatypes support start and end timestamps, some, such as weight, only have one timestamp. The plugin will use the start timestamp to set the actual one.
+- Not all datatypes support start and end timestamps, some, such as weight, only have one timestamp. The plugin will use the start timestamp to set the end timestamp when querying.
 - In Android you can only store basal rate, that is a power. This is estimated from the kcals provided as an argument, divided by the time between the start and end time. When you query the individual sample, you get the kcal/day back, not the kcal, unless you do an aggregated query.
-- sleep in HealthConnect is stored in sessions composed of stages. By default, this function will store each stage as an indipendent session, but if you want to aggregate the stages into a single session, use the flag: `sleepSession: true` and use an array of objects like `[ { startDate: Date, endDate: Date, stage: 'sleep.light' }, ... ]` as value.
-- nutrition in Android is always associated to a specific food item. When storing a single nutrient, like nutrition.sugar, the plugin creates an empty food item with that nutrient. Use food items when possible.
-- nutrition.water is treated separately in Android than the other nutrients, and cannot be associated to a specific food item. This also means that you cannot add it to a nutrition item, nor will you find it when querying nutrition.
+- When storing `heart_rate`, you can also provide the value as an array of [ {bpm: 81, timestamp: Date }, ... ]. This is how the heart rate is actually stored internally and is probably more efficient.
+- `sleep` in HealthConnect is stored in sessions composed of stages. By default, this function will store each stage as an indipendent session, but if you want to aggregate the stages into a single session, use the flag: `sleepSession: true` and use an array of objects like `[ { startDate: Date, endDate: Date, stage: 'sleep.light' }, ... ]` where each object is a stage, as value.
+- `nutrition` in Android is always associated to a specific food item. When storing a single nutrient, like nutrition.sugar, the plugin creates an empty food item with that nutrient. Use food items when possible.
+- `nutrition.water` is treated separately in Android than the other nutrients, and cannot be associated to a specific food item. This also means that you cannot add it to a `nutrition` item, nor will you find it when querying `nutrition`.
 
 ### delete()
 
