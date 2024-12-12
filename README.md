@@ -110,6 +110,7 @@ Capacitor does not automatically include all changes to AndroidManifest.xml or g
         </intent-filter>
       </activity-alias>
 ```
+
 3. add the possibility to query for the presence of Health Connect to AndroidManifest.xml, inside the root tag:
 ```xml
       <!-- Check if Health Connect is installed -->
