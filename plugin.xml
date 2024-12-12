@@ -84,81 +84,18 @@
     <framework src="HealthKit.framework" weak="true" />
   </platform>
 
-  <!-- android -->
   <platform name="android">
-    <framework src="androidx.health.connect:connect-client:1.1.0-alpha10" />
-    <framework src="src/android/build-extras.gradle" custom="true" type="gradleReference" />
-
-    <config-file target="AndroidManifest.xml" parent="/*">
-      <!-- Check if Health Connect is installed -->
-      <queries>
-        <package android:name="com.google.android.apps.healthdata" />
-      </queries>
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     </config-file>
-
+    <source-file src="src/android/StepCounter.java" target-dir="src/com/rn0x/stepcounter" />
     <config-file target="res/xml/config.xml" parent="/*">
-      <feature name="health">
-        <param name="android-package" value="org.apache.cordova.health.HealthPlugin" />
-
-        <!-- used to init the plugin when the cordova activity is created -->
-        <param name="onload" value="true" />
+      <feature name="StepCounter">
+        <param name="android-package" value="com.rn0x.stepcounter.StepCounter" />
       </feature>
-
-      <!-- <access origin="https://accounts.google.com/*" /> -->
     </config-file>
-
-    <config-file target="AndroidManifest.xml" parent="/*/application">
-      <!-- For supported versions through Android 13, create an activity to show the rationale
-       of Health Connect permissions once users click the privacy policy link. -->
-      <activity
-        android:name="org.apache.cordova.health.PermissionsRationaleActivity"
-        android:exported="true">
-        <intent-filter>
-          <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
-        </intent-filter>
-      </activity>
-
-      <!-- For versions starting Android 14, create an activity alias to show the rationale
-       of Health Connect permissions once users click the privacy policy link. -->
-      <activity-alias
-        android:name="ViewPermissionUsageActivity"
-        android:exported="true"
-        android:targetActivity="org.apache.cordova.health.PermissionsRationaleActivity"
-        android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
-        <intent-filter>
-          <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
-          <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
-        </intent-filter>
-      </activity-alias>
-    </config-file>
-
-    <resource-file src="src/android/CordovaPluginHealthStrings.xml"
-      target="res/values/CordovaPluginHealthStrings.xml" />
-
-    <source-file src="src/android/HealthPlugin.java" target-dir="src/org/apache/cordova/health/" />
-    <source-file src="src/android/StepsFunctions.java" target-dir="src/org/apache/cordova/health/" />
-    <source-file src="src/android/WeightFunctions.java" target-dir="src/org/apache/cordova/health/" />
-    <source-file src="src/android/HeightFunctions.java" target-dir="src/org/apache/cordova/health/" />
-    <source-file src="src/android/NutritionFunctions.java"
-      target-dir="src/org/apache/cordova/health/" />
-    <source-file src="src/android/HydrationFunctions.java"
-      target-dir="src/org/apache/cordova/health/" />
-    <source-file src="src/android/NutritionXFunctions.java"
-      target-dir="src/org/apache/cordova/health/" />
-    <source-file src="src/android/SleepFunctions.java" target-dir="src/org/apache/cordova/health/" />
-    <source-file src="src/android/BloodGlucoseFunctions.java"
-      target-dir="src/org/apache/cordova/health/" />
-    <source-file src="src/android/BloodPressureFunctions.java"
-      target-dir="src/org/apache/cordova/health/" />
-    <source-file src="src/android/HeartRateFunctions.java"
-      target-dir="src/org/apache/cordova/health/" />
-    <source-file src="src/android/PermissionsRationaleActivity.java"
-      target-dir="src/org/apache/cordova/health/" />
-    <source-file src="src/android/ActivityMapper.java" target-dir="src/org/apache/cordova/health/" />
-
-    <js-module src="www/android/health.js" name="health">
-      <clobbers target="cordova.plugins.health" />
+    <js-module src="www/StepCounter.js" name="StepCounter">
+      <clobbers target="cordova.plugins.stepCounter" />
     </js-module>
   </platform>
-
 </plugin>
