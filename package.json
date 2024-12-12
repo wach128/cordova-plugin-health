@@ -1,20 +1,20 @@
 {
-  "version": "4.0.0",
-  "name": "cordova-plugin-step-counter",
+  "version": "3.2.3",
+  "name": "cordova-plugin-health",
   "cordova_name": "Health",
   "description": "A plugin that abstracts fitness and health repositories like Apple HealthKit or Google Health Connect",
   "license": "MIT",
   "author": "Dario Salvi",
-  "homepage": "https://github.com/wach128/cordova-plugin-health",
-  "repo": "https://github.com/wach128/cordova-plugin-health.git",
+  "homepage": "https://github.com/dariosalvi78/cordova-plugin-health",
+  "repo": "https://github.com/dariosalvi78/cordova-plugin-health.git",
   "repository": {
     "type": "git",
-    "url": "https://github.com/wach128/cordova-plugin-health.git"
+    "url": "https://github.com/dariosalvi78/cordova-plugin-health.git"
   },
   "bugs": {
-    "url": "https://github.com/wach128/cordova-plugin-health/issues"
+    "url": "https://github.com/dariosalvi78/cordova-plugin-health/issues"
   },
-  "issue": "https://github.com/wach128/cordova-plugin-health/issues",
+  "issue": "https://github.com/dariosalvi78/cordova-plugin-health/issues",
   "keywords": [
     "HealthKit",
     "Health Connect",
